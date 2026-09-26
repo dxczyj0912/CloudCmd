@@ -2,9 +2,7 @@
 /build-apk/
 /*.apk
 /_tmp-*
-/tools/_*.js
-/tools/_*/
-/tools/_*.png
+/tools/_*
 !/tools/_cmdlist.js
 !/tools/_lessonlist.js
 !/tools/_kblist.js
