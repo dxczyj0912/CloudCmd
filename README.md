@@ -2,7 +2,7 @@
 
 > 一个**零依赖、离线可用、可搜索**的云计算命令速查与学习网站。
 > 双击 `index.html` 就能用，不需要装任何东西，断网也能查。
-> Android 版可构建为零权限、离线 APK；当前仓库中的 `CloudCmd-1.1.apk` 是**未签名构建产物，不能直接安装**。
+> Android 版可构建为零权限、离线 APK；当前仓库中的 `CloudCmd-1.2.apk` 是**未签名构建产物，不能直接安装**。
 
 ---
 
@@ -24,7 +24,7 @@ python -m http.server 8080
 
 ### 方式三：构建 Android 版
 
-当前 **`CloudCmd-1.1.apk` 未签名，不能直接安装**。如需安装或分发，先用仓库外的签名凭证重建并验证签名。
+当前 **`CloudCmd-1.2.apk` 未签名，不能直接安装**。如需安装或分发，先用仓库外的签名凭证重建并验证签名。
 
 | | |
 | --- | --- |
@@ -161,7 +161,7 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 - 终端右上角可**一键切全屏终端**（讲义让位），看完再切回来
 - **软键盘适配**：用 `visualViewport` 把页面高度压到可视区，输入行不会被键盘盖住
 - 触摸目标全部放大（运行/复制 40px、快捷键 38px、星标 42px）；输入框 ≥16px（否则 iOS 聚焦会自动放大整页）
-- 自检：`node tools/lab-check.js`（**118 项断言**，其中 37 项专门跑手机视口：竖屏 375×667 与横屏 667×375）
+- 自检：`node tools/lab-check.js`（**124 项断言**，其中 37 项专门跑手机视口：竖屏 375×667 与横屏 667×375）
 
 **它不能做什么**（页面上也明确标注了）：
 
@@ -201,15 +201,15 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 | 🔐 安全与合规 | 38 | openssl 证书、SELinux、审计与入侵排查、镜像扫描、AK/SK 泄露应急 |
 | ⚡ 性能压测与调优 | 25 | ab/wrk/sysbench/fio、内核参数、JVM 线程栈分析 |
 
-外加 **37 条故障速查链路**、**9 阶段学习路线图**、**188 个交互式练习课（764 步）** 与 **398 张每日一练卡片**。
+外加 **37 条故障速查链路**、**9 阶段学习路线图**、**188 个主站交互式练习课（764 步）** 与 **398 张每日一练卡片**。
 
 数据、终端行为与卡片由自动检查把关，可随时运行 `node tools/check-all.js`：
 
 ```bash
 node tools/validate-data.js     # 数据契约：字段完整性、id 唯一性、裸占位符、related 断链、summary 长度、路线图覆盖
 node tools/shell-check.js       # 模拟终端行为（含全部课程的答案、备用答案、逐步命令、静默错误回归）
-node tools/render-check.js      # 无头 Chrome 里跑 129 项真实 DOM 冒烟测试（含每日一练的翻面/打分/送终端）
-node tools/lab-check.js         # 练习平台：104 项冒烟测试（真 shell / 讲义 / 步骤打卡 / 路由 / 手机竖屏与横屏）
+node tools/render-check.js      # 无头 Chrome 里跑 131 项真实 DOM 冒烟测试（含每日一练的翻面/打分/送终端/进度备份）
+node tools/lab-check.js         # 练习平台：124 项冒烟测试（真 shell / 讲义 / 步骤打卡 / 路由 / 手机竖屏与横屏）
 node tools/card-check.js        # 每日一练卡片：398 张，18 分类全覆盖；289 张有 run 且都在模拟器里跑通
 node tools/coverage-report.js   # 生成命令/课程/卡片覆盖率报告，列出仍需补课的命令
 node tools/learning-chain-inventory.js # 生成 830 条命令的完整教/练/实战清单与 CSV
@@ -238,7 +238,7 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 云计算-DS/
 ├─ index.html                 主站唯一页面（SPA 外壳，双击即可打开）
 ├─ academy-lab.html           实时练习平台（左终端 + 右步骤讲义，独立页面）
-├─ CloudCmd-1.1.apk           Android 未签名构建产物（不能直接安装）
+├─ CloudCmd-1.2.apk           Android 未签名构建产物（不能直接安装）
 ├─ android/                    Android 外壳工程（WebView + 图标资源，不含站点内容）
 │  ├─ AndroidManifest.xml      零权限清单 + adjustResize + configChanges
 │  ├─ java/…/MainActivity.java 单 Activity：WebView 配置、外链分流、返回键
