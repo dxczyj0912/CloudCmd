@@ -44,8 +44,8 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
 
 /* ---------- 主体 ---------- */
 .lab{
-  flex:1 1 auto;min-height:0;width:min(100%,1840px);margin:0 auto;
-  display:grid;grid-template-columns:minmax(360px,38%) minmax(0,1fr);
+  flex:1 1 auto;min-height:0;width:calc(100% - 32px);max-width:2400px;margin:0 auto;
+  display:grid;grid-template-columns:minmax(360px,min(38%,680px)) minmax(0,1fr);
   gap:14px;padding:14px 18px
 }
 
