@@ -12,3 +12,4 @@
 !/tools/_lesson-serialize.js
 !/tools/_stepscan.js
 !/tools/_grep.js
+!/tools/_target-step-ids.json
