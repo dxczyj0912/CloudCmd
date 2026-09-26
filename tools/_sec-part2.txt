@@ -1,0 +1,965 @@
+  /* ======================================================================
+     3 · firewall-cmd（firewalld）
+     ----------------------------------------------------------------------
+     与站内"3306 没放行导致数据库连不上"的剧情保持一致：
+       public 区域运行时放行 80/tcp、8080/tcp、ssh、dhcpv6-client，**没有 3306**。
+     —— 这正是 data/linux-net.js 里 `firewall-cmd --query-port=3306/tcp` 回 no 的原因。
+     runtime 与 permanent 是两套规则集，--reload 才会把 permanent 同步到 runtime。
+     ====================================================================== */
+  var FW = window.CC_SEC_FW;
+  if (!FW) {
+    FW = window.CC_SEC_FW = {
+      running: true,
+      defaultZone: 'public',
+      activeZone: 'public',
+      interface: 'eth0',
+      /* permanent：配置文件里的规则 */
+      perm: {
+        'public': { services: ['dhcpv6-client', 'ssh', 'http'], ports: ['80/tcp', '8080/tcp'], rich: [], protocols: [], sources: [], masquerade: false },
+        'trusted': { services: [], ports: [], rich: [], protocols: [], sources: [], masquerade: false },
+        'internal': { services: ['dhcpv6-client', 'ssh', 'mdns', 'samba-client'], ports: [], rich: [], protocols: [], sources: [], masquerade: false }
+      },
+      /* runtime：当前内存里的规则（--reload 后与 permanent 一致） */
+      runtime: null,
+      dirty: false
+    };
+    FW.runtime = cloneZones(FW.perm);
+  }
+  function cloneZones(z) {
+    var o = {};
+    Object.keys(z).forEach(function (k) {
+      o[k] = {
+        services: z[k].services.slice(), ports: z[k].ports.slice(), rich: z[k].rich.slice(),
+        protocols: z[k].protocols.slice(), sources: z[k].sources.slice(), masquerade: !!z[k].masquerade
+      };
+    });
+    return o;
+  }
+  var FW_SERVICE_PORTS = {
+    http: '80/tcp', https: '443/tcp', ssh: '22/tcp', 'dhcpv6-client': '546/udp',
+    mysql: '3306/tcp', nfs: '2049/tcp', mdns: '5353/udp', 'samba-client': '137/udp',
+    'cockpit': '9090/tcp', 'redis': '6379/tcp', 'docker-registry': '5000/tcp'
+  };
+
+  function firewallCmd(argv, ctx, stdin, HOST) {
+    var out = [], err = [];
+    var permanent = false, zone = null, i;
+    var actions = [];
+    var query = null;
+    for (i = 0; i < argv.length; i++) {
+      var a = String(argv[i]);
+      if (a === '--permanent') { permanent = true; continue; }
+      if (a === '--zone' && argv[i + 1]) { zone = String(argv[++i]); continue; }
+      if (a.indexOf('--zone=') === 0) { zone = a.slice(7); continue; }
+      if (a === '--reload' || a === '--complete-reload') { actions.push({ op: 'reload' }); continue; }
+      if (a === '--state') { actions.push({ op: 'state' }); continue; }
+      if (a === '--list-all' || a === '--list-all-zones') { actions.push({ op: a === '--list-all' ? 'list-all' : 'list-all-zones' }); continue; }
+      if (a === '--list-ports') { actions.push({ op: 'list-ports' }); continue; }
+      if (a === '--list-services') { actions.push({ op: 'list-services' }); continue; }
+      if (a === '--list-rich-rules') { actions.push({ op: 'list-rich' }); continue; }
+      if (a === '--get-active-zones') { actions.push({ op: 'active-zones' }); continue; }
+      if (a === '--get-default-zone') { actions.push({ op: 'default-zone' }); continue; }
+      if (a === '--set-default-zone') { actions.push({ op: 'set-default-zone', v: argv[++i] }); continue; }
+      var m = a.match(/^--(add|remove|query)-(port|service|rich-rule|protocol|source|interface|masquerade)(?:=(.*))?$/);
+      if (m) {
+        var val = m[3] !== undefined ? m[3] : argv[++i];
+        actions.push({ op: m[1] + '-' + m[2], v: val === undefined ? '' : String(val) });
+        continue;
+      }
+      if (a === '--add-masquerade' || a === '--remove-masquerade') { actions.push({ op: a.slice(2) }); continue; }
+      if (a.charAt(0) === '-') return U.fail(['firewall-cmd: unrecognized option ' + a, 'Usage: see firewall-cmd man page']);
+      actions.push({ op: 'positional', v: a });
+    }
+    if (!FW.running && actions.length && actions[0].op !== 'state') {
+      return U.fail(['FirewallD is not running']);
+    }
+    if (!actions.length) return U.fail(['usage: see firewall-cmd man page\nfirewall-cmd: Error: no option specified']);
+
+    var z = zone || FW.activeZone;
+    var set = permanent ? FW.perm : FW.runtime;
+    if (!set[z]) {
+      if (actions[0].op === 'list-all') return U.fail([z + '\n  target: default\n  icmp-block-inversion: no\n  interfaces:\n  sources:\n  services:\n  ports:\n  protocols:\n  masquerade: no\n  forward-ports:\n  source-ports:\n  icmp-blocks:\n  rich rules:']);
+      return U.fail(['Error: INVALID_ZONE: ' + z]);
+    }
+    var code = 0;
+    var deferredHints = [];
+    actions.forEach(function (act) {
+      var zs = set[z];
+      var key = null, val = act.v;
+      switch (act.op) {
+        case 'state':
+          out.push(FW.running ? 'running' : 'not running');
+          return;
+        case 'default-zone':
+          out.push(FW.defaultZone);
+          return;
+        case 'active-zones':
+          out.push(FW.activeZone);
+          out.push('  interfaces: ' + FW.interface);
+          return;
+        case 'set-default-zone':
+          FW.defaultZone = val;
+          out.push('success');
+          return;
+        case 'reload':
+          if (!FW.running) { err.push('FirewallD is not running'); code = 1; return; }
+          FW.runtime = cloneZones(FW.perm);
+          if (!FW.dirty) {
+            /* 真 firewalld 在规则没变时不会打印任何东西 */
+          } else {
+            out.push('success');
+          }
+          FW.dirty = false;
+          deferredHints.push('（reload 把 permanent 配置同步到 runtime：只做 --permanent 不加 --reload，规则不会生效）');
+          return;
+        case 'list-all':
+          out.push(z + (z === FW.activeZone && FW.running ? ' (active)' : ''));
+          out.push('  target: default');
+          out.push('  icmp-block-inversion: no');
+          out.push('  interfaces: ' + (z === FW.activeZone ? FW.interface : ''));
+          out.push('  sources: ' + zs.sources.join(' '));
+          out.push('  services: ' + zs.services.join(' '));
+          out.push('  ports: ' + zs.ports.join(' '));
+          out.push('  protocols: ' + zs.protocols.join(' '));
+          out.push('  masquerade: ' + (zs.masquerade ? 'yes' : 'no'));
+          out.push('  forward-ports:');
+          out.push('  source-ports:');
+          out.push('  icmp-blocks:');
+          out.push('  rich rules: ' + zs.rich.join(' '));
+          return;
+        case 'list-all-zones':
+          Object.keys(set).forEach(function (zz) {
+            out.push(zz + (zz === FW.activeZone && FW.running ? ' (active)' : ''));
+            out.push('  target: default');
+            out.push('  interfaces: ' + (zz === FW.activeZone ? FW.interface : ''));
+            out.push('  services: ' + set[zz].services.join(' '));
+            out.push('  ports: ' + set[zz].ports.join(' '));
+            out.push('  rich rules: ' + set[zz].rich.join(' '));
+            out.push('');
+          });
+          return;
+        case 'list-ports': out.push(zs.ports.join(' ')); return;
+        case 'list-services': out.push(zs.services.join(' ')); return;
+        case 'list-rich': out.push(zs.rich.join('\n')); return;
+        case 'query-port':
+          out.push(zs.ports.indexOf(val) !== -1 ? 'yes' : 'no');
+          if (zs.ports.indexOf(val) === -1) code = 1;
+          return;
+        case 'query-service':
+          out.push(zs.services.indexOf(val) !== -1 ? 'yes' : 'no');
+          if (zs.services.indexOf(val) === -1) code = 1;
+          return;
+        case 'query-rich-rule':
+          out.push(zs.rich.indexOf(val) !== -1 ? 'yes' : 'no');
+          if (zs.rich.indexOf(val) === -1) code = 1;
+          return;
+        case 'add-port':
+          if (!/^\d+(-\d+)?\/(tcp|udp|sctp|dccp)$/.test(val)) { err.push('Error: INVALID_PORT: ' + val); code = 1; return; }
+          if (zs.ports.indexOf(val) === -1) zs.ports.push(val);
+          out.push('success');
+          if (!permanent) deferredHints.push('（运行时规则：重启 firewalld 即失效。要长期生效请加 --permanent 再 --reload）');
+          else FW.dirty = true;
+          return;
+        case 'remove-port':
+          if (!/^\d+(-\d+)?\/(tcp|udp|sctp|dccp)$/.test(val)) { err.push('Error: INVALID_PORT: ' + val); code = 1; return; }
+          var pi = zs.ports.indexOf(val);
+          if (pi === -1) { err.push('Warning: NOT_ENABLED: ' + val); code = 1; return; }
+          zs.ports.splice(pi, 1);
+          out.push('success');
+          if (permanent) FW.dirty = true;
+          return;
+        case 'add-service':
+          if (!FW_SERVICE_PORTS[val]) { err.push('Error: INVALID_SERVICE: ' + val + '\n（服务名必须存在于 /usr/lib/firewalld/services/）'); code = 1; return; }
+          if (zs.services.indexOf(val) === -1) zs.services.push(val);
+          out.push('success');
+          if (!permanent) deferredHints.push('（运行时规则：重启即失效）');
+          else FW.dirty = true;
+          return;
+        case 'remove-service':
+          var si = zs.services.indexOf(val);
+          if (si === -1) { err.push('Warning: NOT_ENABLED: ' + val); code = 1; return; }
+          zs.services.splice(si, 1);
+          out.push('success');
+          if (permanent) FW.dirty = true;
+          return;
+        case 'add-rich-rule':
+          zs.rich.push(val);
+          out.push('success');
+          if (!permanent) deferredHints.push('（富规则同样分 runtime / permanent 两套）');
+          else FW.dirty = true;
+          return;
+        case 'remove-rich-rule':
+          var ri = zs.rich.indexOf(val);
+          if (ri === -1) { err.push('Warning: NOT_ENABLED: ' + val); code = 1; return; }
+          zs.rich.splice(ri, 1);
+          out.push('success');
+          if (permanent) FW.dirty = true;
+          return;
+        case 'add-protocol':
+          zs.protocols.push(val); out.push('success');
+          if (permanent) FW.dirty = true;
+          return;
+        case 'remove-protocol':
+          var qi = zs.protocols.indexOf(val);
+          if (qi === -1) { err.push('Warning: NOT_ENABLED: ' + val); code = 1; return; }
+          zs.protocols.splice(qi, 1); out.push('success');
+          return;
+        case 'add-source': zs.sources.push(val); out.push('success'); if (permanent) FW.dirty = true; return;
+        case 'remove-source':
+          var xi = zs.sources.indexOf(val);
+          if (xi === -1) { err.push('Warning: NOT_ENABLED: ' + val); code = 1; return; }
+          zs.sources.splice(xi, 1); out.push('success');
+          return;
+        case 'add-interface':
+          if (val !== FW.interface) { err.push('Error: INVALID_INTERFACE: ' + val); code = 1; return; }
+          out.push('success'); if (permanent) FW.dirty = true;
+          return;
+        case 'query-interface': out.push(val === FW.interface ? 'yes' : 'no'); return;
+        case 'add-masquerade': zs.masquerade = true; out.push('success'); return;
+        case 'remove-masquerade': zs.masquerade = false; out.push('success'); return;
+        case 'query-masquerade': out.push(zs.masquerade ? 'yes' : 'no'); return;
+        default:
+          err.push('firewall-cmd: unrecognized option --' + act.op);
+          code = 1;
+      }
+    });
+    deferredHints.forEach(function (h) { out.push(h); });
+    if (code !== 0) return { out: [], err: err, code: code };
+    return { out: out, err: err, code: 0 };
+  }
+
+  /* ======================================================================
+     4 · SELinux：getenforce / setenforce / sestatus / getsebool / setsebool
+                     semanage / restorecon
+     ====================================================================== */
+  var SE = window.CC_SEC_SELINUX;
+  if (!SE) {
+    SE = window.CC_SEC_SELINUX = {
+      mode: 'Enforcing',
+      configMode: 'enforcing',
+      policy: 'targeted',
+      booleans: {
+        'httpd_can_network_connect': false,
+        'httpd_can_network_connect_db': false,
+        'httpd_can_sendmail': false,
+        'httpd_enable_homedirs': false,
+        'httpd_read_user_content': true,
+        'httpd_use_nfs': false,
+        'httpd_tmp_exec': false,
+        'httpd_unified': false,
+        'httpd_execmem': false,
+        'httpd_anon_write': false,
+        'httpd_mod_auth_ntlm_winbind': false,
+        'httpd_use_cifs': false,
+        'httpd_use_gpg': false,
+        'httpd_verify_dns': false,
+        'ftpd_anon_write': false,
+        'ftpd_full_access': false,
+        'samba_export_all_ro': false,
+        'samba_export_all_rw': false,
+        'ssh_sysadm_login': false,
+        'staff_read_sysadm_file': false
+      },
+      /* 文件上下文规则表（semanage fcontext -l 的数据源） */
+      fcontext: [
+        { pattern: '/var/www(/.*)?', type: 'httpd_sys_content_t' },
+        { pattern: '/var/www/html(/.*)?', type: 'httpd_sys_content_t' },
+        { pattern: '/var/www/cgi-bin(/.*)?', type: 'httpd_sys_script_exec_t' },
+        { pattern: '/usr/lib/systemd/system(/.*)?', type: 'systemd_unit_file_t' },
+        { pattern: '/etc/nginx(/.*)?', type: 'httpd_config_t' },
+        { pattern: '/var/log/nginx(/.*)?', type: 'httpd_log_t' },
+        { pattern: '/var/lib/mysql(/.*)?', type: 'mysqld_db_t' },
+        { pattern: '/data/backup(/.*)?', type: 'default_t' }
+      ],
+      ports: [
+        { type: 'http_port_t', proto: 'tcp', ports: '80, 81, 443, 488, 8008, 8009, 8443, 9000' },
+        { type: 'http_cache_port_t', proto: 'tcp', ports: '8080, 8118, 8123, 10001-10010' },
+        { type: 'ssh_port_t', proto: 'tcp', ports: '22' },
+        { type: 'mysqld_port_t', proto: 'tcp', ports: '3306' },
+        { type: 'postgresql_port_t', proto: 'tcp', ports: '5432' }
+      ],
+      /* 实际文件标签（ls -Z / restorecon 看的就是它） */
+      labels: {
+        '/data/www': 'unconfined_u:object_r:default_t:s0',
+        '/data/www/index.html': 'unconfined_u:object_r:default_t:s0',
+        '/data/www/health.txt': 'unconfined_u:object_r:default_t:s0',
+        '/var/www/html/index.html': 'system_u:object_r:httpd_sys_content_t:s0',
+        '/var/www/html/health.txt': 'system_u:object_r:httpd_sys_content_t:s0',
+        '/etc/nginx/nginx.conf': 'system_u:object_r:httpd_config_t:s0',
+        '/data/backup/www-2024-03-17.tar.gz': 'unconfined_u:object_r:default_t:s0'
+      }
+    };
+  }
+  function seLabel(path) {
+    var abs = String(path);
+    if (SE.labels[abs]) return SE.labels[abs];
+    var best = null;
+    Object.keys(SE.labels).forEach(function (k) {
+      if (abs.indexOf(k + '/') === 0 && (!best || k.length > best.length)) best = k;
+    });
+    if (best) return SE.labels[best];
+    return 'unconfined_u:object_r:default_t:s0';
+  }
+  function seTypeOfLabel(label) {
+    var m = String(label).match(/object_r:([^:]+)/);
+    return m ? m[1] : 'default_t';
+  }
+
+  function getenforce(argv, ctx, stdin, HOST) {
+    return U.ok([SE.mode]);
+  }
+  function setenforce(argv, ctx, stdin, HOST) {
+    var v = argv.filter(function (a) { return a.charAt(0) !== '-'; })[0];
+    if (v === undefined) {
+      return U.fail(['usage: setenforce [ Enforcing | Permissive | 1 | 0 ]']);
+    }
+    var target;
+    if (v === 'Enforcing' || v === '1') target = 'Enforcing';
+    else if (v === 'Permissive' || v === '0') target = 'Permissive';
+    else return U.fail(['setenforce: invalid argument \'' + v + '\'; usage: setenforce [ Enforcing | Permissive | 1 | 0 ]']);
+    if (SE.configMode === 'disabled') {
+      return U.fail(['setenforce: SELinux is disabled']);
+    }
+    SE.mode = target;
+    return U.ok([]);
+  }
+  function sestatus(argv, ctx, stdin, HOST) {
+    var out = [];
+    out.push('SELinux status:                 ' + (SE.configMode === 'disabled' ? 'disabled' : 'enabled'));
+    if (SE.configMode !== 'disabled') {
+      out.push('SELinuxfs mount:                /sys/fs/selinux');
+      out.push('SELinux root directory:         /etc/selinux');
+      out.push('Loaded policy name:             ' + SE.policy);
+      out.push('Current mode:                   ' + SE.mode);
+      out.push('Mode from config file:          ' + SE.configMode);
+      out.push('Policy MLS status:              enabled');
+      out.push('Policy deny_unknown status:     allowed');
+      out.push('Memory protection checking:     actual (secure)');
+      out.push('Max kernel policy version:      33');
+    }
+    out.push('');
+    out.push('（Current mode 是内存里的状态，setenforce 一重启就没了；Mode from config file 才是 /etc/selinux/config 里的持久设置）');
+    return U.ok(out);
+  }
+  function getsebool(argv, ctx, stdin, HOST) {
+    var all = argv.indexOf('-a') !== -1;
+    var name = argv.filter(function (a) { return a.charAt(0) !== '-'; })[0];
+    if (!all && !name) return U.fail(['usage: getsebool [-a] [boolean]']);
+    var out = [];
+    if (all) {
+      Object.keys(SE.booleans).sort().forEach(function (k) {
+        out.push(k + ' --> ' + (SE.booleans[k] ? 'on' : 'off'));
+      });
+      return U.ok(out);
+    }
+    if (SE.booleans[name] === undefined) {
+      return U.fail(['getsebool:  Boolean ' + name + ' is not defined']);
+    }
+    out.push(name + ' --> ' + (SE.booleans[name] ? 'on' : 'off'));
+    return U.ok(out);
+  }
+  function setsebool(argv, ctx, stdin, HOST) {
+    var persist = false;
+    var rest = [];
+    for (var i = 0; i < argv.length; i++) {
+      var a = String(argv[i]);
+      if (a === '-P' || a === '--permanent') { persist = true; continue; }
+      if (a === '-N' || a === '--no-permanent') continue;
+      rest.push(a);
+    }
+    if (rest.length < 2) return U.fail(['usage: setsebool [-PN] boolean value | bool1=val1 bool2=val2...']);
+    var name = rest[0], value = rest[1];
+    var on;
+    if (value === 'on' || value === '1' || value === 'true') on = true;
+    else if (value === 'off' || value === '0' || value === 'false') on = false;
+    else return U.fail(['setsebool: invalid value \'' + value + '\' (must be on/off)']);
+    if (SE.booleans[name] === undefined) {
+      return U.fail(['setsebool:  Boolean ' + name + ' is not defined']);
+    }
+    if (!persist) {
+      SE.booleans[name] = on;
+      return U.ok(['（未加 -P：只改运行时，重启后恢复。要永久生效请用 setsebool -P，它会重建整个策略，耗时较长）']);
+    }
+    SE.booleans[name] = on;
+    return U.ok([]);
+  }
+  function semanage(argv, ctx, stdin, HOST) {
+    var kind = argv[0];
+    if (kind === 'fcontext') {
+      var mode = argv[1];
+      if (mode === '-l' || mode === '--list') {
+        var out = [];
+        if (argv.indexOf('-C') !== -1) {
+          out.push('（-C = 只看本地自定义规则，系统内置规则不显示）');
+        }
+        out.push('SELinux fcontext                                   type               Context');
+        out.push('');
+        SE.fcontext.forEach(function (r) {
+          out.push(padRightStr(r.pattern, 51) + r.type);
+        });
+        out.push('');
+        out.push('（本地自定义规则以 -C 查看；系统默认规则来自 /etc/selinux/targeted/contexts/files/file_contexts）');
+        return U.ok(out);
+      }
+      if (mode === '-a' || mode === '--add') {
+        var type = null, pattern = null;
+        for (var i = 2; i < argv.length; i++) {
+          if (argv[i] === '-t' && argv[i + 1]) { type = argv[++i]; continue; }
+          if (argv[i] === '-f' && argv[i + 1]) { i++; continue; }
+          if (argv[i] === '-s' && argv[i + 1]) { i++; continue; }
+          if (argv[i].charAt(0) === '-') continue;
+          pattern = argv[i];
+        }
+        if (!type || !pattern) return U.fail(['usage: semanage fcontext -a -t <type> <file_spec>']);
+        var dup = false;
+        SE.fcontext.forEach(function (r) { if (r.pattern === pattern) dup = true; });
+        if (dup) return U.fail(['/usr/sbin/semanage: File context for ' + pattern + ' already defined']);
+        SE.fcontext.unshift({ pattern: pattern, type: type });
+        return U.ok([]);
+      }
+      if (mode === '-d' || mode === '--delete') {
+        var pat = argv[argv.length - 1];
+        var before = SE.fcontext.length;
+        SE.fcontext = SE.fcontext.filter(function (r) { return r.pattern !== pat; });
+        if (SE.fcontext.length === before) return U.fail(['/usr/sbin/semanage: File context for ' + pat + ' is not defined']);
+        return U.ok([]);
+      }
+      if (mode === '-m' || mode === '--modify') return U.ok([]);
+      return U.fail(['usage: semanage fcontext [-a|-d|-l|-m] ...']);
+    }
+    if (kind === 'port') {
+      var pmode = argv[1];
+      if (pmode === '-l' || pmode === '--list') {
+        var out2 = ['SELinux Port Type              Proto    Port Number'];
+        SE.ports.forEach(function (p) {
+          out2.push(padRightStr(p.type, 31) + padRightStr(p.proto, 9) + p.ports);
+        });
+        return U.ok(out2);
+      }
+      if (pmode === '-a' || pmode === '--add') {
+        var ptype = null, proto = null, port = null;
+        for (var k = 2; k < argv.length; k++) {
+          if (argv[k] === '-t' && argv[k + 1]) { ptype = argv[++k]; continue; }
+          if (argv[k] === '-p' && argv[k + 1]) { proto = argv[++k]; continue; }
+          if (argv[k].charAt(0) === '-') continue;
+          port = argv[k];
+        }
+        if (!ptype || !port) return U.fail(['usage: semanage port -a -t <type> -p <proto> <port>']);
+        if (proto && proto !== 'tcp' && proto !== 'udp') return U.fail(['/usr/sbin/semanage: Invalid protocol \'' + proto + '\'']);
+        var exists = false;
+        SE.ports.forEach(function (p) {
+          if (p.type === ptype && (',' + p.ports + ',').indexOf(',' + port + ',') !== -1) exists = true;
+        });
+        if (exists) return U.fail(['/usr/sbin/semanage: Port ' + port + ' already defined']);
+        SE.ports.push({ type: ptype, proto: proto || 'tcp', ports: String(port) });
+        return U.ok([]);
+      }
+      if (pmode === '-d' || pmode === '--delete') return U.ok([]);
+      return U.fail(['usage: semanage port [-a|-d|-l|-m] ...']);
+    }
+    if (kind === 'boolean') {
+      if (argv[1] === '-l' || argv[1] === '--list') {
+        var out3 = ['SELinux boolean                State  Default Description', ''];
+        Object.keys(SE.booleans).sort().forEach(function (b) {
+          out3.push(padRightStr(b, 31) + padRightStr(SE.booleans[b] ? 'on' : 'off', 7) + 'off');
+        });
+        return U.ok(out3);
+      }
+      return U.fail(['usage: semanage boolean [-l]']);
+    }
+    if (kind === 'login' || kind === 'user' || kind === 'permissive') return U.ok(['（教学环境只实现 fcontext / port / boolean）']);
+    return U.fail(['usage: semanage {boolean,fcontext,port,login,user,permissive} ...']);
+  }
+  function restorecon(argv, ctx, stdin, HOST) {
+    var recursive = false, verbose = false, dry = false, targets = [];
+    argv.forEach(function (a) {
+      if (/^-[a-zA-Z]+$/.test(a)) {
+        a.slice(1).split('').forEach(function (c) {
+          if (c === 'R' || c === 'r') recursive = true;
+          else if (c === 'v') verbose = true;
+          else if (c === 'n') dry = true;
+          else if (c === 'F') { /* force */ }
+        });
+      } else targets.push(a);
+    });
+    if (!targets.length) return U.fail(['usage: restorecon [-R] [-n] [-v] <path> ...']);
+    var out = [];
+    var changed = 0, scanned = 0;
+    var resolveType = function (abs) {
+      /* 规则表里最长匹配优先（真 SELinux 也是这个语义） */
+      var best = null;
+      SE.fcontext.forEach(function (r) {
+        var pat = r.pattern.replace(/\(\.\*\)\?$/, '').replace(/\/$/, '');
+        var hit = (abs === pat) || (abs.indexOf(pat + '/') === 0);
+        if (hit && (!best || pat.length > best.pattern.length)) best = r;
+      });
+      return best ? best.type : 'default_t';
+    };
+    var visit = function (abs) {
+      var node = U.findNode(ctx.root, abs);
+      if (!node) { return false; }
+      scanned++;
+      var want = resolveType(abs);
+      var cur = seTypeOfLabel(seLabel(abs));
+      if (cur !== want) {
+        changed++;
+        if (verbose) out.push((dry ? '[DRY RUN] ' : '') + 'Relabeled ' + abs + ' from ' + seLabel(abs) + ' to ' + want);
+        if (!dry) SE.labels[abs] = 'system_u:object_r:' + want + ':s0';
+      } else if (verbose) {
+        out.push('（已是 ' + want + '，无需修改）' + abs);
+      }
+      if (node.type === 'dir' && recursive) {
+        U.childrenSorted(node).forEach(function (n) { visit(abs === '/' ? '/' + n : abs + '/' + n); });
+      }
+      return true;
+    };
+    var missing = [];
+    targets.forEach(function (t) {
+      var abs = U.resolvePath(ctx.cwd, t);
+      if (!visit(abs)) missing.push(t);
+    });
+    if (missing.length) {
+      return { out: out, err: missing.map(function (t) { return 'restorecon: lstat(' + t + ') failed: No such file or directory'; }), code: 1 };
+    }
+    if (verbose) {
+      out.push('');
+      out.push('（本次共扫描 ' + scanned + ' 个对象，' + (dry ? '演练模式下未做修改' : '修改 ' + changed + ' 个标签') + '）');
+    } else if (!dry) {
+      out.push('（restorecon 成功时不打印任何内容；要看改了什么必须加 -v，先看范围加 -n 演练）');
+    }
+    return U.ok(out);
+  }
+
+  /* ======================================================================
+     5 · 审计：ausearch / aureport / auditctl
+     ====================================================================== */
+  var AVC_LOG = [
+    'type=AVC msg=audit(1710728641.412:1802): avc:  denied  { read } for  pid=1843 comm="nginx" name="index.html" dev="vdb1" ino=131842 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:default_t:s0 tclass=file permissive=0',
+    'type=AVC msg=audit(1710728641.412:1802): avc:  denied  { open } for  pid=1843 comm="nginx" path="/data/www/index.html" dev="vdb1" ino=131842 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:default_t:s0 tclass=file permissive=0',
+    'type=SYSCALL msg=audit(1710728641.412:1802): arch=c000003e syscall=2 success=no exit=-13 a0=55d3f0a1b2c0 a1=0 a2=0 a3=0 items=0 ppid=1842 pid=1843 auid=4294967295 uid=991 gid=986 euid=991 suid=991 fsuid=991 egid=986 sgid=986 fsgid=986 tty=(none) ses=4294967295 comm=nginx exe=/usr/sbin/nginx subj=system_u:system_r:httpd_t:s0 key=(null)',
+    'type=AVC msg=audit(1710729180.881:1841): avc:  denied  { name_connect } for  pid=1843 comm="nginx" dest=3306 scontext=system_u:system_r:httpd_t:s0 tcontext=system_u:object_r:mysqld_port_t:s0 tclass=tcp_socket permissive=0',
+    'type=AVC msg=audit(1710729180.881:1841): avc:  denied  { getattr } for  pid=4102 comm="node_exporter" path="/etc/shadow" dev="vda1" ino=132005 scontext=system_u:system_r:node_exporter_t:s0 tcontext=system_u:object_r:shadow_t:s0 tclass=file permissive=0'
+  ];
+
+  function ausearch(argv, ctx, stdin, HOST) {
+    var opt = parseOpts(argv, ['m', 'ts', 'te', 'k', 'c', 'ui', 'p', 'if', 'sc', 'x'], ['i', 'interpret', 'success', 'raw']);
+    var msgType = opt.m;
+    var since = opt.ts;
+    var key = opt.k;
+    var comm = opt.c;
+    var lines = AVC_LOG.slice();
+    if (since === 'recent') lines = lines.slice(0, 3);
+    else if (since === 'today') lines = lines.slice(3, 4).concat(lines.slice(0, 1));
+    if (key === 'passwd_change') lines = [];
+    if (msgType && msgType !== 'avc' && msgType !== 'all') {
+      /* 只要非 avc 类型：本环境没有这类记录 */
+      return U.fail(['<no matches>']);
+    }
+    if (comm && comm !== 'nginx') lines = lines.filter(function (l) { return false; });
+    if (!lines.length) return U.fail(['<no matches>']);
+    var out = ['----'];
+    if (opt.i || opt.interpret) {
+      out.push('time->Mon Mar 18 09:04:01 2024');
+      out.push('type=AVC msg=audit(1710728641.412:1802): avc:  denied  { read } for  pid=1843 comm="nginx" name="index.html" dev="vdb1" ino=131842 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:default_t:s0 tclass=file permissive=0');
+      out.push('type=AVC msg=audit(1710728641.412:1802): avc:  denied  { open } for  pid=1843 comm="nginx" path="/data/www/index.html" dev="vdb1" ino=131842 scontext=system_u:system_r:httpd_t:s0 tcontext=unconfined_u:object_r:default_t:s0 tclass=file permissive=0');
+      out.push('type=SYSCALL msg=audit(1710728641.412:1802): arch=c000003e syscall=2 success=no exit=-13 a0=55d3f0a1b2c0 a1=0 a2=0 a3=0 items=0 ppid=1842 pid=1843 auid=4294967295 uid=991 gid=986 euid=991 suid=991 fsuid=991 egid=986 sgid=986 fsgid=986 tty=(none) ses=4294967295 comm=nginx exe=/usr/sbin/nginx subj=system_u:system_r:httpd_t:s0 key=(null)');
+      out.push('----');
+      out.push('time->Mon Mar 18 09:13:00 2024');
+      out.push('type=AVC msg=audit(1710729180.881:1841): avc:  denied  { name_connect } for  pid=1843 comm="nginx" dest=3306 scontext=system_u:system_r:httpd_t:s0 tcontext=system_u:object_r:mysqld_port_t:s0 tclass=tcp_socket permissive=0');
+      out.push('----');
+      out.push('（读法：scontext = 发起方域（httpd_t），tcontext = 目标标签（default_t / mysqld_port_t），tclass = 对象类型（file / tcp_socket），denied { ... } = 被拒的动作）');
+    } else {
+      lines.forEach(function (l) { out.push(l); });
+      out.push('----');
+    }
+    return U.ok(out);
+  }
+  function aureport(argv, ctx, stdin, HOST) {
+    if (argv.indexOf('--avc') !== -1 || argv.indexOf('-a') !== -1) {
+      return U.ok([
+        '',
+        'AVC Report',
+        '====================================================',
+        '# date time          pid     comm        syscall',
+        '====================================================',
+        '1. 2024-03-18 09:04:01 1843   nginx       open',
+        '2. 2024-03-18 09:04:01 1843   nginx       read',
+        '3. 2024-03-18 09:13:00 1843   nginx       connect',
+        '4. 2024-03-18 09:13:00 4102   node_exporter  getattr',
+        '',
+        '<no summary>'
+      ]);
+    }
+    if (argv.indexOf('--summary') !== -1) {
+      return U.ok([
+        '',
+        'Summary Report',
+        '======================',
+        'Total  lines processed:        5',
+        'Total  AVC messages:           5',
+        'Total  failed syscalls:        5',
+        'Total  files:                  3',
+        'Total  network sockets:        1',
+        ''
+      ]);
+    }
+    return U.ok([
+      '',
+      'Aureport 3.0.7',
+      'Summary:',
+      'Range of time in logs: 2024-03-18 09:04:01 - 2024-03-18 09:13:00',
+      'Selected time for report: 2024-03-18 09:04:01 - 2024-03-18 09:13:00',
+      'Number of changes in configuration: 0',
+      'Number of changes to accounts, groups, or roles: 0',
+      'Number of logins: 3',
+      'Number of failed logins: 1',
+      'Number of authentications: 4',
+      'Number of failed authentications: 63',
+      'Number of AVCs: 5',
+      ''
+    ]);
+  }
+  function auditctl(argv, ctx, stdin, HOST) {
+    var rules = window.CC_SEC_AUDIT_RULES;
+    if (!rules) {
+      rules = window.CC_SEC_AUDIT_RULES = [
+        { w: '/etc/passwd', p: 'wa', k: 'passwd_change' },
+        { w: '/etc/sudoers', p: 'wa', k: 'sudoers_change' }
+      ];
+    }
+    if (argv.indexOf('-l') !== -1) {
+      var out = [];
+      rules.forEach(function (r) {
+        out.push('-w ' + r.w + ' -p ' + r.p + ' -k ' + r.k);
+      });
+      if (argv.indexOf('-s') !== -1) {
+        out.push('enabled=1');
+        out.push('failure=1');
+        out.push('pid=1810');
+        out.push('rate_limit=0');
+        out.push('backlog_limit=8192');
+        out.push('lost=0');
+        out.push('backlog=0');
+      }
+      return U.ok(out);
+    }
+    if (argv.indexOf('-s') !== -1) {
+      return U.ok(['enabled=1', 'failure=1', 'pid=1810', 'rate_limit=0', 'backlog_limit=8192', 'lost=0', 'backlog=0']);
+    }
+    if (argv.indexOf('-D') !== -1) { rules.length = 0; return U.ok([]); }
+    if (argv.indexOf('-w') !== -1) {
+      var path = null, perm = 'wa', key = null;
+      for (var i = 0; i < argv.length; i++) {
+        if (argv[i] === '-w' && argv[i + 1]) path = argv[++i];
+        else if (argv[i] === '-p' && argv[i + 1]) perm = argv[++i];
+        else if (argv[i] === '-k' && argv[i + 1]) key = argv[++i];
+      }
+      if (!path) return U.fail(['auditctl: 需要 -w <文件或目录>']);
+      if (!key) return U.fail(['auditctl: 建议用 -k <关键字> 给规则命名，否则事后无法用 ausearch -k 检索']);
+      var dup = false;
+      rules.forEach(function (r) { if (r.w === path) dup = true; });
+      if (dup) return U.fail(['Rule exists']);
+      rules.push({ w: path, p: perm, k: key });
+      return U.ok(['（规则只存在于内存，重启即失效；持久化要写 /etc/audit/rules.d/*.rules 再 augenrules --load）']);
+    }
+    if (argv.indexOf('-a') !== -1) {
+      return U.ok(['（已加载 syscall 规则；这类规则会记录所有命令执行，日志量极大，排查完记得 -d 删掉）']);
+    }
+    return U.fail(['auditctl: 参数不完整，试试 auditctl -w <文件> -p wa -k <关键字> 或 auditctl -l']);
+  }
+
+  /* ======================================================================
+     6 · AppArmor：aa-status / aa-complain / aa-enforce / dmesg
+     ====================================================================== */
+  function aaStatus(argv, ctx, stdin, HOST) {
+    if (argv.indexOf('--verbose') !== -1) {
+      return U.ok([
+        'apparmor module is loaded.',
+        '14 profiles are loaded.',
+        '12 profiles are in enforce mode.',
+        '   /usr/sbin/nginx',
+        '   /usr/sbin/named',
+        '   /usr/sbin/chronyd',
+        '   docker-default',
+        '   /usr/bin/man',
+        '   /usr/lib/NetworkManager/nm-dhcp-client.action',
+        '   /usr/lib/connman/scripts/dhclient-script',
+        '   /usr/sbin/tcpdump',
+        '   /usr/bin/evince',
+        '   /usr/bin/evince-previewer',
+        '   /usr/bin/evince-thumbnailer',
+        '   /usr/bin/cupsd',
+        '2 profiles are in complain mode.',
+        '   /usr/sbin/mysqld',
+        '   /usr/sbin/sshd',
+        '0 profiles are in kill mode.',
+        '0 profiles are in unconfined mode.',
+        '0 processes have profiles defined.',
+        '0 processes are in enforce mode.',
+        '0 processes are in complain mode.',
+        '0 processes are unconfined but have a profile defined.'
+      ]);
+    }
+    return U.ok([
+      'apparmor module is loaded.',
+      '14 profiles are loaded.',
+      '12 profiles are in enforce mode.',
+      '2 profiles are in complain mode.',
+      '0 profiles are in kill mode.',
+      '0 profiles are in unconfined mode.',
+      '0 processes have profiles defined.',
+      '0 processes are in enforce mode.',
+      '0 processes are in complain mode.',
+      '0 processes are unconfined but have a profile defined.',
+      '',
+      '（enforce = 真拦截；complain = 只记日志不拦。排障时先 aa-complain 把可疑 profile 切过去，问题消失就说明是 AppArmor 拦的）'
+    ]);
+  }
+  function aaMode(argv, ctx, stdin, HOST, mode) {
+    var target = argv.filter(function (a) { return a.charAt(0) !== '-'; })[0];
+    if (!target) return U.fail(['Usage: aa-' + mode + ' <profile> [<profile>..]']);
+    var known = ['/usr/sbin/nginx', '/usr/sbin/sshd', '/usr/sbin/mysqld', '/usr/sbin/named', 'docker-default'];
+    if (known.indexOf(target) === -1) {
+      return U.fail(['Cache read/write disabled: ' + target + ' not found\nProfile ' + target + ' does not exist.']);
+    }
+    if (mode === 'complain') {
+      return U.ok([
+        'Setting ' + target + ' to complain mode.',
+        '',
+        '（complain 模式只记录不拦截；验证完请记得 aa-enforce 切回强制模式）'
+      ]);
+    }
+    return U.ok(['Setting ' + target + ' to enforce mode.']);
+  }
+  function dmesgCmd(argv, ctx, stdin, HOST) {
+    var clear = argv.indexOf('-C') !== -1 || argv.indexOf('-c') !== -1;
+    if (clear) {
+      window.CC_SEC_DMESG_CLEARED = true;
+      return U.ok([]);
+    }
+    if (window.CC_SEC_DMESG_CLEARED) return U.ok([]);
+    var lines = [
+      '[    0.000000] Linux version 5.10.0-136.12.0.86.hce2.x86_64 (mockbuild@hce2) (gcc 10.3.1) #1 SMP Mon Dec 11 08:32:11 UTC 2023',
+      '[    0.000000] Command line: BOOT_IMAGE=/vmlinuz-5.10.0 root=/dev/vda1 ro console=tty0 console=ttyS0,115200',
+      '[    2.184213] systemd[1]: systemd 245.4-4ubuntu3 running in system mode.',
+      '[    4.902117] SELinux:  Permission check on netif_rx failed.',
+      '[   12.401882] audit: type=1400 audit(1710728641.412:1802): apparmor="DENIED" operation="open" profile="/usr/sbin/nginx" name="/data/www/index.html" pid=1843 comm="nginx" requested_mask="r" denied_mask="r" fsuid=991 ouid=991',
+      '[   12.402004] audit: type=1400 audit(1710728641.413:1803): apparmor="DENIED" operation="open" profile="/usr/sbin/nginx" name="/data/www/health.txt" pid=1843 comm="nginx" requested_mask="r" denied_mask="r" fsuid=991 ouid=991',
+      '[   31.228710] EXT4-fs (vdb1): mounted filesystem with ordered data mode. Opts: (null)',
+      '[  184.552011] docker0: port 3(veth9c1a2b) entered blocking state',
+      '[ 1842.771204] TCP: request_sock_TCP: Possible SYN flooding on port 80. Sending cookies.',
+      '[ 9021.334512] audit: type=1400 audit(1710729180.881:1841): apparmor="DENIED" operation="connect" profile="/usr/sbin/nginx" name="tcp:3306" pid=1843 comm="nginx" requested_mask="w" denied_mask="w"',
+      '[1283947.420115] docker0: port 3(veth9c1a2b) entered forwarding state'
+    ];
+    return U.ok(lines);
+  }
+
+  /* ======================================================================
+     7 · gpg
+     ====================================================================== */
+  var GPG_KEYS = {
+    'ops@example.com': { id: '4F2A9C1B7E3D5086', name: 'ops (运维组)', algo: 'rsa3072', created: '2024-01-08', expires: '2027-01-07' }
+  };
+  function gpgCmd(argv, ctx, stdin, HOST) {
+    var out = [], err = [];
+    var i, a;
+    var opts = { armor: false, detach: false, symmetric: false, decrypt: false, encrypt: false, verify: false, sign: false, export: false, exportSecret: false, list: false, genkey: false, import: false, out: null, recipient: null };
+    var files = [];
+    for (i = 0; i < argv.length; i++) {
+      a = String(argv[i]);
+      if (a === '--armor' || a === '-a') { opts.armor = true; continue; }
+      if (a === '--detach-sign' || a === '-b') { opts.detach = true; continue; }
+      if (a === '-c' || a === '--symmetric') { opts.symmetric = true; continue; }
+      if (a === '-d' || a === '--decrypt') { opts.decrypt = true; continue; }
+      if (a === '-e' || a === '--encrypt') { opts.encrypt = true; continue; }
+      if (a === '-s' || a === '--sign') { opts.sign = true; continue; }
+      if (a === '--verify') { opts.verify = true; continue; }
+      if (a === '--export') { opts.export = true; continue; }
+      if (a === '--export-secret-keys') { opts.export = true; opts.exportSecret = true; continue; }
+      if (a === '--list-keys' || a === '--list-secret-keys') { opts.list = true; continue; }
+      if (a === '--full-generate-key' || a === '--gen-key') { opts.genkey = true; continue; }
+      if (a === '--import') { opts.import = true; continue; }
+      if (a === '--cipher-algo' && argv[i + 1]) { opts.cipher = argv[++i]; continue; }
+      if (a === '-r' || a === '--recipient') { opts.recipient = argv[++i]; continue; }
+      if (a === '-o' || a === '--output') { opts.out = argv[++i]; continue; }
+      if (a === '--batch' || a === '--yes' || a === '--quiet' || a === '--no-tty') continue;
+      if (a.charAt(0) === '-') { err.push('gpg: invalid option "' + a + '"'); return { out: [], err: err, code: 2 }; }
+      files.push(a);
+    }
+    if (opts.genkey) {
+      out.push('gpg (GnuPG) 2.2.20; Copyright (C) 2020 Free Software Foundation, Inc.');
+      out.push('Please select what kind of key you want:');
+      out.push('   (1) RSA and RSA (default)');
+      out.push('   (2) DSA and Elgamal');
+      out.push('   (3) DSA (sign only)');
+      out.push('   (4) RSA (sign only)');
+      out.push('（教学环境不进入交互式问答：真机上接下来会问密钥长度、有效期、姓名邮箱与口令）');
+      out.push('');
+      out.push('等价的一次性写法（脚本里常用）：');
+      out.push('  gpg --batch --gen-key <<EOF');
+      out.push('  %no-protection');
+      out.push('  Key-Type: RSA');
+      out.push('  Key-Length: 3072');
+      out.push('  Name-Real: ops');
+      out.push('  Name-Email: ops@example.com');
+      out.push('  Expire-Date: 2y');
+      out.push('  EOF');
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.list) {
+      out.push('/root/.gnupg/pubring.kbx');
+      out.push('----------------------------');
+      Object.keys(GPG_KEYS).forEach(function (uid) {
+        var k = GPG_KEYS[uid];
+        out.push('pub   ' + k.algo + ' 2024-01-08 [SC] [expires: ' + k.expires + ']');
+        out.push('      ' + k.id);
+        out.push('uid           [ultimate] ' + k.name + ' <' + uid + '>');
+        out.push('sub   rsa3072 2024-01-08 [E] [expires: ' + k.expires + ']');
+      });
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.export) {
+      if (!files.length) { err.push('gpg: no key specified for export'); return { out: [], err: err, code: 2 }; }
+      var uid = files[0];
+      var kk = GPG_KEYS[uid];
+      if (!kk) { err.push('gpg: WARNING: nothing exported'); return { out: [], err: err, code: 2 }; }
+      if (opts.exportSecret) {
+        out.push('-----BEGIN PGP PRIVATE KEY BLOCK-----');
+        out.push('lQPGBGXk2Q8BCADe1a9o0KcM5yR7QhV2jX8pN4tS6uL0fE3wA1bC5dG7hJ9kM2nP4rT6vX8z');
+        out.push('B2dF5hJ7kL9mN1pQ3rS5tU7vW9xY1zA3bC5dE7fG9hI1jK3lM5nO7pQ9rS1tU3vW5xY7z');
+        out.push('=Kw3d');
+        out.push('-----END PGP PRIVATE KEY BLOCK-----');
+        out.push('（⚠ 私钥导出后必须离线加密保存；泄露等于所有用它加密的历史文件都失守）');
+      } else {
+        out.push('-----BEGIN PGP PUBLIC KEY BLOCK-----');
+        out.push('mQGNBGXk2Q8BDADQ8f2kR5mN7pQ9rS1tU3vW5xY7zA1bC3dE5fG7hI9jK1lM3nO5pQ7rS9');
+        out.push('tU1vW3xY5zA7bC9dE1fG3hI5jK7lM9nO1pQ3rS5tU7vW9xY1zA3bC5dE7fG9hI1jK3lM5');
+        out.push('=Ab2c');
+        out.push('-----END PGP PUBLIC KEY BLOCK-----');
+      }
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.import) {
+      var inp = files[0] ? fsRead(ctx, files[0]) : { content: (stdin || []).join('\n') };
+      if (inp.error) { err.push('gpg: cannot open: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      if (!/-----BEGIN PGP (PUBLIC|PRIVATE) KEY BLOCK-----/.test(inp.content)) {
+        err.push('gpg: no valid OpenPGP data found.'); err.push('gpg: processing message failed: Unknown system error');
+        return { out: [], err: err, code: 2 };
+      }
+      out.push('gpg: key 4F2A9C1B7E3D5086: public key "ops (运维组) <ops@example.com>" imported');
+      out.push('gpg: Total number processed: 1');
+      out.push('gpg:               imported: 1');
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.symmetric) {
+      if (!files.length) { err.push('gpg: no file to encrypt'); return { out: [], err: err, code: 2 }; }
+      var src = fsRead(ctx, files[0]);
+      if (src.error) { err.push('gpg: cannot open: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      var cipher = (opts.cipher || 'AES256');
+      var target = files[0] + '.gpg';
+      var blob = '-----BEGIN PGP MESSAGE-----\n' +
+        'Version: GnuPG v2.2.20 (GNU/Linux)\n\n' +
+        wrap64(base64Encode(sha256Bytes(utf8Bytes('gpgc:' + files[0])).concat(sha256Bytes(utf8Bytes(src.content))))) +
+        '\n=cX4t\n-----END PGP MESSAGE-----\n';
+      var w = fsWrite(ctx, target, blob, '600');
+      STORE['gpg:' + target] = src.content;
+      if (w.error) { err.push('gpg: ' + target + ': No such file or directory'); return { out: [], err: err, code: 2 }; }
+      out.push('（教学环境：已用口令对称加密，算法 ' + cipher + '，产出 ' + target + '；口令不参与真实运算）');
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.decrypt) {
+      if (!files.length) { err.push('gpg: no file to decrypt'); return { out: [], err: err, code: 2 }; }
+      var enc = fsRead(ctx, files[0]);
+      if (enc.error) { err.push('gpg: cannot open: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      var plain = STORE['gpg:' + U.resolvePath(ctx.cwd, files[0])] || STORE['gpg:' + files[0]];
+      if (plain === undefined) {
+        err.push('gpg: AES256.CFB encrypted data');
+        err.push('gpg: decryption failed: No secret key');
+        return { out: [], err: err, code: 2 };
+      }
+      if (opts.out) {
+        var w2 = fsWrite(ctx, opts.out, plain, '600');
+        if (w2.error) { err.push('gpg: ' + opts.out + ': No such file or directory'); return { out: [], err: err, code: 2 }; }
+        return { out: [], err: [], code: 0 };
+      }
+      splitLines(plain).forEach(function (l) { out.push(l); });
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.encrypt) {
+      if (!opts.recipient) { err.push('gpg: no valid recipients'); return { out: [], err: err, code: 2 }; }
+      if (!GPG_KEYS[opts.recipient]) {
+        err.push('gpg: ' + opts.recipient + ': skipped: No public key');
+        err.push('gpg: [' + (files[0] || 'stdin') + ']: encryption failed: No public key');
+        return { out: [], err: err, code: 2 };
+      }
+      if (!files.length) { err.push('gpg: no file to encrypt'); return { out: [], err: err, code: 2 }; }
+      var src2 = fsRead(ctx, files[0]);
+      if (src2.error) { err.push('gpg: cannot open: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      var target2 = files[0] + '.gpg';
+      var blob2 = (opts.armor ? '-----BEGIN PGP MESSAGE-----\nVersion: GnuPG v2.2.20 (GNU/Linux)\n\n' : '') +
+        wrap64(base64Encode(sha256Bytes(utf8Bytes('gpgp:' + files[0] + opts.recipient)))) +
+        (opts.armor ? '\n=sT9q\n-----END PGP MESSAGE-----\n' : '\n');
+      fsWrite(ctx, target2, blob2, '600');
+      out.push('（教学环境：已用 ' + opts.recipient + ' 的公钥加密，只有对应私钥能解）');
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.detach) {
+      if (!files.length) { err.push('gpg: no file to sign'); return { out: [], err: err, code: 2 }; }
+      var s3 = fsRead(ctx, files[0]);
+      if (s3.error) { err.push('gpg: cannot open: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      var sigTarget = files[0] + (opts.armor ? '.asc' : '.sig');
+      var sigBody = opts.armor
+        ? '-----BEGIN PGP SIGNATURE-----\n\n' + wrap64(base64Encode(sha256Bytes(utf8Bytes('gpgsig:' + s3.content)))) + '\n=Zx7p\n-----END PGP SIGNATURE-----\n'
+        : base64Encode(sha256Bytes(utf8Bytes('gpgsig:' + s3.content)));
+      fsWrite(ctx, sigTarget, sigBody, '644');
+      STORE['gpgsig:' + U.resolvePath(ctx.cwd, sigTarget)] = sha256Hex(s3.content);
+      STORE['gpgsig:' + sigTarget] = sha256Hex(s3.content);
+      out.push('（教学环境：已在 ' + files[0] + ' 旁生成独立签名文件 ' + sigTarget + '）');
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.verify) {
+      var sigFile = files[0], dataFile = files[1];
+      if (!sigFile) { err.push('gpg: no signature to verify'); return { out: [], err: err, code: 2 }; }
+      var sr = fsRead(ctx, sigFile);
+      if (sr.error) { err.push('gpg: cannot open signature file: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      if (!/-----BEGIN PGP SIGNATURE-----|^[A-Za-z0-9+/=]+$/.test(sr.content.trim())) {
+        err.push('gpg: no signed data'); err.push('gpg: cannot hash datafile: No data');
+        return { out: [], err: err, code: 2 };
+      }
+      if (!dataFile) {
+        err.push('gpg: no signed data'); err.push('gpg: cannot hash datafile: No data');
+        return { out: [], err: err, code: 2 };
+      }
+      var dr = fsRead(ctx, dataFile);
+      if (dr.error) { err.push('gpg: cannot open data file: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      var expect = STORE['gpgsig:' + U.resolvePath(ctx.cwd, sigFile)] || STORE['gpgsig:' + sigFile];
+      var match = expect !== undefined && expect === sha256Hex(dr.content);
+      out.push('gpg: Signature made Mon Mar 18 09:51:00 2024 CST');
+      out.push('gpg:                using RSA key 4F2A9C1B7E3D5086');
+      out.push('gpg:                issuer "ops@example.com"');
+      out.push('gpg: ' + (match ? 'Good signature from "ops (运维组) <ops@example.com>" [ultimate]' : 'BAD signature from "ops (运维组) <ops@example.com>"'));
+      if (!match) {
+        err.push('gpg: verification failed: BAD signature');
+        return { out: out, err: err, code: 1 };
+      }
+      err.push('gpg: WARNING: This key is not certified with a trusted signature!');
+      err.push('gpg:          There is no indication that the signature belongs to the owner.');
+      return { out: out, err: err, code: 0 };
+    }
+    if (opts.sign) {
+      return { out: ['（教学环境：请用 --detach-sign 生成独立签名文件）'], err: [], code: 0 };
+    }
+    /* 无参数或只有文件：真 gpg 会尝试解密 */
+    if (files.length) {
+      var fr = fsRead(ctx, files[0]);
+      if (fr.error) { err.push('gpg: cannot open: No such file or directory'); return { out: [], err: err, code: 2 }; }
+      err.push('gpg: no valid OpenPGP data found.');
+      err.push('gpg: processing message failed: Unknown system error');
+      return { out: [], err: err, code: 2 };
+    }
+    out.push('gpg: WARNING: no command supplied.  Trying to guess what you mean ...');
+    out.push('usage: gpg [options] [filename]');
+    return { out: out, err: err, code: 2 };
+  }
+
+/*__PART3__*/

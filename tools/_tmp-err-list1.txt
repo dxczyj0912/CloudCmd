@@ -1,0 +1,28 @@
+# Linux 基础/权限
+ls /nope
+cat /nope
+cat /etc/shadow
+cat /etc/sudoers
+ls /etc/sudoers
+cd /root
+mkdir /etc/x
+touch /etc/x
+rm /etc
+rm -rf /nope
+cp /nope /tmp/a
+mv /nope /tmp/a
+ln -s /nope /tmp/l
+chmod 777 /nope
+chmod 644 /etc/x
+chown root /nope
+find /nope -name x
+head /nope
+tail /nope
+grep x /nope
+/tmp/a
+./a.sh
+echo hi > /nope/x
+echo hi > /proc/x
+df -h /nope
+stat /nope
+file /nope

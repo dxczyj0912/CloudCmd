@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-academy-view>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CloudCmd · 实时练习平台</title>
+<meta name="description" content="CloudCmd 实时练习平台：左侧模拟终端，右侧步骤讲义，覆盖 Linux、Docker、Kubernetes、华为云 CLI、监控排障等场景，离线可用。">
+<meta name="theme-color" content="#2f6bff">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☁️</text></svg>">
+<link rel="stylesheet" href="assets/css/main.css?v=20260925a">
+<link rel="stylesheet" href="assets/css/lab.css?v=20260925a">
+<link rel="stylesheet" href="assets/css/progress-transfer.css?v=20260926a">
+<link rel="stylesheet" href="assets/css/print.css?v=20260925a" media="print">
+</head>
+<body class="lab-body">
+
+<a class="skip-link" href="#lesson-body">跳到讲义内容</a>
+
+<!-- ══════════════ 顶栏 ══════════════ -->
+<header class="topbar">
+  <a class="back-home" href="index.html" id="back-home" title="返回 CloudCmd 云计算命令手册">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5 7.5 12l7 7"/></svg>
+    返回手册
+  </a>
+
+  <a class="brand" href="index.html" id="brand-home" title="返回 CloudCmd 首页">
+    <span class="brand-logo" aria-hidden="true">☁️</span>
+    <span class="brand-text">
+      <strong>CloudCmd</strong>
+      <small>云计算命令手册</small>
+    </span>
+  </a>
+
+  <div class="academy-kicker"><strong>实时练习</strong><span>Linux · 容器 · 云平台</span></div>
+  <span class="academy-status">模拟环境 · 离线可用</span>
+  <button class="progress-top-btn" id="btn-progress-transfer" type="button" aria-label="备份或恢复学习进度" title="备份或恢复学习进度">⇄ <span>进度备份</span></button>
+</header>
+
+<!-- ══════════════ 主体：左终端 + 右讲义 ══════════════ -->
+<main class="lab">
+
+  <!-- ─── 左：实验机终端 ─── -->
+  <section class="term" aria-label="实验终端" id="term">
+    <div class="term-bar">
+      <span class="term-dots" aria-hidden="true"><i class="dot dot-red"></i><i class="dot dot-yellow"></i><i class="dot dot-green"></i></span>
+      <span class="term-bar-text">
+        <strong>root@cloudcmd</strong>
+        <small>模拟终端 · 命令由引擎现场算出</small>
+      </span>
+      <!-- 手机端：在「讲义 + 贴底终端」与「全屏终端」之间切换 -->
+      <button class="term-bar-btn" id="term-full" type="button" aria-pressed="false" title="全屏终端 / 恢复讲义">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 20h5v-5M20 9V4h-5M4 15v5h5"/></svg>
+        <span class="sr-only">全屏终端</span>
+      </button>
+    </div>
+
+    <div class="term-body" id="term-body" tabindex="0" role="log" aria-live="polite" aria-label="终端输出">
+      <pre class="term-out" id="term-out"></pre>
+      <div class="term-line-input" id="term-input-row">
+        <span class="term-prompt">root@cloudcmd-lab01:~#</span><span class="term-caret" id="term-ghost"></span><span class="term-cursor" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <!-- 手机端快捷键条：手机上 `|` `~` `$` 这类字符藏在符号键盘里，方向键干脆没有，
+         所以给一排可横向滑动的按钮（桌面端由 CSS 隐藏） -->
+    <div class="term-keys" id="term-keys" role="toolbar" aria-label="终端快捷键">
+      <button class="tk" type="button" data-k="up" aria-label="上一条命令">↑</button>
+      <button class="tk" type="button" data-k="down" aria-label="下一条命令">↓</button>
+      <button class="tk" type="button" data-k="|">|</button>
+      <button class="tk" type="button" data-k="-">-</button>
+      <button class="tk" type="button" data-k="/">/</button>
+      <button class="tk" type="button" data-k="~">~</button>
+      <button class="tk" type="button" data-k="$">$</button>
+      <button class="tk" type="button" data-k="*">*</button>
+      <button class="tk" type="button" data-k=">">&gt;</button>
+      <button class="tk" type="button" data-k="'">'</button>
+      <button class="tk" type="button" data-k='"'>"</button>
+      <button class="tk tk-wide" type="button" data-k="space">空格</button>
+      <button class="tk tk-wide" type="button" data-k="clear">清屏</button>
+    </div>
+
+    <input class="term-real-input" id="term-real-input" type="text" spellcheck="false" autocomplete="off"
+           autocapitalize="off" aria-label="在此输入命令，回车执行">
+  </section>
+
+  <!-- ─── 右：讲义面板 ─── -->
+  <section class="lesson" aria-label="讲义">
+
+    <div class="lesson-toolbar">
+      <div class="lesson-context">
+        <span class="lesson-kicker">Linux 网络与排障</span>
+        <strong id="lesson-count">7 个步骤</strong>
+      </div>
+      <button class="tb-check" id="tb-check" type="button" aria-disabled="true" title="完成右侧步骤后自动打卡">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.6 9.6 17.7 19.5 7.8"/></svg>
+        <span id="tb-check-label">未完成</span>
+      </button>
+    </div>
+
+    <div class="lesson-body" id="lesson-body" tabindex="-1">
+
+      <div class="lesson-head">
+        <span class="lh-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M7.5 7.5h7M7.5 10.5h5"/></svg>
+        </span>
+        <div>
+          <h1 class="lh-title">Linux 网络排障与路由跟踪</h1>
+          <p class="lh-subtitle">按顺序执行命令，判断 IP、网关、DNS 和路由是否正常。</p>
+        </div>
+      </div>
+
+      <!-- 本节步骤导航由 academy-lab.js 生成 -->
+      <nav class="lesson-tabs" aria-label="本节操作"></nav>
+
+      <article class="lesson-doc" id="lesson-doc">
+        <!-- 讲义正文由 assets/js/academy-lab.js 从课程数据渲染（支持多节课切换） -->
+      </article>
+
+    </div>
+
+    <div class="lesson-foot"></div>
+  </section>
+</main>
+
+<footer class="footer lab-footer">
+  <span>CloudCmd · 实时练习平台</span>
+  <span class="dot">·</span>
+  <span class="sb-hint">点击右侧“运行”执行步骤，也可以直接在左侧终端输入命令</span>
+</footer>
+
+<!-- ══════════════ 数据层：模拟终端环境 + 课程数据 + 分类注册表 ══════════════ -->
+<script>
+  /* 与 index.html 相同的全局约定：各 data 文件把自己挂到这两个对象上。
+     分类注册表用来给讲义头部取「场景」名（见 academy-lab.js 的 sceneOf）。 */
+  window.CC_LESSONS = window.CC_LESSONS || [];
+  window.CC_CATS = window.CC_CATS || {};
+  window.CC_DATA = window.CC_DATA || {};
+</script>
+<script src="data/_registry.js"></script>
+<script src="data/termfs.js"></script>
+<script src="data/lessons.js"></script>
+<script src="data/lessons-linux.js"></script>
+<script src="data/lessons-container.js"></script>
+<script src="data/lessons-cloud.js"></script>
+<script src="data/lessons-data.js"></script>
+<script src="data/lessons-shell.js"></script>
+<script src="data/lessons-iac.js"></script>
+<script src="data/lessons-virt.js"></script>
+<script src="data/lessons-sec.js"></script>
+<script src="data/lessons-perf.js"></script>
+<script src="data/lessons-practice.js"></script>
+<script src="data/zz-lesson-assertions.js"></script>
+<script src="assets/js/store.js?v=20260926b"></script>
+<script src="assets/js/progress-transfer.js?v=20260926a"></script>
+<script src="assets/js/shell.js?v=20260925a"></script>
+<script src="assets/js/lesson-judge.js?v=20260926b"></script>
+<!-- 命令实现的扩展模块：必须排在 shell.js 之后，顺序见 tools/_cmdlist.js -->
+<script src="assets/js/sim-data.js?v=20260925a"></script>
+<script src="assets/js/cmd-k8s.js?v=20260925a"></script>
+<script src="assets/js/cmd-virt.js?v=20260925a"></script>
+<script src="assets/js/cmd-iac.js?v=20260925a"></script>
+<script src="assets/js/cmd-sec.js?v=20260925a"></script>
+<script src="assets/js/cmd-db.js?v=20260925a"></script>
+<script src="assets/js/cmd-ops.js?v=20260925a"></script>
+<script src="assets/js/cmd-basic2.js?v=20260925c"></script>
+<script src="assets/js/fs-extra.js?v=20260925c"></script>
+<script src="assets/js/cmd-basic3.js?v=20260925c"></script>
+<script src="assets/js/cmd-host.js?v=20260925d"></script>
+<script src="assets/js/cmd-text.js?v=20260925e"></script>
+<script src="assets/js/cmd-cloud.js?v=20260925f"></script>
+<script src="assets/js/academy-lab.js?v=20260926b"></script>
+</body>
+</html>

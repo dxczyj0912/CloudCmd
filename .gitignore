@@ -1,0 +1,16 @@
+# 本地构建物与历史试验产物，不作为发布源码。
+/build-apk/
+/*.apk
+/_tmp-*
+/tools/_*.js
+/tools/_*/
+/tools/_*.png
+!/tools/_cmdlist.js
+!/tools/_lessonlist.js
+!/tools/_kblist.js
+!/tools/_smoke-harness.js
+!/tools/_merge-lessons.js
+!/tools/_drop-lesson.js
+!/tools/_lesson-serialize.js
+!/tools/_stepscan.js
+!/tools/_grep.js

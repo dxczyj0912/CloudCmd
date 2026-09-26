@@ -1,0 +1,25 @@
+name: CloudCmd checks
+on:
+  push:
+  pull_request:
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Data, simulator, lesson and security checks
+        run: node tools/check-all.js --quick
+      - name: Browser interaction checks
+        run: node tools/render-check.js
+      - name: Lab and mobile viewport checks
+        run: node tools/lab-check.js
+      - name: Android toolchain
+        shell: pwsh
+        run: ./tools/android/setup-toolchain.ps1
+      - name: Unsigned APK build and content parity
+        run: |
+          node tools/build-apk.js --no-sign --version-code=2 --version-name=1.1
+          node tools/apk-check.js --apk=CloudCmd-1.1.apk

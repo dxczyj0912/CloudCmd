@@ -1,0 +1,24 @@
+kubectl describe pod worker-6b8f7c9d4-m2vqt
+kubectl logs worker-6b8f7c9d4-m2vqt --previous
+kubectl logs worker-6b8f7c9d4-m2vqt
+kubectl describe pod batch-job-28471920-x7klm
+kubectl describe pvc logs-pvc
+kubectl get pvc -A
+kubectl describe deploy web
+kubectl get deploy
+kubectl auth can-i get pods
+kubectl auth can-i create pods
+kubectl exec web-7d9c4b8f5-2xk9p -- ls
+kubectl exec -it web-7d9c4b8f5-2xk9p -- sh
+kubectl get pod mysql-0 -o yaml
+kubectl config view
+kubectl get ingress
+kubectl get sc
+kubectl describe sc csi-nas
+kubectl get no
+kubectl cordon 10.0.1.23
+kubectl drain 10.0.1.23
+kubectl taint nodes 10.0.1.23 dedicated=gpu:NoSchedule
+kubectl get ns
+kubectl get ep
+kubectl describe ep mysql

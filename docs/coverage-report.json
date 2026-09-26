@@ -1,0 +1,528 @@
+{
+  "commands": 830,
+  "lessons": 188,
+  "steps": 764,
+  "hints": 764,
+  "cards": 398,
+  "taught": 302,
+  "quizzed": 686,
+  "orphan": 103,
+  "orphanIds": [
+    {
+      "id": "lb-tac",
+      "cat": "linux-basic",
+      "name": "tac"
+    },
+    {
+      "id": "lb-more",
+      "cat": "linux-basic",
+      "name": "more"
+    },
+    {
+      "id": "lb-rename",
+      "cat": "linux-basic",
+      "name": "rename"
+    },
+    {
+      "id": "lb-locate",
+      "cat": "linux-basic",
+      "name": "locate"
+    },
+    {
+      "id": "lb-xz",
+      "cat": "linux-basic",
+      "name": "xz"
+    },
+    {
+      "id": "lb-zstd",
+      "cat": "linux-basic",
+      "name": "zstd"
+    },
+    {
+      "id": "lb-wget",
+      "cat": "linux-basic",
+      "name": "wget"
+    },
+    {
+      "id": "lb-dd",
+      "cat": "linux-basic",
+      "name": "dd"
+    },
+    {
+      "id": "lt-fgrep",
+      "cat": "linux-text",
+      "name": "fgrep"
+    },
+    {
+      "id": "lt-grep-pcre",
+      "cat": "linux-text",
+      "name": "grep -P"
+    },
+    {
+      "id": "lt-zgrep",
+      "cat": "linux-text",
+      "name": "zgrep"
+    },
+    {
+      "id": "lt-sed-e",
+      "cat": "linux-text",
+      "name": "sed -e"
+    },
+    {
+      "id": "lt-awk-func",
+      "cat": "linux-text",
+      "name": "awk 内置函数"
+    },
+    {
+      "id": "lu-userdel",
+      "cat": "linux-user",
+      "name": "userdel"
+    },
+    {
+      "id": "lu-groupmod",
+      "cat": "linux-user",
+      "name": "groupmod"
+    },
+    {
+      "id": "lu-groupdel",
+      "cat": "linux-user",
+      "name": "groupdel"
+    },
+    {
+      "id": "lu-lsattr",
+      "cat": "linux-user",
+      "name": "lsattr"
+    },
+    {
+      "id": "lu-chattr",
+      "cat": "linux-user",
+      "name": "chattr"
+    },
+    {
+      "id": "lu-service",
+      "cat": "linux-user",
+      "name": "service"
+    },
+    {
+      "id": "lu-at",
+      "cat": "linux-user",
+      "name": "at"
+    },
+    {
+      "id": "lu-shutdown",
+      "cat": "linux-user",
+      "name": "shutdown"
+    },
+    {
+      "id": "lu-reboot",
+      "cat": "linux-user",
+      "name": "reboot"
+    },
+    {
+      "id": "lu-halt",
+      "cat": "linux-user",
+      "name": "halt"
+    },
+    {
+      "id": "lu-poweroff",
+      "cat": "linux-user",
+      "name": "poweroff"
+    },
+    {
+      "id": "lu-runlevel",
+      "cat": "linux-user",
+      "name": "runlevel"
+    },
+    {
+      "id": "lu-update-alternatives",
+      "cat": "linux-user",
+      "name": "update-alternatives"
+    },
+    {
+      "id": "ln-wget",
+      "cat": "linux-net",
+      "name": "wget"
+    },
+    {
+      "id": "ln-httpie",
+      "cat": "linux-net",
+      "name": "httpie"
+    },
+    {
+      "id": "ln-tshark",
+      "cat": "linux-net",
+      "name": "tshark"
+    },
+    {
+      "id": "ln-iftop",
+      "cat": "linux-net",
+      "name": "iftop"
+    },
+    {
+      "id": "ln-nethogs",
+      "cat": "linux-net",
+      "name": "nethogs"
+    },
+    {
+      "id": "ln-iptables-save",
+      "cat": "linux-net",
+      "name": "iptables-save / iptables-restore"
+    },
+    {
+      "id": "ln-ipset",
+      "cat": "linux-net",
+      "name": "ipset"
+    },
+    {
+      "id": "ls9-autofs",
+      "cat": "linux-storage",
+      "name": "autofs"
+    },
+    {
+      "id": "ls9-lvreduce",
+      "cat": "linux-storage",
+      "name": "lvreduce"
+    },
+    {
+      "id": "ls9-lvremove",
+      "cat": "linux-storage",
+      "name": "lvremove"
+    },
+    {
+      "id": "ls9-dd",
+      "cat": "linux-storage",
+      "name": "dd（磁盘测速）"
+    },
+    {
+      "id": "ls9-mdadm",
+      "cat": "linux-storage",
+      "name": "mdadm"
+    },
+    {
+      "id": "ls9-hdparm",
+      "cat": "linux-storage",
+      "name": "hdparm"
+    },
+    {
+      "id": "ls9-sync",
+      "cat": "linux-storage",
+      "name": "sync"
+    },
+    {
+      "id": "ls9-blkdiscard",
+      "cat": "linux-storage",
+      "name": "blkdiscard"
+    },
+    {
+      "id": "sh-devnull-devtcp",
+      "cat": "shell",
+      "name": "/dev/null 与 /dev/tcp"
+    },
+    {
+      "id": "sh-template-batch-ssh",
+      "cat": "shell",
+      "name": "批量多主机操作模板"
+    },
+    {
+      "id": "dk-commit",
+      "cat": "docker",
+      "name": "docker commit"
+    },
+    {
+      "id": "dk-pause",
+      "cat": "docker",
+      "name": "docker pause / docker unpause"
+    },
+    {
+      "id": "dk-wait",
+      "cat": "docker",
+      "name": "docker wait"
+    },
+    {
+      "id": "dk-rename",
+      "cat": "docker",
+      "name": "docker rename"
+    },
+    {
+      "id": "dk-network-rm",
+      "cat": "docker",
+      "name": "docker network rm / prune"
+    },
+    {
+      "id": "k8s-auth-reconcile",
+      "cat": "kubernetes",
+      "name": "kubectl auth reconcile"
+    },
+    {
+      "id": "k8s-sa-token",
+      "cat": "kubernetes",
+      "name": "ServiceAccount 令牌与身份安全"
+    },
+    {
+      "id": "k8s-kubeadm-init",
+      "cat": "kubernetes",
+      "name": "kubeadm init"
+    },
+    {
+      "id": "k8s-kubeadm-join",
+      "cat": "kubernetes",
+      "name": "kubeadm join"
+    },
+    {
+      "id": "k8s-kubeadm-token",
+      "cat": "kubernetes",
+      "name": "kubeadm token create --print-join-command"
+    },
+    {
+      "id": "k8s-kubeadm-upgrade",
+      "cat": "kubernetes",
+      "name": "kubeadm upgrade plan"
+    },
+    {
+      "id": "k8s-kubeadm-reset",
+      "cat": "kubernetes",
+      "name": "kubeadm reset"
+    },
+    {
+      "id": "k8s-etcdctl-snapshot-restore",
+      "cat": "kubernetes",
+      "name": "etcdctl snapshot restore"
+    },
+    {
+      "id": "hl-functions",
+      "cat": "helm",
+      "name": "Helm 模板函数速查"
+    },
+    {
+      "id": "db-mysql-change-replication-source",
+      "cat": "db-cache",
+      "name": "CHANGE REPLICATION SOURCE TO"
+    },
+    {
+      "id": "db-kafka-console-producer",
+      "cat": "db-cache",
+      "name": "kafka-console-producer.sh"
+    },
+    {
+      "id": "db-rabbit-plugins",
+      "cat": "db-cache",
+      "name": "rabbitmq-plugins enable"
+    },
+    {
+      "id": "mo-log-rsyslog",
+      "cat": "monitor",
+      "name": "rsyslog 规则"
+    },
+    {
+      "id": "mo-grafana-api",
+      "cat": "monitor",
+      "name": "Grafana API 导入看板"
+    },
+    {
+      "id": "mo-jvm-arthas",
+      "cat": "monitor",
+      "name": "arthas"
+    },
+    {
+      "id": "hw-ecs-create",
+      "cat": "cloud-cli",
+      "name": "hcloud ECS CreatePostPaidServers"
+    },
+    {
+      "id": "hw-ecs-update-resize",
+      "cat": "cloud-cli",
+      "name": "hcloud ECS UpdateServer / ResizePostPaidServer"
+    },
+    {
+      "id": "hw-ecs-keypair-group",
+      "cat": "cloud-cli",
+      "name": "hcloud ECS NovaCreateKeypair / NovaCreateServerGroup"
+    },
+    {
+      "id": "hw-obs-put-object",
+      "cat": "cloud-cli",
+      "name": "hcloud OBS PutObject"
+    },
+    {
+      "id": "hw-vpc-create",
+      "cat": "cloud-cli",
+      "name": "hcloud VPC CreateVpc / CreateSubnet"
+    },
+    {
+      "id": "hw-evs-create",
+      "cat": "cloud-cli",
+      "name": "hcloud EVS CreateVolume"
+    },
+    {
+      "id": "hw-elb-create-listener",
+      "cat": "cloud-cli",
+      "name": "hcloud ELB CreateLoadBalancer / CreateListener"
+    },
+    {
+      "id": "hw-rds-create",
+      "cat": "cloud-cli",
+      "name": "hcloud RDS CreateInstance"
+    },
+    {
+      "id": "hw-obsutil-mb",
+      "cat": "cloud-cli",
+      "name": "obsutil mb"
+    },
+    {
+      "id": "hw-obsutil-sign",
+      "cat": "cloud-cli",
+      "name": "obsutil sign（生成临时下载链接）"
+    },
+    {
+      "id": "hw-obsutil-restore-resume",
+      "cat": "cloud-cli",
+      "name": "obsutil restore 与断点续传/分片参数（-j / -p / -cpd / -threshold）"
+    },
+    {
+      "id": "hw-aws-configure",
+      "cat": "cloud-cli",
+      "name": "aws configure"
+    },
+    {
+      "id": "hw-aws-sts-identity",
+      "cat": "cloud-cli",
+      "name": "aws sts get-caller-identity"
+    },
+    {
+      "id": "hw-aws-ec2-describe",
+      "cat": "cloud-cli",
+      "name": "aws ec2 describe-instances"
+    },
+    {
+      "id": "hw-aws-ec2-power",
+      "cat": "cloud-cli",
+      "name": "aws ec2 start-instances / stop-instances"
+    },
+    {
+      "id": "hw-aws-s3-sync",
+      "cat": "cloud-cli",
+      "name": "aws s3 sync"
+    },
+    {
+      "id": "hw-aws-s3-presign",
+      "cat": "cloud-cli",
+      "name": "aws s3 presign"
+    },
+    {
+      "id": "hw-aws-eks-ecr",
+      "cat": "cloud-cli",
+      "name": "aws eks update-kubeconfig / ecr get-login-password"
+    },
+    {
+      "id": "hw-az-login",
+      "cat": "cloud-cli",
+      "name": "az login"
+    },
+    {
+      "id": "hw-az-account-list",
+      "cat": "cloud-cli",
+      "name": "az account list / az account set"
+    },
+    {
+      "id": "hw-az-vm",
+      "cat": "cloud-cli",
+      "name": "az vm list / az vm create"
+    },
+    {
+      "id": "hw-az-storage-blob-upload",
+      "cat": "cloud-cli",
+      "name": "az storage blob upload"
+    },
+    {
+      "id": "hw-az-aks-credentials",
+      "cat": "cloud-cli",
+      "name": "az aks get-credentials"
+    },
+    {
+      "id": "iac-tf-refresh",
+      "cat": "iac",
+      "name": "terraform refresh"
+    },
+    {
+      "id": "iac-tf-workspace",
+      "cat": "iac",
+      "name": "terraform workspace"
+    },
+    {
+      "id": "ci-jenkins-cli",
+      "cat": "cicd",
+      "name": "jenkins-cli"
+    },
+    {
+      "id": "ci-jenkins-parallel",
+      "cat": "cicd",
+      "name": "Jenkins parallel 并行阶段"
+    },
+    {
+      "id": "ci-jenkins-when",
+      "cat": "cicd",
+      "name": "Jenkins when 条件"
+    },
+    {
+      "id": "ci-jenkins-params",
+      "cat": "cicd",
+      "name": "Jenkins 构建参数与 parameters"
+    },
+    {
+      "id": "ci-gitlab-yml",
+      "cat": "cicd",
+      "name": ".gitlab-ci.yml 结构"
+    },
+    {
+      "id": "ci-gitlab-runner",
+      "cat": "cicd",
+      "name": "gitlab-runner register"
+    },
+    {
+      "id": "ci-gitlab-services",
+      "cat": "cicd",
+      "name": "GitLab CI services"
+    },
+    {
+      "id": "vm-misc-packer",
+      "cat": "kvm",
+      "name": "packer"
+    },
+    {
+      "id": "vm-misc-vagrant",
+      "cat": "kvm",
+      "name": "vagrant"
+    },
+    {
+      "id": "vm-misc-govc",
+      "cat": "kvm",
+      "name": "govc"
+    },
+    {
+      "id": "sec-masscan",
+      "cat": "security",
+      "name": "masscan"
+    },
+    {
+      "id": "sec-nikto",
+      "cat": "security",
+      "name": "nikto"
+    },
+    {
+      "id": "sec-waf-ddos",
+      "cat": "security",
+      "name": "WAF 与 DDoS 基础配置"
+    },
+    {
+      "id": "sec-setenforce",
+      "cat": "security",
+      "name": "setenforce"
+    },
+    {
+      "id": "sec-setsebool",
+      "cat": "security",
+      "name": "setsebool"
+    }
+  ],
+  "generatedAt": "2026-09-26T13:57:30.485Z"
+}

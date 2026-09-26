@@ -1,0 +1,794 @@
+[
+ {
+  "id": "sh-var-export",
+  "ex": "APP_HOME=/opt/myapp && echo \"$APP_HOME\""
+ },
+ {
+  "id": "sh-var-export",
+  "ex": "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk && $JAVA_HOME/bin/java -version"
+ },
+ {
+  "id": "sh-var-export",
+  "ex": "NOW=$(date +%F) && LOG=/var/log/app-$NOW.log && echo \"$LOG\""
+ },
+ {
+  "id": "sh-var-export",
+  "ex": "export PATH=\"$PATH:/opt/myapp/bin\""
+ },
+ {
+  "id": "sh-var-export",
+  "ex": "declare -r CONFIG=/etc/myapp/app.conf"
+ },
+ {
+  "id": "sh-var-export",
+  "ex": "env | grep -E \"JAVA_HOME|APP_HOME\""
+ },
+ {
+  "id": "sh-quotes",
+  "ex": "NAME=world && echo \"hello $NAME\""
+ },
+ {
+  "id": "sh-quotes",
+  "ex": "NAME=world && echo 'hello $NAME'"
+ },
+ {
+  "id": "sh-quotes",
+  "ex": "echo \"今天是 $(date +%F)，用户是 $(whoami)\""
+ },
+ {
+  "id": "sh-quotes",
+  "ex": "grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}' /var/log/app.log"
+ },
+ {
+  "id": "sh-quotes",
+  "ex": "FILE=\"my report.txt\" && ls -l \"$FILE\""
+ },
+ {
+  "id": "sh-quotes",
+  "ex": "MSG=$ 'line1\\\nline2' && printf '%s\\\n' \"$MSG\""
+ },
+ {
+  "id": "sh-param-default",
+  "ex": "TIMEOUT=${TIMEOUT:-30} && echo \"超时设置为 $TIMEOUT 秒\""
+ },
+ {
+  "id": "sh-param-default",
+  "ex": ": \"${BACKUP_DIR:?用法: backup.sh 需要先设置 BACKUP_DIR 环境变量}\""
+ },
+ {
+  "id": "sh-param-default",
+  "ex": "DEBUG=1 && CMD=\"curl -s ${DEBUG:+--verbose} http://10.0.1.23/health\" && echo \"$CMD\""
+ },
+ {
+  "id": "sh-param-default",
+  "ex": "COUNT=${COUNT:=10} && echo \"$COUNT\""
+ },
+ {
+  "id": "sh-param-default",
+  "ex": "LOG=/var/log/app-20240318.log && echo \"文件名长度 ${#LOG}\""
+ },
+ {
+  "id": "sh-param-default",
+  "ex": "DATE=20240318 && echo \"${DATE:0:4}-${DATE:4:2}-${DATE:6:2}\""
+ },
+ {
+  "id": "sh-string-ops",
+  "ex": "f=/data/backup/app-20240318.tar.gz && echo \"${f##*/}\""
+ },
+ {
+  "id": "sh-string-ops",
+  "ex": "f=/data/backup/app-20240318.tar.gz && echo \"${f%%.*}\""
+ },
+ {
+  "id": "sh-string-ops",
+  "ex": "f=/data/backup/app-20240318.tar.gz && echo \"${f%.tar.gz}\""
+ },
+ {
+  "id": "sh-string-ops",
+  "ex": "LIST=\"nginx,mysql,redis\" && echo \"${LIST//,/ }\""
+ },
+ {
+  "id": "sh-string-ops",
+  "ex": "V=1.2.3 && echo \"${V//./-}\""
+ },
+ {
+  "id": "sh-string-ops",
+  "ex": "for f in /var/log/*.log; do echo \"处理 ${f##*/}\"; done"
+ },
+ {
+  "id": "sh-array",
+  "ex": "HOSTS=(10.0.1.21 10.0.1.22 10.0.1.23) && for h in \"${HOSTS[@]}\"; do echo \"检查 $h\"; done"
+ },
+ {
+  "id": "sh-array",
+  "ex": "HOSTS=(10.0.1.21 10.0.1.22) && echo \"共 ${#HOSTS[@]} 台\""
+ },
+ {
+  "id": "sh-array",
+  "ex": "declare -A PORT && PORT[web]=80 && PORT[db]=3306 && for k in \"${!PORT[@]}\"; do echo \"$k -> ${PORT[$k]}\"; done"
+ },
+ {
+  "id": "sh-array",
+  "ex": "ARGS=(curl -s -H \"X-Token: abc123\" http://10.0.1.23/health) && \"${ARGS[@]}\""
+ },
+ {
+  "id": "sh-array",
+  "ex": "FILES=(/var/log/a.log /var/log/b.log) && FILES+=(/var/log/c.log) && echo \"${FILES[@]}\""
+ },
+ {
+  "id": "sh-array",
+  "ex": "LIST=(\"a b\" c) && printf \"[%s]\\\n\" \"${LIST[@]}\""
+ },
+ {
+  "id": "sh-special-vars",
+  "ex": "systemctl is-active nginx >/dev/null 2>&1; echo \"退出码: $?\""
+ },
+ {
+  "id": "sh-special-vars",
+  "ex": "if [ $# -lt 2 ]; then echo \"用法: $0 <源目录> <目标目录>\"; exit 1; fi"
+ },
+ {
+  "id": "sh-special-vars",
+  "ex": "for arg in \"$@\"; do echo \"参数: $arg\"; done"
+ },
+ {
+  "id": "sh-special-vars",
+  "ex": "echo \"参数个数 $#，全部参数: $*\""
+ },
+ {
+  "id": "sh-special-vars",
+  "ex": "TMPFILE=/tmp/myapp.$$.tmp && echo \"$TMPFILE\" > \"$TMPFILE\""
+ },
+ {
+  "id": "sh-special-vars",
+  "ex": "sleep 30 & BG=$! && echo \"后台进程 PID: $BG\" && wait $BG"
+ },
+ {
+  "id": "sh-if",
+  "ex": "if [ ! -f /etc/nginx/nginx.conf ]; then echo \"配置文件缺失\"; exit 1; fi"
+ },
+ {
+  "id": "sh-if",
+  "ex": "if command -v docker >/dev/null 2>&1; then echo \"docker 已安装\"; else echo \"需要先安装 docker\"; fi"
+ },
+ {
+  "id": "sh-if",
+  "ex": "if [ $# -lt 2 ]; then echo \"用法: $0 <源目录> <目标目录>\"; exit 1; elif [ ! -d \"$1\" ]; then echo \"源目录不存在: $1\"; exit 1; fi"
+ },
+ {
+  "id": "sh-if",
+  "ex": "if grep -q \"ERROR\" /var/log/app.log; then echo \"发现错误日志\"; fi"
+ },
+ {
+  "id": "sh-if",
+  "ex": "if systemctl is-active --quiet nginx; then echo \"nginx 运行中\"; else systemctl restart nginx; fi"
+ },
+ {
+  "id": "sh-if",
+  "ex": "if [ \"$(id -u)\" -ne 0 ]; then echo \"请用 root 运行\"; exit 1; fi"
+ },
+ {
+  "id": "sh-test",
+  "ex": "if [[ -f /etc/nginx/nginx.conf && -r /etc/nginx/nginx.conf ]]; then echo \"配置可读\"; fi"
+ },
+ {
+  "id": "sh-test",
+  "ex": "if [[ \"$FILE\" == *.log ]]; then echo \"这是日志文件\"; fi"
+ },
+ {
+  "id": "sh-test",
+  "ex": "if [[ \"$IP\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then echo \"IPv4 格式正确\"; fi"
+ },
+ {
+  "id": "sh-test",
+  "ex": "count=15 && if (( count > 10 )); then echo \"超过阈值\"; fi"
+ },
+ {
+  "id": "sh-test",
+  "ex": "if [ -z \"${NAME:-}\" ]; then echo \"NAME 未设置\"; fi"
+ },
+ {
+  "id": "sh-test",
+  "ex": "var= && if [ -n $var ]; then echo yes; else echo no; fi"
+ },
+ {
+  "id": "sh-case",
+  "ex": "case \"$1\" in start) systemctl start nginx ;; stop) systemctl stop nginx ;; restart) systemctl restart nginx ;; *) echo \"用法: $0 {start|stop|restart}\"; exit 1 ;; esac"
+ },
+ {
+  "id": "sh-case",
+  "ex": "case \"$file\" in *.tar.gz) tar -xzf \"$file\" ;; *.zip) unzip -q \"$file\" ;; *.gz) gunzip \"$file\" ;; *) echo \"不支持的格式: $file\" ;; esac"
+ },
+ {
+  "id": "sh-case",
+  "ex": "case \"$(uname -s)\" in Linux) pkg=dnf ;; Darwin) pkg=brew ;; *) pkg=unknown ;; esac && echo \"包管理器: $pkg\""
+ },
+ {
+  "id": "sh-case",
+  "ex": "read -r -p \"确认删除? [y/N] \" ans; case \"$ans\" in [Yy]|[Yy][Ee][Ss]) echo \"执行删除\" ;; *) echo \"已取消\" ;; esac"
+ },
+ {
+  "id": "sh-for",
+  "ex": "for h in 10.0.1.21 10.0.1.22 10.0.1.23; do ping -c 1 -W 1 \"$h\" >/dev/null && echo \"$h 可达\" || echo \"$h 不可达\"; done"
+ },
+ {
+  "id": "sh-for",
+  "ex": "for f in /var/log/*.log; do [ -e \"$f\" ] || continue; echo \"$(basename \"$f\"): $(wc -l < \"$f\") 行\"; done"
+ },
+ {
+  "id": "sh-for",
+  "ex": "for i in {1..5}; do echo \"第 $i 次重试\"; sleep 2; done"
+ },
+ {
+  "id": "sh-for",
+  "ex": "for ((i=0; i<${#HOSTS[@]}; i++)); do echo \"${HOSTS[$i]}\"; done"
+ },
+ {
+  "id": "sh-for",
+  "ex": "while IFS= read -r host; do echo \"处理 $host\"; done < hosts.txt"
+ },
+ {
+  "id": "sh-for",
+  "ex": "for d in /data/app /data/log /data/backup; do echo \"$d: $(du -sh \"$d\" 2>/dev/null | cut -f1)\"; done"
+ },
+ {
+  "id": "sh-while-until",
+  "ex": "n=0; until curl -sf http://127.0.0.1:8080/health >/dev/null; do n=$((n+1)); [ $n -gt 30 ] && { echo \"等待超时\"; exit 1; }; sleep 2; done; echo \"服务已就绪\""
+ },
+ {
+  "id": "sh-while-until",
+  "ex": "while IFS= read -r host; do echo \"检查 $host\"; done < hosts.txt"
+ },
+ {
+  "id": "sh-while-until",
+  "ex": "count=0; while IFS= read -r line; do count=$((count+1)); done < /var/log/app.log; echo \"共 $count 行\""
+ },
+ {
+  "id": "sh-while-until",
+  "ex": "while IFS= read -r line; do count=$((count+1)); done < <(grep -c ERROR /var/log/app.log); echo \"$count\""
+ },
+ {
+  "id": "sh-while-until",
+  "ex": "while true; do if [ -f /tmp/stop.flag ]; then echo \"收到停止标志，退出\"; break; fi; sleep 5; done"
+ },
+ {
+  "id": "sh-while-until",
+  "ex": "until systemctl is-active --quiet nginx; do echo \"等待 nginx 启动\"; sleep 1; done"
+ },
+ {
+  "id": "sh-break-continue",
+  "ex": "for i in 1 2 3 4 5; do [ \"$i\" -eq 3 ] && break; echo \"$i\"; done"
+ },
+ {
+  "id": "sh-break-continue",
+  "ex": "for i in 1 2 3 4 5; do [ \"$i\" -eq 3 ] && continue; echo \"$i\"; done"
+ },
+ {
+  "id": "sh-break-continue",
+  "ex": "for i in 1 2 3; do for j in a b c; do [ \"$j\" = b ] && continue 2; echo \"$i-$j\"; done; done"
+ },
+ {
+  "id": "sh-break-continue",
+  "ex": "while IFS= read -r line; do [ -z \"$line\" ] && continue; case \"$line\" in \\#*) continue ;; esac; echo \"处理: $line\"; done < config.txt"
+ },
+ {
+  "id": "sh-break-continue",
+  "ex": "for i in 1 2 3; do if curl -sf http://10.0.1.23/health >/dev/null; then echo \"第 $i 次成功\"; break; fi; sleep 3; done"
+ },
+ {
+  "id": "sh-function",
+  "ex": "log() { echo \"[$(date \"+%F %T\")] $*\"; } && log \"开始执行备份\""
+ },
+ {
+  "id": "sh-function",
+  "ex": "get_ip() { hostname -I | awk \"{print \\$1}\"; } && IP=$(get_ip) && echo \"本机 IP: $IP\""
+ },
+ {
+  "id": "sh-function",
+  "ex": "check_port() { local host=$1 port=$2; timeout 2 bash -c \"cat < /dev/null > /dev/tcp/$host/$port\" 2>/dev/null; } && if check_port 10.0.1.23 80; then echo \"端口可达\"; fi"
+ },
+ {
+  "id": "sh-function",
+  "ex": "die() { echo \"错误: $*\" >&2; exit 1; } && [ -f /etc/myapp/app.conf ] || die \"配置文件不存在\""
+ },
+ {
+  "id": "sh-function",
+  "ex": "retry() { local n=$1; shift; local i; for ((i=1;i<=n;i++)); do \"$@\" && return 0; sleep 3; done; return 1; } && retry 3 curl -sf http://10.0.1.23/health"
+ },
+ {
+  "id": "sh-getopts",
+  "ex": "while getopts \"hvf:o:\" opt; do case \"$opt\" in h) echo \"用法: $0 [-v] [-f 输入文件] [-o 输出文件]\"; exit 0 ;; v) VERBOSE=1 ;; f) FILE=$OPTARG ;; o) OUT=$OPTARG ;; \\?) echo \"未知选项，使用 -h 查看用法\"; exit 1 ;; esac; done; shift $((OPTIND-1))"
+ },
+ {
+  "id": "sh-getopts",
+  "ex": "VERBOSE=0; while getopts \"v\" opt; do [ \"$opt\" = v ] && VERBOSE=1; done; [ \"$VERBOSE\" = 1 ] && echo \"详细模式已开启\""
+ },
+ {
+  "id": "sh-getopts",
+  "ex": "./deploy.sh -f \"my config.yaml\" -o /tmp/out.log"
+ },
+ {
+  "id": "sh-getopts",
+  "ex": "while getopts \":f:\" opt; do case \"$opt\" in f) FILE=$OPTARG ;; :) echo \"选项 -$OPTARG 缺少值\"; exit 1 ;; \\?) echo \"未知选项: -$OPTARG\"; exit 1 ;; esac; done"
+ },
+ {
+  "id": "sh-redirect",
+  "ex": "df -h > /tmp/disk-report.txt"
+ },
+ {
+  "id": "sh-redirect",
+  "ex": "echo \"检查时间: $(date)\" >> /var/log/health.log"
+ },
+ {
+  "id": "sh-redirect",
+  "ex": "find /data -name \"*.tmp\" -delete 2>/tmp/find-error.log"
+ },
+ {
+  "id": "sh-redirect",
+  "ex": "systemctl restart nginx > /tmp/nginx-restart.log 2>&1"
+ },
+ {
+  "id": "sh-redirect",
+  "ex": "systemctl restart nginx 2>&1 > /tmp/nginx-restart.log"
+ },
+ {
+  "id": "sh-redirect",
+  "ex": "curl -s http://10.0.1.23/health >/dev/null 2>&1; echo \"退出码 $?\""
+ },
+ {
+  "id": "sh-redirect",
+  "ex": "tar -czf /tmp/app.tar.gz /data/app 2>&1 | tee /var/log/backup.log"
+ },
+ {
+  "id": "sh-heredoc",
+  "ex": "cat <<EOF > /etc/myapp/app.conf\n[server]\nlisten = 8080\ndata_dir = /data/myapp\nEOF\ncat /etc/myapp/app.conf"
+ },
+ {
+  "id": "sh-heredoc",
+  "ex": "cat <<'EOF' > /opt/scripts/env.sh\nexport APP_HOME=/opt/myapp\necho \"HOME is $APP_HOME\"\nEOF"
+ },
+ {
+  "id": "sh-heredoc",
+  "ex": "mysql -u root -p<数据库密码> mydb <<EOF\nSELECT COUNT(*) FROM orders WHERE created_at > CURDATE();\nEOF"
+ },
+ {
+  "id": "sh-heredoc",
+  "ex": "sudo tee /etc/sysctl.d/99-tuning.conf > /dev/null <<EOF\nnet.core.somaxconn = 32768\nnet.ipv4.tcp_tw_reuse = 1\nEOF"
+ },
+ {
+  "id": "sh-heredoc",
+  "ex": "read -r user host <<< \"ops 10.0.1.23\" && echo \"用户 $user 主机 $host\""
+ },
+ {
+  "id": "sh-heredoc",
+  "ex": "bc <<< \"scale=2; 100/3\""
+ },
+ {
+  "id": "sh-pipe-cmdsub",
+  "ex": "awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head -10"
+ },
+ {
+  "id": "sh-pipe-cmdsub",
+  "ex": "NOW=$(date +%F) && LOG=/var/log/app-$NOW.log && echo \"$LOG\""
+ },
+ {
+  "id": "sh-pipe-cmdsub",
+  "ex": "COUNT=$(grep -c \"ERROR\" /var/log/app.log) && echo \"错误行数: $COUNT\""
+ },
+ {
+  "id": "sh-pipe-cmdsub",
+  "ex": "grep -v \"^#\" /etc/nginx/nginx.conf | grep -v \"^$\" | wc -l"
+ },
+ {
+  "id": "sh-pipe-cmdsub",
+  "ex": "ls /var/log/*.log 2>&1 | head -3; echo \"各段退出码: ${PIPESTATUS[@]}\""
+ },
+ {
+  "id": "sh-pipe-cmdsub",
+  "ex": "find /data -name \"*.log\" -print0 | xargs -0 rm -f"
+ },
+ {
+  "id": "sh-tee-exec",
+  "ex": "df -h | tee /var/log/disk-check.log"
+ },
+ {
+  "id": "sh-tee-exec",
+  "ex": "df -h | tee -a /var/log/disk-check.log"
+ },
+ {
+  "id": "sh-tee-exec",
+  "ex": "echo \"net.core.somaxconn = 32768\" | sudo tee /etc/sysctl.d/99-tuning.conf"
+ },
+ {
+  "id": "sh-tee-exec",
+  "ex": "exec >> /var/log/backup.log 2>&1 && echo \"备份开始 $(date +%F\\ %T)\""
+ },
+ {
+  "id": "sh-tee-exec",
+  "ex": "exec 3< /etc/hosts && while IFS= read -r line <&3; do echo \"$line\"; done && exec 3<&-"
+ },
+ {
+  "id": "sh-tee-exec",
+  "ex": "LOG=/var/log/deploy.log; exec > >(tee -a \"$LOG\") 2>&1; echo \"部署开始\""
+ },
+ {
+  "id": "sh-devnull-devtcp",
+  "ex": "command -v docker >/dev/null 2>&1 && echo \"docker 已安装\""
+ },
+ {
+  "id": "sh-devnull-devtcp",
+  "ex": "(echo > /dev/tcp/10.0.1.23/80) 2>/dev/null && echo \"80 端口可达\" || echo \"80 端口不可达\""
+ },
+ {
+  "id": "sh-devnull-devtcp",
+  "ex": "for p in 22 80 443 3306; do (echo > /dev/tcp/10.0.1.23/$p) 2>/dev/null && echo \"$p 开放\" || echo \"$p 关闭\"; done"
+ },
+ {
+  "id": "sh-devnull-devtcp",
+  "ex": "timeout 3 bash -c \"echo > /dev/tcp/10.0.1.23/3306\" 2>/dev/null && echo \"可达\""
+ },
+ {
+  "id": "sh-devnull-devtcp",
+  "ex": "dd if=/dev/zero of=/tmp/testfile bs=1M count=100 2>/dev/null && ls -lh /tmp/testfile"
+ },
+ {
+  "id": "sh-devnull-devtcp",
+  "ex": "df -h >/dev/null 2>&1; echo \"df 退出码 $?\""
+ },
+ {
+  "id": "sh-set-euo-pipefail",
+  "ex": "head -3 /opt/scripts/strict-demo.sh"
+ },
+ {
+  "id": "sh-set-euo-pipefail",
+  "ex": "printf \"#!/bin/bash\\\nset -Eeuo pipefail\\\ntrap 'echo \\\"第 \\$LINENO 行失败\\\" >&2' ERR\\\necho \\\"开始执行\\\"\\\n\" > /tmp/strict.sh && chmod +x /tmp/strict.sh && /tmp/strict.sh"
+ },
+ {
+  "id": "sh-set-euo-pipefail",
+  "ex": "set -e; false; echo \"这行不会执行\""
+ },
+ {
+  "id": "sh-set-euo-pipefail",
+  "ex": "set -o pipefail; false | true; echo \"退出码 $?\""
+ },
+ {
+  "id": "sh-set-euo-pipefail",
+  "ex": "set -u; echo \"${UNDEFINED_VAR:-默认值}\"; echo \"仍然继续执行\""
+ },
+ {
+  "id": "sh-set-euo-pipefail",
+  "ex": "set -e; if false; then echo yes; else echo \"条件位置失败不退出\"; fi"
+ },
+ {
+  "id": "sh-trap",
+  "ex": "tmp=$(mktemp) && trap \"rm -f $tmp\" EXIT && echo \"临时文件: $tmp\""
+ },
+ {
+  "id": "sh-trap",
+  "ex": "lock=/var/lock/myapp.lock && trap \"rm -f $lock\" EXIT INT TERM && touch \"$lock\""
+ },
+ {
+  "id": "sh-trap",
+  "ex": "trap 'echo \"错误发生在第 $LINENO 行: $BASH_COMMAND\" >&2' ERR"
+ },
+ {
+  "id": "sh-trap",
+  "ex": "trap 'echo 收到中断信号，正在收尾...; exit 130' INT TERM"
+ },
+ {
+  "id": "sh-trap",
+  "ex": "trap 'rc=$?; echo 脚本退出，退出码 $rc' EXIT; false"
+ },
+ {
+  "id": "sh-trap",
+  "ex": "trap -l | head -20"
+ },
+ {
+  "id": "sh-shift",
+  "ex": "while [ $# -gt 0 ]; do echo \"处理参数: $1\"; shift; done"
+ },
+ {
+  "id": "sh-shift",
+  "ex": "if [ $# -lt 2 ]; then echo \"用法: $0 <源目录> <目标目录>\" >&2; exit 1; fi"
+ },
+ {
+  "id": "sh-shift",
+  "ex": "cmd=$1; shift; case \"$cmd\" in start) echo \"启动: $*\" ;; stop) echo \"停止: $*\" ;; *) echo \"未知子命令\" ;; esac"
+ },
+ {
+  "id": "sh-shift",
+  "ex": "while getopts \"f:v\" opt; do case \"$opt\" in f) FILE=$OPTARG ;; v) VERBOSE=1 ;; esac; done; shift $((OPTIND-1)); echo \"剩余参数: $*\""
+ },
+ {
+  "id": "sh-shift",
+  "ex": "print_all() { echo \"共 $# 个参数\"; }; print_all \"$@\""
+ },
+ {
+  "id": "sh-mktemp",
+  "ex": "tmp=$(mktemp) && trap \"rm -f $tmp\" EXIT && df -h > \"$tmp\" && wc -l < \"$tmp\""
+ },
+ {
+  "id": "sh-mktemp",
+  "ex": "workdir=$(mktemp -d -p /data/tmp) && trap \"rm -rf $workdir\" EXIT && echo \"工作目录: $workdir\""
+ },
+ {
+  "id": "sh-mktemp",
+  "ex": "tmp=$(mktemp -p /data/tmp) && trap \"rm -f $tmp\" EXIT && dd if=/dev/zero of=\"$tmp\" bs=1M count=100"
+ },
+ {
+  "id": "sh-mktemp",
+  "ex": "tmp=$(mktemp -p /data/tmp) || { echo \"创建临时文件失败\" >&2; exit 1; }"
+ },
+ {
+  "id": "sh-mktemp",
+  "ex": "df -h /tmp && mount | grep \" /tmp \""
+ },
+ {
+  "id": "sh-read",
+  "ex": "read -r -p \"请输入目标主机 IP: \" host && echo \"将操作 $host\""
+ },
+ {
+  "id": "sh-read",
+  "ex": "read -r -s -p \"请输入数据库密码: \" dbpass && echo && echo \"已接收 ${#dbpass} 位密码\""
+ },
+ {
+  "id": "sh-read",
+  "ex": "read -r -t 10 -p \"10 秒内确认继续执行? [y/N] \" ans; case \"$ans\" in [Yy]*) echo \"继续\" ;; *) echo \"已取消\" ;; esac"
+ },
+ {
+  "id": "sh-read",
+  "ex": "while IFS= read -r line; do echo \"处理: $line\"; done < hosts.txt"
+ },
+ {
+  "id": "sh-read",
+  "ex": "while IFS= read -r line || [ -n \"$line\" ]; do echo \"$line\"; done < /tmp/no-newline.txt"
+ },
+ {
+  "id": "sh-read",
+  "ex": "read -r -a parts <<< \"nginx 80 running\" && echo \"服务 ${parts[0]} 端口 ${parts[1]}\""
+ },
+ {
+  "id": "sh-read",
+  "ex": "read -r -n 1 -s -p \"按任意键继续...\" && echo \"继续执行\""
+ },
+ {
+  "id": "sh-log-error",
+  "ex": "LOG=/tmp/myapp.log; log() { echo \"[$(date \"+%F %T\")] [INFO] $*\" | tee -a \"$LOG\"; }; log \"脚本开始执行\""
+ },
+ {
+  "id": "sh-log-error",
+  "ex": "die() { echo \"[$(date \"+%F %T\")] [ERROR] $*\" >&2; exit 1; }; [ -f /etc/myapp/app.conf ] || die \"配置文件不存在: /etc/myapp/app.conf\""
+ },
+ {
+  "id": "sh-log-error",
+  "ex": "set -Eeuo pipefail; trap 'echo \"[$(date \"+%F %T\")] [ERROR] 第 $LINENO 行失败: $BASH_COMMAND\" >&2' ERR"
+ },
+ {
+  "id": "sh-log-error",
+  "ex": "LOG=/var/log/myapp/deploy.log; mkdir -p \"$(dirname \"$LOG\")\" && exec >> \"$LOG\" 2>&1 && echo \"部署开始 $(date \"+%F %T\")\""
+ },
+ {
+  "id": "sh-log-error",
+  "ex": "count=$(grep -c ERROR /var/log/app.log 2>/dev/null || echo 0); echo \"错误数: $count\" >&2; echo \"$count\""
+ },
+ {
+  "id": "sh-debug",
+  "ex": "bash -n /opt/scripts/backup.sh && echo \"语法检查通过\""
+ },
+ {
+  "id": "sh-debug",
+  "ex": "bash -x /opt/scripts/backup.sh /data/app /data/backup 2>/tmp/debug.log"
+ },
+ {
+  "id": "sh-debug",
+  "ex": "PS4='+ $LINENO: '; set -x; host=10.0.1.23; ping -c 1 \"$host\"; set +x"
+ },
+ {
+  "id": "sh-debug",
+  "ex": "shellcheck /opt/scripts/backup.sh"
+ },
+ {
+  "id": "sh-debug",
+  "ex": "set -Eeuo pipefail; trap 'echo \"失败于第 $LINENO 行: $BASH_COMMAND\" >&2' ERR"
+ },
+ {
+  "id": "sh-debug",
+  "ex": "bash -x /opt/scripts/deploy.sh 2>&1 | grep -n \"curl\" | head -5"
+ },
+ {
+  "id": "sh-background",
+  "ex": "nohup /opt/myapp/start.sh > /var/log/myapp/start.log 2>&1 & echo \"已启动 PID: $!\""
+ },
+ {
+  "id": "sh-background",
+  "ex": "setsid /opt/myapp/batch.sh > /var/log/myapp/batch.log 2>&1 & echo \"已在新会话启动: $!\""
+ },
+ {
+  "id": "sh-background",
+  "ex": "/opt/myapp/long-task.sh & disown -h %1"
+ },
+ {
+  "id": "sh-background",
+  "ex": "jobs -l && ps -ef | grep -v grep | grep myapp"
+ },
+ {
+  "id": "sh-background",
+  "ex": "for i in 1 2 3 4; do (curl -s \"http://10.0.1.2$i/health\" > /tmp/h$i.log 2>&1 &); done; wait"
+ },
+ {
+  "id": "sh-screen-tmux",
+  "ex": "tmux new -s deploy"
+ },
+ {
+  "id": "sh-screen-tmux",
+  "ex": "tmux ls"
+ },
+ {
+  "id": "sh-screen-tmux",
+  "ex": "tmux attach -t deploy"
+ },
+ {
+  "id": "sh-screen-tmux",
+  "ex": "tmux new -d -s convert 'qemu-img convert -p -O qcow2 /data/a.raw /data/a.qcow2'"
+ },
+ {
+  "id": "sh-screen-tmux",
+  "ex": "screen -S dbload && screen -ls && screen -r dbload"
+ },
+ {
+  "id": "sh-screen-tmux",
+  "ex": "screen -d -r dbload"
+ },
+ {
+  "id": "sh-wait",
+  "ex": "for i in 1 2 3; do (sleep $i; echo \"任务 $i 完成\") & done; wait; echo \"全部完成\""
+ },
+ {
+  "id": "sh-wait",
+  "ex": "for h in 10.0.1.21 10.0.1.22 10.0.1.23; do (ping -c 1 -W 1 \"$h\" >/dev/null && echo \"$h 可达\" || echo \"$h 不可达\") & done; wait"
+ },
+ {
+  "id": "sh-wait",
+  "ex": "MAX=5; for h in $(seq 1 20); do (sleep 1; echo \"处理 $h\") & while [ \"$(jobs -rp | wc -l)\" -ge \"$MAX\" ]; do sleep 0.2; done; done; wait"
+ },
+ {
+  "id": "sh-wait",
+  "ex": "pids=(); for h in 10.0.1.21 10.0.1.22; do (check_host \"$h\") & pids+=($!); done; for p in \"${pids[@]}\"; do wait \"$p\" || echo \"PID $p 的任务失败\"; done"
+ },
+ {
+  "id": "sh-wait",
+  "ex": "seq 1 20 | xargs -P 5 -I{} sh -c \"sleep 1; echo 处理 {}\""
+ },
+ {
+  "id": "sh-timeout",
+  "ex": "timeout 5 ssh -o BatchMode=yes -o ConnectTimeout=3 10.0.1.23 uptime || echo \"连接超时或失败\""
+ },
+ {
+  "id": "sh-timeout",
+  "ex": "timeout 3 bash -c \"echo > /dev/tcp/10.0.1.23/3306\" 2>/dev/null && echo \"端口可达\" || echo \"不可达或超时\""
+ },
+ {
+  "id": "sh-timeout",
+  "ex": "timeout -k 5 30 systemctl restart nginx; rc=$?; [ \"$rc\" = 124 ] && echo \"重启超时，需要人工介入\""
+ },
+ {
+  "id": "sh-timeout",
+  "ex": "timeout 600 tar -czf /data/backup/app.tar.gz /data/app; [ $? = 124 ] && echo \"备份超时告警\" >&2"
+ },
+ {
+  "id": "sh-timeout",
+  "ex": "timeout -s KILL 10 /opt/myapp/stubborn-task.sh"
+ },
+ {
+  "id": "sh-systemd-wrapper",
+  "ex": "printf \"[Unit]\\\nDescription=MyApp 备份任务\\\nAfter=network-online.target\\\n\\\n[Service]\\\nType=oneshot\\\nUser=backup\\\nWorkingDirectory=/opt/myapp\\\nExecStart=/opt/myapp/bin/backup.sh\\\nTimeoutStartSec=3600\\\n\\\n[Install]\\\nWantedBy=multi-user.target\\\n\" | sudo tee /etc/systemd/system/myapp-backup.service"
+ },
+ {
+  "id": "sh-systemd-wrapper",
+  "ex": "sudo systemctl daemon-reload && sudo systemctl start myapp-backup"
+ },
+ {
+  "id": "sh-systemd-wrapper",
+  "ex": "systemctl status myapp-backup && journalctl -u myapp-backup -n 50 --no-pager"
+ },
+ {
+  "id": "sh-systemd-wrapper",
+  "ex": "sudo systemctl enable myapp-backup"
+ },
+ {
+  "id": "sh-systemd-wrapper",
+  "ex": "printf \"[Unit]\\\nDescription=MyApp 备份定时器\\\n\\\n[Timer]\\\nOnCalendar=daily\\\nPersistent=true\\\n\\\n[Install]\\\nWantedBy=timers.target\\\n\" | sudo tee /etc/systemd/system/myapp-backup.timer"
+ },
+ {
+  "id": "sh-systemd-wrapper",
+  "ex": "systemctl list-timers --all | grep myapp"
+ },
+ {
+  "id": "sh-template-backup",
+  "ex": "#!/bin/bash\nset -Eeuo pipefail\n\nSRC=/data/app\nDST=/data/backup\nRETENTION=7\nLOG=/var/log/backup.log\nLOCK=/var/lock/backup.lock\n\nlog() { echo \"[$(date '+%F %T')] [INFO] $*\" | tee -a \"$LOG\"; }\ndie() { echo \"[$(date '+%F %T')] [ERROR] $*\" >&2 | tee -a \"$LOG\"; exit 1; }\n\nmkdir -p \"$DST\" \"$(dirname \"$LOG\")\"\nexec 9>\"$LOCK\"\nflock -n 9 || die \"已有备份任务在运行，本次退出\"\n\n[ -d \"$SRC\" ] || die \"源目录不存在: $SRC\"\n\nSTAMP=$(date +%F)\nFINAL=\"$DST/app-$STAMP.tar.gz\"\nTMP=\"$FINAL.tmp\"\ntrap 'rm -f \"$TMP\"' EXIT\n\nlog \"开始备份 $SRC\"\ntar -czf \"$TMP\" -C \"$SRC\" . || die \"打包失败\"\nmv \"$TMP\" \"$FINAL\"\n\nfind \"$DST\" -name 'app-*.tar.gz' -mtime +\"$RETENTION\" -delete\nlog \"备份完成: $FINAL 大小 $(du -h \"$FINAL\" | cut -f1)\""
+ },
+ {
+  "id": "sh-template-backup",
+  "ex": "tar -tzf /data/backup/app-2024-03-18.tar.gz | head -5"
+ },
+ {
+  "id": "sh-template-backup",
+  "ex": "mkdir -p /tmp/restore-test && tar -xzf /data/backup/app-2024-03-18.tar.gz -C /tmp/restore-test && ls /tmp/restore-test"
+ },
+ {
+  "id": "sh-template-backup",
+  "ex": "printf \"net.core.somaxconn = 32768\\\n\" > /dev/null; flock -n /var/lock/backup.lock -c \"echo 锁可用\""
+ },
+ {
+  "id": "sh-template-log-clean",
+  "ex": "#!/bin/bash\nset -Eeuo pipefail\n\nLOG_DIR=/var/log/myapp\nKEEP_DAYS=14\nMAX_SIZE_MB=500\nLOG=/var/log/logclean.log\n\nlog() { echo \"[$(date '+%F %T')] $*\" | tee -a \"$LOG\"; }\n\n[ -d \"$LOG_DIR\" ] || { echo \"日志目录不存在: $LOG_DIR\" >&2; exit 1; }\n\nlog \"开始清理 $LOG_DIR\"\nfind \"$LOG_DIR\" -type f -name '*.log' -mtime +\"$KEEP_DAYS\" -print -delete | wc -l\nfind \"$LOG_DIR\" -type f -name '*.log' -mtime +7 ! -name '*.gz' -exec gzip -q {} \\;\n\nwhile IFS= read -r f; do\n  size=$(du -m \"$f\" | cut -f1)\n  if [ \"$size\" -gt \"$MAX_SIZE_MB\" ]; then\n    truncate -s 0 \"$f\"\n    log \"已截断超大日志: $f (${size}MB)\"\n  fi\ndone < <(find \"$LOG_DIR\" -type f -name '*.log')\n\nlog \"清理完成，当前占用: $(du -sh \"$LOG_DIR\" | cut -f1)\""
+ },
+ {
+  "id": "sh-template-log-clean",
+  "ex": "lsof +L1 | grep deleted | head -10"
+ },
+ {
+  "id": "sh-template-log-clean",
+  "ex": "truncate -s 0 /var/log/myapp/app.log && ls -lh /var/log/myapp/app.log"
+ },
+ {
+  "id": "sh-template-log-clean",
+  "ex": "logrotate -d /etc/logrotate.d/myapp"
+ },
+ {
+  "id": "sh-template-health",
+  "ex": "#!/bin/bash\nset -Eeuo pipefail\n\nURL=http://127.0.0.1:8080/health\nSERVICE=myapp\nRETRY=3\nINTERVAL=5\nLOG=/var/log/healthcheck.log\n\nlog() { echo \"[$(date '+%F %T')] $*\" | tee -a \"$LOG\"; }\n\nfor i in $(seq 1 \"$RETRY\"); do\n  if curl -sf -m 5 \"$URL\" >/dev/null; then\n    log \"健康检查通过（第 $i 次）\"\n    exit 0\n  fi\n  log \"第 $i 次检查失败，${INTERVAL} 秒后重试\"\n  sleep \"$INTERVAL\"\ndone\n\nlog \"连续 ${RETRY} 次检查失败，重启服务 $SERVICE\"\nif systemctl restart \"$SERVICE\"; then\n  sleep 10\n  if curl -sf -m 5 \"$URL\" >/dev/null; then\n    log \"重启后服务已恢复\"\n    exit 0\n  fi\n  log \"重启后仍未恢复，需要人工介入\"\n  exit 2\nfi\nlog \"重启命令执行失败\"\nexit 3"
+ },
+ {
+  "id": "sh-template-health",
+  "ex": "curl -sf -m 5 -o /dev/null -w \"%{http_code}\\\n\" http://127.0.0.1:8080/health; echo \"退出码 $?\""
+ },
+ {
+  "id": "sh-template-health",
+  "ex": "crond 环境下手动测试: /opt/scripts/healthcheck.sh; echo \"退出码 $?\""
+ },
+ {
+  "id": "sh-template-health",
+  "ex": "grep -c \"重启服务\" /var/log/healthcheck.log"
+ },
+ {
+  "id": "sh-template-batch-ssh",
+  "ex": "#!/bin/bash\nset -Eeuo pipefail\n\nHOSTS_FILE=${1:-/opt/scripts/hosts.txt}\nSSH_USER=${SSH_USER:-ops}\nCONCURRENCY=${CONCURRENCY:-5}\nCMD=${2:-uptime}\nOUTDIR=/var/log/batch-$(date +%F_%H%M%S)\n\n[ -f \"$HOSTS_FILE\" ] || { echo \"主机清单不存在: $HOSTS_FILE\" >&2; exit 1; }\nmkdir -p \"$OUTDIR\"\n\nrun_one() {\n  local host=$1\n  if timeout 15 ssh -n -p 22 -o BatchMode=yes -o ConnectTimeout=5 \"$SSH_USER@$host\" \"$CMD\" > \"$OUTDIR/$host.out\" 2>&1; then\n    echo \"[OK]   $host\"\n  else\n    echo \"[FAIL] $host\"\n  fi\n}\nexport -f run_one\nexport SSH_USER OUTDIR CMD\n\ngrep -vE '^[[:space:]]*(#|$)' \"$HOSTS_FILE\" | xargs -P \"$CONCURRENCY\" -I{} bash -c 'run_one \"$@\"' _ {}\n\necho \"全部完成，逐台结果见: $OUTDIR\"\nls -1 \"$OUTDIR\" | wc -l"
+ },
+ {
+  "id": "sh-template-batch-ssh",
+  "ex": "printf '10.0.1.21\\\n10.0.1.22\\\n# 10.0.1.23 维护中\\\n' > /opt/scripts/hosts.txt && cat /opt/scripts/hosts.txt"
+ },
+ {
+  "id": "sh-template-batch-ssh",
+  "ex": "bash /opt/scripts/batch.sh /opt/scripts/hosts.txt \"uptime\""
+ },
+ {
+  "id": "sh-template-batch-ssh",
+  "ex": "cat /var/log/batch-*/10.0.1.21.out"
+ },
+ {
+  "id": "sh-template-batch-ssh",
+  "ex": "ssh -n -o BatchMode=yes -o ConnectTimeout=5 ops@10.0.1.21 \"hostname\""
+ },
+ {
+  "id": "sh-template-batch-ssh",
+  "ex": "bash /opt/scripts/batch.sh /opt/scripts/hosts.txt \"sudo systemctl restart myapp\""
+ },
+ {
+  "id": "sh-echo",
+  "ex": "echo \"app.timeout=30m\" >> /data/app/config.yaml"
+ },
+ {
+  "id": "sh-echo",
+  "ex": "echo \"a=1\" > /tmp/tmp.conf"
+ },
+ {
+  "id": "sh-echo",
+  "ex": "echo -n \"no-newline\""
+ },
+ {
+  "id": "sh-echo",
+  "ex": "echo -e \"line1\\\nline2\""
+ }
+]

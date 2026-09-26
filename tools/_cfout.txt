@@ -1,0 +1,135 @@
+﻿共 198 条 cmd 示例
+  for: 21
+  while: 16
+  until: 2
+  if: 23
+  case: 10
+  $(...): 32
+  read: 16
+  test-bracket: 29
+  arith-(()): 8
+  funcdef: 12
+  trap: 13
+  getopts: 4
+  array: 9
+  brace-{n..m}: 1
+  shift: 5
+  seq: 3
+  IFS=read: 9
+  heredoc: 7
+  procsub: 2
+  bg-&: 8
+  set-e: 12
+  multiline: 17
+  done: 38
+  fi: 21
+  esac: 10
+  printf: 7
+  basename: 1
+  dirname: 2
+  mktemp: 5
+  command: 2
+  true/false: 6
+  colon: 1
+  ${#}: 4
+  ${x:-}: 4
+  ${x%%}: 3
+
+===== 含 for/while/until/if/case 的例子 =====
+[sh-string-ops] "for f in /var/log/*.log; do echo \"处理 ${f##*/}\"; done"
+[sh-array] "HOSTS=(10.0.1.21 10.0.1.22 10.0.1.23) && for h in \"${HOSTS[@]}\"; do echo \"检查 $h\"; done"
+[sh-array] "declare -A PORT && PORT[web]=80 && PORT[db]=3306 && for k in \"${!PORT[@]}\"; do echo \"$k -> ${PORT[$k]}\"; done"
+[sh-special-vars] "if [ $# -lt 2 ]; then echo \"用法: $0 <源目录> <目标目录>\"; exit 1; fi"
+[sh-special-vars] "for arg in \"$@\"; do echo \"参数: $arg\"; done"
+[sh-if] "if [ ! -f /etc/nginx/nginx.conf ]; then echo \"配置文件缺失\"; exit 1; fi"
+[sh-if] "if command -v docker >/dev/null 2>&1; then echo \"docker 已安装\"; else echo \"需要先安装 docker\"; fi"
+[sh-if] "if [ $# -lt 2 ]; then echo \"用法: $0 <源目录> <目标目录>\"; exit 1; elif [ ! -d \"$1\" ]; then echo \"源目录不存在: $1\"; exit 1; fi"
+[sh-if] "if grep -q \"ERROR\" /var/log/app.log; then echo \"发现错误日志\"; fi"
+[sh-if] "if systemctl is-active --quiet nginx; then echo \"nginx 运行中\"; else systemctl restart nginx; fi"
+[sh-if] "if [ \"$(id -u)\" -ne 0 ]; then echo \"请用 root 运行\"; exit 1; fi"
+[sh-test] "if [[ -f /etc/nginx/nginx.conf && -r /etc/nginx/nginx.conf ]]; then echo \"配置可读\"; fi"
+[sh-test] "if [[ \"$FILE\" == *.log ]]; then echo \"这是日志文件\"; fi"
+[sh-test] "if [[ \"$IP\" =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then echo \"IPv4 格式正确\"; fi"
+[sh-test] "count=15 && if (( count > 10 )); then echo \"超过阈值\"; fi"
+[sh-test] "if [ -z \"${NAME:-}\" ]; then echo \"NAME 未设置\"; fi"
+[sh-test] "var= && if [ -n $var ]; then echo yes; else echo no; fi"
+[sh-case] "case \"$1\" in start) systemctl start nginx ;; stop) systemctl stop nginx ;; restart) systemctl restart nginx ;; *) echo \"用法: $0 {start|stop|restart}\"; exit 1 ;; esac"
+[sh-case] "case \"$file\" in *.tar.gz) tar -xzf \"$file\" ;; *.zip) unzip -q \"$file\" ;; *.gz) gunzip \"$file\" ;; *) echo \"不支持的格式: $file\" ;; esac"
+[sh-case] "case \"$(uname -s)\" in Linux) pkg=dnf ;; Darwin) pkg=brew ;; *) pkg=unknown ;; esac && echo \"包管理器: $pkg\""
+[sh-case] "read -r -p \"确认删除? [y/N] \" ans; case \"$ans\" in [Yy]|[Yy][Ee][Ss]) echo \"执行删除\" ;; *) echo \"已取消\" ;; esac"
+[sh-for] "for h in 10.0.1.21 10.0.1.22 10.0.1.23; do ping -c 1 -W 1 \"$h\" >/dev/null && echo \"$h 可达\" || echo \"$h 不可达\"; done"
+[sh-for] "for f in /var/log/*.log; do [ -e \"$f\" ] || continue; echo \"$(basename \"$f\"): $(wc -l < \"$f\") 行\"; done"
+[sh-for] "for i in {1..5}; do echo \"第 $i 次重试\"; sleep 2; done"
+[sh-for] "for ((i=0; i<${#HOSTS[@]}; i++)); do echo \"${HOSTS[$i]}\"; done"
+[sh-for] "while IFS= read -r host; do echo \"处理 $host\"; done < hosts.txt"
+[sh-for] "for d in /data/app /data/log /data/backup; do echo \"$d: $(du -sh \"$d\" 2>/dev/null | cut -f1)\"; done"
+[sh-while-until] "n=0; until curl -sf http://127.0.0.1:8080/health >/dev/null; do n=$((n+1)); [ $n -gt 30 ] && { echo \"等待超时\"; exit 1; }; sleep 2; done; echo \"服务已就绪\""
+[sh-while-until] "while IFS= read -r host; do echo \"检查 $host\"; done < hosts.txt"
+[sh-while-until] "count=0; while IFS= read -r line; do count=$((count+1)); done < /var/log/app.log; echo \"共 $count 行\""
+[sh-while-until] "while IFS= read -r line; do count=$((count+1)); done < <(grep -c ERROR /var/log/app.log); echo \"$count\""
+[sh-while-until] "while true; do if [ -f /tmp/stop.flag ]; then echo \"收到停止标志，退出\"; break; fi; sleep 5; done"
+[sh-while-until] "until systemctl is-active --quiet nginx; do echo \"等待 nginx 启动\"; sleep 1; done"
+[sh-break-continue] "for i in 1 2 3 4 5; do [ \"$i\" -eq 3 ] && break; echo \"$i\"; done"
+[sh-break-continue] "for i in 1 2 3 4 5; do [ \"$i\" -eq 3 ] && continue; echo \"$i\"; done"
+[sh-break-continue] "for i in 1 2 3; do for j in a b c; do [ \"$j\" = b ] && continue 2; echo \"$i-$j\"; done; done"
+[sh-break-continue] "while IFS= read -r line; do [ -z \"$line\" ] && continue; case \"$line\" in \\#*) continue ;; esac; echo \"处理: $line\"; done < config.txt"
+[sh-break-continue] "for i in 1 2 3; do if curl -sf http://10.0.1.23/health >/dev/null; then echo \"第 $i 次成功\"; break; fi; sleep 3; done"
+[sh-function] "check_port() { local host=$1 port=$2; timeout 2 bash -c \"cat < /dev/null > /dev/tcp/$host/$port\" 2>/dev/null; } && if check_port 10.0.1.23 80; then echo \"端口可达\"; fi"
+[sh-function] "retry() { local n=$1; shift; local i; for ((i=1;i<=n;i++)); do \"$@\" && return 0; sleep 3; done; return 1; } && retry 3 curl -sf http://10.0.1.23/health"
+[sh-getopts] "while getopts \"hvf:o:\" opt; do case \"$opt\" in h) echo \"用法: $0 [-v] [-f 输入文件] [-o 输出文件]\"; exit 0 ;; v) VERBOSE=1 ;; f) FILE=$OPTARG ;; o) OUT=$OPTARG ;; \\?) echo \"未知选项，使用 -h 查看用法\"; exit 1 ;; esac; done; shift $((OPTIND-1))"
+[sh-getopts] "VERBOSE=0; while getopts \"v\" opt; do [ \"$opt\" = v ] && VERBOSE=1; done; [ \"$VERBOSE\" = 1 ] && echo \"详细模式已开启\""
+[sh-getopts] "while getopts \":f:\" opt; do case \"$opt\" in f) FILE=$OPTARG ;; :) echo \"选项 -$OPTARG 缺少值\"; exit 1 ;; \\?) echo \"未知选项: -$OPTARG\"; exit 1 ;; esac; done"
+[sh-tee-exec] "exec 3< /etc/hosts && while IFS= read -r line <&3; do echo \"$line\"; done && exec 3<&-"
+[sh-devnull-devtcp] "for p in 22 80 443 3306; do (echo > /dev/tcp/10.0.1.23/$p) 2>/dev/null && echo \"$p 开放\" || echo \"$p 关闭\"; done"
+[sh-devnull-devtcp] "dd if=/dev/zero of=/tmp/testfile bs=1M count=100 2>/dev/null && ls -lh /tmp/testfile"
+[sh-set-euo-pipefail] "set -e; if false; then echo yes; else echo \"条件位置失败不退出\"; fi"
+[sh-shift] "while [ $# -gt 0 ]; do echo \"处理参数: $1\"; shift; done"
+[sh-shift] "if [ $# -lt 2 ]; then echo \"用法: $0 <源目录> <目标目录>\" >&2; exit 1; fi"
+[sh-shift] "cmd=$1; shift; case \"$cmd\" in start) echo \"启动: $*\" ;; stop) echo \"停止: $*\" ;; *) echo \"未知子命令\" ;; esac"
+[sh-shift] "while getopts \"f:v\" opt; do case \"$opt\" in f) FILE=$OPTARG ;; v) VERBOSE=1 ;; esac; done; shift $((OPTIND-1)); echo \"剩余参数: $*\""
+[sh-mktemp] "tmp=$(mktemp -p /data/tmp) && trap \"rm -f $tmp\" EXIT && dd if=/dev/zero of=\"$tmp\" bs=1M count=100"
+[sh-read] "read -r -t 10 -p \"10 秒内确认继续执行? [y/N] \" ans; case \"$ans\" in [Yy]*) echo \"继续\" ;; *) echo \"已取消\" ;; esac"
+[sh-read] "while IFS= read -r line; do echo \"处理: $line\"; done < hosts.txt"
+[sh-read] "while IFS= read -r line || [ -n \"$line\" ]; do echo \"$line\"; done < /tmp/no-newline.txt"
+[sh-background] "for i in 1 2 3 4; do (curl -s \"http://10.0.1.2$i/health\" > /tmp/h$i.log 2>&1 &); done; wait"
+[sh-wait] "for i in 1 2 3; do (sleep $i; echo \"任务 $i 完成\") & done; wait; echo \"全部完成\""
+[sh-wait] "for h in 10.0.1.21 10.0.1.22 10.0.1.23; do (ping -c 1 -W 1 \"$h\" >/dev/null && echo \"$h 可达\" || echo \"$h 不可达\") & done; wait"
+[sh-wait] "MAX=5; for h in $(seq 1 20); do (sleep 1; echo \"处理 $h\") & while [ \"$(jobs -rp | wc -l)\" -ge \"$MAX\" ]; do sleep 0.2; done; done; wait"
+[sh-wait] "pids=(); for h in 10.0.1.21 10.0.1.22; do (check_host \"$h\") & pids+=($!); done; for p in \"${pids[@]}\"; do wait \"$p\" || echo \"PID $p 的任务失败\"; done"
+[sh-template-log-clean] "#!/bin/bash\nset -Eeuo pipefail\n\nLOG_DIR=/var/log/myapp\nKEEP_DAYS=14\nMAX_SIZE_MB=500\nLOG=/var/log/logclean.log\n\nlog() { echo \"[$(date '+%F %T')] $*\" | tee -a \"$LOG\"; }\n\n[ -d \"$LOG_DIR\" ] || { echo \"日志目录不存在: $LOG_DIR\" >&2; exit 1; }\n\nlog \"开始清理 $LOG_DIR\"\nfind \"$LOG_DIR\" -type f -name '*.log' -mtime +\"$KEEP_DAYS\" -print -delete | wc -l\nfind \"$LOG_DIR\" -type f -name '*.log' -mtime +7 ! -name '*.gz' -exec gzip -q {} \\;\n\nwhile IFS= read -r f; do\n  size=$(du -m \"$f\" | cut -f1)\n  if [ \"$size\" -gt \"$MAX_SIZE_MB\" ]; then\n    truncate -s 0 \"$f\"\n    log \"已截断超大日志: $f (${size}MB)\"\n  fi\ndone < <(find \"$LOG_DIR\" -type f -name '*.log')\n\nlog \"清理完成，当前占用: $(du -sh \"$LOG_DIR\" | cut -f1)\""
+[sh-template-health] "#!/bin/bash\nset -Eeuo pipefail\n\nURL=http://127.0.0.1:8080/health\nSERVICE=myapp\nRETRY=3\nINTERVAL=5\nLOG=/var/log/healthcheck.log\n\nlog() { echo \"[$(date '+%F %T')] $*\" | tee -a \"$LOG\"; }\n\nfor i in $(seq 1 \"$RETRY\"); do\n  if curl -sf -m 5 \"$URL\" >/dev/null; then\n    log \"健康检查通过（第 $i 次）\"\n    exit 0\n  fi\n  log \"第 $i 次检查失败，${INTERVAL} 秒后重试\"\n  sleep \"$INTERVAL\"\ndone\n\nlog \"连续 ${RETRY} 次检查失败，重启服务 $SERVICE\"\nif systemctl restart \"$SERVICE\"; then\n  sleep 10\n  if curl -sf -m 5 \"$URL\" >/dev/null; then\n    log \"重启后服务已恢复\"\n    exit 0\n  fi\n  log \"重启后仍未恢复，需要人工介入\"\n  exit 2\nfi\nlog \"重启命令执行失败\"\nexit 3"
+[sh-template-batch-ssh] "#!/bin/bash\nset -Eeuo pipefail\n\nHOSTS_FILE=${1:-/opt/scripts/hosts.txt}\nSSH_USER=${SSH_USER:-ops}\nCONCURRENCY=${CONCURRENCY:-5}\nCMD=${2:-uptime}\nOUTDIR=/var/log/batch-$(date +%F_%H%M%S)\n\n[ -f \"$HOSTS_FILE\" ] || { echo \"主机清单不存在: $HOSTS_FILE\" >&2; exit 1; }\nmkdir -p \"$OUTDIR\"\n\nrun_one() {\n  local host=$1\n  if timeout 15 ssh -n -p 22 -o BatchMode=yes -o ConnectTimeout=5 \"$SSH_USER@$host\" \"$CMD\" > \"$OUTDIR/$host.out\" 2>&1; then\n    echo \"[OK]   $host\"\n  else\n    echo \"[FAIL] $host\"\n  fi\n}\nexport -f run_one\nexport SSH_USER OUTDIR CMD\n\ngrep -vE '^[[:space:]]*(#|$)' \"$HOSTS_FILE\" | xargs -P \"$CONCURRENCY\" -I{} bash -c 'run_one \"$@\"' _ {}\n\necho \"全部完成，逐台结果见: $OUTDIR\"\nls -1 \"$OUTDIR\" | wc -l"
+
+===== 含 $() 或反引号的例子 =====
+[sh-var-export] "NOW=$(date +%F) && LOG=/var/log/app-$NOW.log && echo \"$LOG\""
+[sh-quotes] "echo \"今天是 $(date +%F)，用户是 $(whoami)\""
+[sh-if] "if [ \"$(id -u)\" -ne 0 ]; then echo \"请用 root 运行\"; exit 1; fi"
+[sh-case] "case \"$(uname -s)\" in Linux) pkg=dnf ;; Darwin) pkg=brew ;; *) pkg=unknown ;; esac && echo \"包管理器: $pkg\""
+[sh-for] "for f in /var/log/*.log; do [ -e \"$f\" ] || continue; echo \"$(basename \"$f\"): $(wc -l < \"$f\") 行\"; done"
+[sh-for] "for d in /data/app /data/log /data/backup; do echo \"$d: $(du -sh \"$d\" 2>/dev/null | cut -f1)\"; done"
+[sh-while-until] "n=0; until curl -sf http://127.0.0.1:8080/health >/dev/null; do n=$((n+1)); [ $n -gt 30 ] && { echo \"等待超时\"; exit 1; }; sleep 2; done; echo \"服务已就绪\""
+[sh-while-until] "count=0; while IFS= read -r line; do count=$((count+1)); done < /var/log/app.log; echo \"共 $count 行\""
+[sh-while-until] "while IFS= read -r line; do count=$((count+1)); done < <(grep -c ERROR /var/log/app.log); echo \"$count\""
+[sh-function] "log() { echo \"[$(date \"+%F %T\")] $*\"; } && log \"开始执行备份\""
+[sh-function] "get_ip() { hostname -I | awk \"{print \\$1}\"; } && IP=$(get_ip) && echo \"本机 IP: $IP\""
+[sh-getopts] "while getopts \"hvf:o:\" opt; do case \"$opt\" in h) echo \"用法: $0 [-v] [-f 输入文件] [-o 输出文件]\"; exit 0 ;; v) VERBOSE=1 ;; f) FILE=$OPTARG ;; o) OUT=$OPTARG ;; \\?) echo \"未知选项，使用 -h 查看用法\"; exit 1 ;; esac; done; shift $((OPTIND-1))"
+[sh-redirect] "echo \"检查时间: $(date)\" >> /var/log/health.log"
+[sh-pipe-cmdsub] "NOW=$(date +%F) && LOG=/var/log/app-$NOW.log && echo \"$LOG\""
+[sh-pipe-cmdsub] "COUNT=$(grep -c \"ERROR\" /var/log/app.log) && echo \"错误行数: $COUNT\""
+[sh-tee-exec] "exec >> /var/log/backup.log 2>&1 && echo \"备份开始 $(date +%F\\ %T)\""
+[sh-trap] "tmp=$(mktemp) && trap \"rm -f $tmp\" EXIT && echo \"临时文件: $tmp\""
+[sh-shift] "while getopts \"f:v\" opt; do case \"$opt\" in f) FILE=$OPTARG ;; v) VERBOSE=1 ;; esac; done; shift $((OPTIND-1)); echo \"剩余参数: $*\""
+[sh-mktemp] "tmp=$(mktemp) && trap \"rm -f $tmp\" EXIT && df -h > \"$tmp\" && wc -l < \"$tmp\""
+[sh-mktemp] "workdir=$(mktemp -d -p /data/tmp) && trap \"rm -rf $workdir\" EXIT && echo \"工作目录: $workdir\""
+[sh-mktemp] "tmp=$(mktemp -p /data/tmp) && trap \"rm -f $tmp\" EXIT && dd if=/dev/zero of=\"$tmp\" bs=1M count=100"
+[sh-mktemp] "tmp=$(mktemp -p /data/tmp) || { echo \"创建临时文件失败\" >&2; exit 1; }"
+[sh-log-error] "LOG=/tmp/myapp.log; log() { echo \"[$(date \"+%F %T\")] [INFO] $*\" | tee -a \"$LOG\"; }; log \"脚本开始执行\""
+[sh-log-error] "die() { echo \"[$(date \"+%F %T\")] [ERROR] $*\" >&2; exit 1; }; [ -f /etc/myapp/app.conf ] || die \"配置文件不存在: /etc/myapp/app.conf\""
+[sh-log-error] "set -Eeuo pipefail; trap 'echo \"[$(date \"+%F %T\")] [ERROR] 第 $LINENO 行失败: $BASH_COMMAND\" >&2' ERR"
+[sh-log-error] "LOG=/var/log/myapp/deploy.log; mkdir -p \"$(dirname \"$LOG\")\" && exec >> \"$LOG\" 2>&1 && echo \"部署开始 $(date \"+%F %T\")\""
+[sh-log-error] "count=$(grep -c ERROR /var/log/app.log 2>/dev/null || echo 0); echo \"错误数: $count\" >&2; echo \"$count\""
+[sh-wait] "MAX=5; for h in $(seq 1 20); do (sleep 1; echo \"处理 $h\") & while [ \"$(jobs -rp | wc -l)\" -ge \"$MAX\" ]; do sleep 0.2; done; done; wait"
+[sh-template-backup] "#!/bin/bash\nset -Eeuo pipefail\n\nSRC=/data/app\nDST=/data/backup\nRETENTION=7\nLOG=/var/log/backup.log\nLOCK=/var/lock/backup.lock\n\nlog() { echo \"[$(date '+%F %T')] [INFO] $*\" | tee -a \"$LOG\"; }\ndie() { echo \"[$(date '+%F %T')] [ERROR] $*\" >&2 | tee -a \"$LOG\"; exit 1; }\n\nmkdir -p \"$DST\" \"$(dirname \"$LOG\")\"\nexec 9>\"$LOCK\"\nflock -n 9 || die \"已有备份任务在运行，本次退出\"\n\n[ -d \"$SRC\" ] || die \"源目录不存在: $SRC\"\n\nSTAMP=$(date +%F)\nFINAL=\"$DST/app-$STAMP.tar.gz\"\nTMP=\"$FINAL.tmp\"\ntrap 'rm -f \"$TMP\"' EXIT\n\nlog \"开始备份 $SRC\"\ntar -czf \"$TMP\" -C \"$SRC\" . || die \"打包失败\"\nmv \"$TMP\" \"$FINAL\"\n\nfind \"$DST\" -name 'app-*.tar.gz' -mtime +\"$RETENTION\" -delete\nlog \"备份完成: $FINAL 大小 $(du -h \"$FINAL\" | cut -f1)\""
+[sh-template-log-clean] "#!/bin/bash\nset -Eeuo pipefail\n\nLOG_DIR=/var/log/myapp\nKEEP_DAYS=14\nMAX_SIZE_MB=500\nLOG=/var/log/logclean.log\n\nlog() { echo \"[$(date '+%F %T')] $*\" | tee -a \"$LOG\"; }\n\n[ -d \"$LOG_DIR\" ] || { echo \"日志目录不存在: $LOG_DIR\" >&2; exit 1; }\n\nlog \"开始清理 $LOG_DIR\"\nfind \"$LOG_DIR\" -type f -name '*.log' -mtime +\"$KEEP_DAYS\" -print -delete | wc -l\nfind \"$LOG_DIR\" -type f -name '*.log' -mtime +7 ! -name '*.gz' -exec gzip -q {} \\;\n\nwhile IFS= read -r f; do\n  size=$(du -m \"$f\" | cut -f1)\n  if [ \"$size\" -gt \"$MAX_SIZE_MB\" ]; then\n    truncate -s 0 \"$f\"\n    log \"已截断超大日志: $f (${size}MB)\"\n  fi\ndone < <(find \"$LOG_DIR\" -type f -name '*.log')\n\nlog \"清理完成，当前占用: $(du -sh \"$LOG_DIR\" | cut -f1)\""
+[sh-template-health] "#!/bin/bash\nset -Eeuo pipefail\n\nURL=http://127.0.0.1:8080/health\nSERVICE=myapp\nRETRY=3\nINTERVAL=5\nLOG=/var/log/healthcheck.log\n\nlog() { echo \"[$(date '+%F %T')] $*\" | tee -a \"$LOG\"; }\n\nfor i in $(seq 1 \"$RETRY\"); do\n  if curl -sf -m 5 \"$URL\" >/dev/null; then\n    log \"健康检查通过（第 $i 次）\"\n    exit 0\n  fi\n  log \"第 $i 次检查失败，${INTERVAL} 秒后重试\"\n  sleep \"$INTERVAL\"\ndone\n\nlog \"连续 ${RETRY} 次检查失败，重启服务 $SERVICE\"\nif systemctl restart \"$SERVICE\"; then\n  sleep 10\n  if curl -sf -m 5 \"$URL\" >/dev/null; then\n    log \"重启后服务已恢复\"\n    exit 0\n  fi\n  log \"重启后仍未恢复，需要人工介入\"\n  exit 2\nfi\nlog \"重启命令执行失败\"\nexit 3"
+[sh-template-batch-ssh] "#!/bin/bash\nset -Eeuo pipefail\n\nHOSTS_FILE=${1:-/opt/scripts/hosts.txt}\nSSH_USER=${SSH_USER:-ops}\nCONCURRENCY=${CONCURRENCY:-5}\nCMD=${2:-uptime}\nOUTDIR=/var/log/batch-$(date +%F_%H%M%S)\n\n[ -f \"$HOSTS_FILE\" ] || { echo \"主机清单不存在: $HOSTS_FILE\" >&2; exit 1; }\nmkdir -p \"$OUTDIR\"\n\nrun_one() {\n  local host=$1\n  if timeout 15 ssh -n -p 22 -o BatchMode=yes -o ConnectTimeout=5 \"$SSH_USER@$host\" \"$CMD\" > \"$OUTDIR/$host.out\" 2>&1; then\n    echo \"[OK]   $host\"\n  else\n    echo \"[FAIL] $host\"\n  fi\n}\nexport -f run_one\nexport SSH_USER OUTDIR CMD\n\ngrep -vE '^[[:space:]]*(#|$)' \"$HOSTS_FILE\" | xargs -P \"$CONCURRENCY\" -I{} bash -c 'run_one \"$@\"' _ {}\n\necho \"全部完成，逐台结果见: $OUTDIR\"\nls -1 \"$OUTDIR\" | wc -l"

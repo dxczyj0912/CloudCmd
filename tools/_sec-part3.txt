@@ -1,0 +1,773 @@
+  /* ======================================================================
+     8 · 资产与漏洞扫描：nmap / masscan / nikto / trivy / kube-bench
+     ----------------------------------------------------------------------
+     这些都是"主动扫描"，教学环境只能给出自查视角的输出；对非授权目标扫描
+     既是违规也是违法，所以每一条都在输出末尾点明使用边界。
+     ====================================================================== */
+  function nmapCmd(argv, ctx, stdin, HOST) {
+    var opt = parseOpts(argv, ['p', 'script', 'oN', 'oX', 'oG', 'T', 'iL', 'exclude'], ['sT', 'sS', 'sV', 'Pn', 'sn', 'A', 'v', 'F', 'n']);
+    var target = null;
+    for (var i = 0; i < argv.length; i++) {
+      var a = String(argv[i]);
+      if (a.charAt(0) === '-') {
+        if (['-p', '-script', '-oN', '-oX', '-oG', '-T', '-iL', '-exclude'].indexOf(a) !== -1) i++;
+        continue;
+      }
+      target = a;
+    }
+    if (!target) {
+      return U.fail(['Nmap 7.93 ( https://nmap.org )',
+        'Usage: nmap [Scan Type(s)] [Options] {target specification}',
+        '（至少给一个目标，例如 nmap -sT -p 22,80,443 -Pn 10.0.1.23）']);
+    }
+    var ports = opt.p || (opt.F ? '22,80,443' : '1-1024');
+    var isCidr = target.indexOf('/') !== -1;
+    var isDbHost = /10\.0\.1\.35|db-prod-01/.test(target);
+    var out = ['Starting Nmap 7.93 ( https://nmap.org ) at 2024-03-18 09:51 CST'];
+    if (isCidr) {
+      out.push('Nmap scan report for 10.0.1.23');
+      out.push('Host is up (0.00042s latency).');
+      out.push('Not shown: 1019 filtered tcp ports (no-response)');
+      out.push('PORT     STATE  SERVICE');
+      out.push('22/tcp   open   ssh');
+      out.push('80/tcp   open   http');
+      out.push('8080/tcp open   http-proxy');
+      out.push('');
+      out.push('Nmap scan report for 10.0.1.31');
+      out.push('Host is up (0.00051s latency).');
+      out.push('Not shown: 1021 filtered tcp ports (no-response)');
+      out.push('PORT     STATE  SERVICE');
+      out.push('8080/tcp open   http-proxy');
+      out.push('');
+      out.push('Nmap scan report for 10.0.1.35');
+      out.push('Host is up (0.00048s latency).');
+      out.push('PORT     STATE    SERVICE');
+      out.push('6379/tcp open     redis');
+      out.push('3306/tcp filtered mysql');
+      out.push('');
+      out.push('Nmap done: 256 IP addresses (3 hosts up) scanned in 4.82 seconds');
+      out.push('');
+      out.push('（教学环境只列出具代表性的几台；云上扫描前必须确认安全组不会把扫描源当成攻击流量封禁）');
+      if (opt.oN) {
+        var w = fsWrite(ctx, opt.oN, out.join('\n') + '\n', '644');
+        if (w.error) return U.fail(['Failed to open output file ' + opt.oN + ' for writing']);
+        out.push('（结果已写入 ' + opt.oN + '）');
+      }
+      return U.ok(out);
+    }
+    var serviceOf = { '22': 'ssh', '80': 'http', '443': 'https', '3306': 'mysql', '6379': 'redis', '27017': 'mongodb', '9200': 'elasticsearch' };
+    var openPorts, filteredPorts;
+    if (isDbHost) { openPorts = ['6379']; filteredPorts = ['3306', '27017']; }
+    else { openPorts = ['22', '80', '8080', '443']; filteredPorts = ['3306']; }
+    if (ports === '22') openPorts = ['22'];
+    if (opt.script === 'banner' && ports === '22') {
+      out.push('Nmap scan report for ' + target);
+      out.push('Host is up (0.00042s latency).');
+      out.push('');
+      out.push('PORT   STATE SERVICE');
+      out.push('22/tcp open  ssh');
+      out.push('|_banner: SSH-2.0-OpenSSH_8.0');
+      out.push('');
+      out.push('Nmap done: 1 IP address (1 host up) scanned in 0.31 seconds');
+      out.push('');
+      out.push('（banner 里泄露了 OpenSSH 精确版本号 —— 攻击者会拿它去比对已知漏洞，加固建议是不要暴露版本信息）');
+      return U.ok(out);
+    }
+    out.push('Nmap scan report for ' + target);
+    out.push('Host is up (0.00042s latency).');
+    var shown = [];
+    out.push('PORT     STATE    SERVICE' + (opt.sV ? '       VERSION' : ''));
+    var VERSIONS = {
+      '22': 'OpenSSH 8.0 (protocol 2.0)',
+      '80': 'nginx 1.20.1',
+      '443': 'nginx 1.20.1 (SSL/TLS)',
+      '8080': 'Jetty 9.4.43 (Java)',
+      '3306': 'MySQL 8.0.32',
+      '6379': 'Redis key-value store 6.2.7',
+      '27017': 'MongoDB 4.4.19'
+    };
+    openPorts.forEach(function (p) {
+      if (ports.indexOf(p) === -1 && ports !== '1-1024') return;
+      shown.push(p);
+      out.push(padRightStr(p + '/tcp', 9) + padRightStr('open', 9) + (serviceOf[p] || 'unknown') + (opt.sV ? '  ' + (VERSIONS[p] || '') : ''));
+    });
+    if (ports === '1-1024') {
+      out.push('Not shown: 1018 closed tcp ports (reset)');
+      out.push('（只显示 open 的端口；1-1024 全量扫描会留下大量连接记录，云审计里很容易被识别为扫描行为）');
+    } else {
+      filteredPorts.forEach(function (p) {
+        if (ports.indexOf(p) === -1) return;
+        shown.push(p);
+        out.push(padRightStr(p + '/tcp', 9) + padRightStr('filtered', 9) + (serviceOf[p] || 'unknown'));
+      });
+      if (shown.indexOf('3306') !== -1) {
+        out.push('');
+        out.push('3306/tcp 是 filtered 而不是 closed：包被安全组/防火墙静默丢弃（DROP），这正是"数据库连不上"的典型特征');
+      }
+    }
+    out.push('');
+    out.push('Nmap done: 1 IP address (1 host up) scanned in 2.14 seconds');
+    if (opt.oN) {
+      var w2 = fsWrite(ctx, opt.oN, out.join('\n') + '\n', '644');
+      if (w2.error) return U.fail(['Failed to open output file ' + opt.oN + ' for writing']);
+    }
+    return U.ok(out);
+  }
+
+  function masscanCmd(argv, ctx, stdin, HOST) {
+    var rate = null, ports = null, target = null, outFile = null, wait = 3;
+    for (var i = 0; i < argv.length; i++) {
+      var a = String(argv[i]);
+      if (a.indexOf('--rate=') === 0) { rate = a.slice(7); continue; }
+      if (a === '--rate' && argv[i + 1]) { rate = argv[++i]; continue; }
+      if (a.indexOf('-p') === 0 && a.length > 2) { ports = a.slice(2); continue; }
+      if (a === '-p' && argv[i + 1]) { ports = argv[++i]; continue; }
+      if (a === '-oL' && argv[i + 1]) { outFile = argv[++i]; continue; }
+      if (a === '--wait' && argv[i + 1]) { wait = Number(argv[++i]); continue; }
+      if (a === '--excludefile' && argv[i + 1]) { i++; continue; }
+      if (a.charAt(0) === '-') continue;
+      target = a;
+    }
+    if (!target || !ports) {
+      return U.fail(['masscan: 用法 masscan <网段> -p<端口范围> --rate=<每秒包数> [-oL 输出文件]']);
+    }
+    var n = Number(rate || 100);
+    if (n > 10000) {
+      return U.fail([
+        'masscan: --rate=' + rate + ' 太高',
+        '',
+        '真实后果：出口带宽瞬间被打满 → 交换机/网关丢包 → 云平台判定为 DDoS 攻击并**封禁这台 ECS**。',
+        '内网自查请从 --rate=1000 起步；扫外网无论速率多少都属于违规行为。'
+      ]);
+    }
+    var lines = [
+      'Starting masscan 1.3.2 (http://bit.ly/14GZzcT) at 2024-03-18 09:51:00 GMT',
+      'Initiating SYN Stealth Scan',
+      'Scanning ' + target + ' [ports ' + ports + ']',
+      'Discovered open port 22/tcp on 10.0.1.23',
+      'Discovered open port 80/tcp on 10.0.1.23',
+      'Discovered open port 8080/tcp on 10.0.1.23',
+      'Discovered open port 8080/tcp on 10.0.1.31',
+      'Discovered open port 8080/tcp on 10.0.1.32',
+      'Discovered open port 6379/tcp on 10.0.1.35',
+      'Discovered open port 3306/tcp on 10.0.1.40',
+      'Discovered open port 22/tcp on 10.0.1.40'
+    ];
+    if (outFile) {
+      var body = ['#masscan', '# Ports scanned: TCP(' + ports + ') UDP() SCTP()', '# Rate: ' + n, ''];
+      var results = [
+        ['open', 'tcp', '22', '10.0.1.23'],
+        ['open', 'tcp', '80', '10.0.1.23'],
+        ['open', 'tcp', '8080', '10.0.1.23'],
+        ['open', 'tcp', '8080', '10.0.1.31'],
+        ['open', 'tcp', '8080', '10.0.1.32'],
+        ['open', 'tcp', '6379', '10.0.1.35'],
+        ['open', 'tcp', '3306', '10.0.1.40'],
+        ['open', 'tcp', '22', '10.0.1.40']
+      ];
+      results.forEach(function (r) {
+        body.push('open tcp ' + r[2] + ' ' + r[3] + ' 1710726660');
+      });
+      body.push('# end');
+      var w = fsWrite(ctx, outFile, body.join('\n') + '\n', '644');
+      if (w.error) return U.fail(['masscan: failed to open ' + outFile + ' for writing']);
+    }
+    lines.push('');
+    lines.push('（--rate=' + n + '：内网自查从 1000 起步；线上业务网段扫描前先知会网络与安全团队）');
+    lines.push('（masscan 只回答"端口通不通"，服务识别要接着用 nmap -sV 精扫）');
+    return U.ok(lines);
+  }
+
+  function niktoCmd(argv, ctx, stdin, HOST) {
+    var opt = parseOpts(argv, ['h', 'p', 'Tuning', 'o', 'Format', 'maxtime', 'useragent', 'id'], ['ssl', 'nointeractive', 'Display', 'v']);
+    var host = opt.h;
+    if (!host) return U.fail(['+ ERROR: No host specified', '',
+      '       Use: nikto -h <host or URL> [-p <port>] [-ssl] [-Tuning <type>] [-o <report>]']);
+    var port = opt.p || (/^https/.test(host) ? '443' : '80');
+    var out = [
+      '- Nikto v2.5.0',
+      '---------------------------------------------------------------------------',
+      '+ Target IP:          121.36.44.17',
+      '+ Target Hostname:    ' + String(host).replace(/^https?:\/\//, ''),
+      '+ Target Port:        ' + port,
+      '+ Start Time:         2024-03-18 09:51:00 (GMT+8)',
+      '---------------------------------------------------------------------------',
+      '+ Server: nginx/1.20.1',
+      '+ /: The anti-clickjacking X-Frame-Options header is not present.',
+      '+ /: The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion.',
+      '+ /backup.zip: Backup file may be publicly accessible. （**高危：立刻删除或移到 Web 根目录之外**）',
+      '+ /.git/config: Git configuration file found. This may expose repository contents.',
+      '+ /phpinfo.php: PHP info file found. Discloses version and configuration.',
+      '+ /robots.txt: contains 3 entries which should be manually viewed.',
+      '+ /admin/: Directory indexing is enabled under /admin/.',
+      '+ /icons/: Directory indexing found.',
+      '---------------------------------------------------------------------------',
+      '+ 1 host(s) tested',
+      '',
+      '（输出里出现备份文件、.git、目录浏览这几类，才是真正要处理的；SPA 应用会把前端路由的 200 误判成"目录存在"，必须人工核对）'
+    ];
+    if (opt.Tuning === '12') out.splice(6, 0, '+ Tuning 1,2: only interesting files and misconfigurations are tested (fast, low noise)');
+    if (opt.o) {
+      var w = fsWrite(ctx, opt.o, '<html><body><pre>' + out.join('\n') + '</pre></body></html>\n', '644');
+      if (w.error) out.push('（教学环境：报告文件写入失败 —— 目录可能不存在）');
+      else out.push('+ Report written to ' + opt.o);
+    }
+    return U.ok(out);
+  }
+
+  function trivyCmd(argv, ctx, stdin, HOST) {
+    if (argv[0] === '--version' || argv[0] === '-v' || argv[0] === 'version') {
+      return U.ok(['Version: 0.49.1', 'Vulnerability DB:', '  Version: 2', '  UpdatedAt: 2024-03-18T06:12:31Z']);
+    }
+    if (argv[0] !== 'image') {
+      return U.fail(['Error: unknown command "' + (argv[0] || '') + '" for "trivy"',
+        'Run trivy --help for usage.']);
+    }
+    var opt = parseOpts(argv, ['severity', 'format', 'o', 'scanners', 'timeout', 'ignorefile', 'exit-code', 'image-src'], ['ignore-unfixed', 'quiet', 'skip-db-update']);
+    var img = opt._[0];
+    if (!img || img === 'image') return U.fail(['Error: image name required', 'Usage: trivy image [flags] IMAGE_NAME']);
+    var isAlpine = /alpine/.test(img);
+    var isHigh = /--severity/.test(argv.join(' '));
+    var rows = isAlpine
+      ? [['alpine:3.19', 'CVE-2023-52425', 'libexpat', '2.5.0-r2', '2.6.0-r0', 'HIGH'],
+      ['alpine:3.19', 'CVE-2024-0727', 'libcrypto3', '3.1.4-r0', '3.1.5-r0', 'MEDIUM']]
+      : [['nginx:1.25', 'CVE-2023-44487', 'nghttp2-libs', '1.55.1-r0', '1.57.0-r0', 'HIGH'],
+      ['nginx:1.25', 'CVE-2023-45853', 'zlib', '1.2.13-r0', '1.3-r0', 'CRITICAL'],
+      ['nginx:1.25', 'CVE-2023-52425', 'libexpat', '2.5.0-r1', '2.6.0-r0', 'HIGH'],
+      ['nginx:1.25', 'CVE-2024-0553', 'gnutls', '3.8.1-r0', '3.8.3-r0', 'HIGH']];
+    var wantCriticalAndHigh = /HIGH,CRITICAL|CRITICAL,HIGH/.test(argv.join(' '));
+    var out = [];
+    out.push('2024-03-18T09:51:00.114+0800\tINFO\tNeed to update DB');
+    out.push('2024-03-18T09:51:04.882+0800\tINFO\tDB updated successfully');
+    out.push('');
+    out.push(img + ' (alpine 3.19.1)' );
+    out.push('================================');
+    out.push('Total: ' + rows.length + ' (UNKNOWN: 0, LOW: 0, MEDIUM: 1, HIGH: ' + (rows.length - 2) + ', CRITICAL: 1)');
+    out.push('');
+    out.push('┌────────────┬────────────────┬──────────┬──────────────┬───────────────────┬───────────┐');
+    out.push('│  LIBRARY   │ VULNERABILITY  │ SEVERITY │ INSTALLED    │ FIXED VERSION     │   TITLE   │');
+    out.push('├────────────┼────────────────┼──────────┼──────────────┼───────────────────┼───────────┤');
+    rows.forEach(function (r) {
+      out.push('│ ' + padRightStr(r[2], 10) + ' │ ' + padRightStr(r[1], 14) + ' │ ' + padRightStr(r[5], 8) + ' │ ' + padRightStr(r[3], 12) + ' │ ' + padRightStr(r[4], 17) + ' │ ' + padRightStr(r[2].slice(0, 9), 9) + ' │');
+    });
+    out.push('└────────────┴────────────────┴──────────┴──────────────┴───────────────────┴───────────┘');
+    if (wantCriticalAndHigh) out.push('（--ignore-unfixed 过滤掉了上游还没发布修复版本的条目，否则基础镜像的陈年 CVE 会让每次构建都红）');
+    if (opt['exit-code']) {
+      out.push('');
+      out.push('（--exit-code 1：发现符合条件的漏洞时 trivy 以非 0 退出，CI 会直接失败 —— 这就是"高危不过不推仓库"的实现方式）');
+    }
+    if (opt.o) {
+      if (opt.format === 'json') {
+        fsWrite(ctx, opt.o, JSON.stringify({ SchemaVersion: 2, ArtifactName: img, Results: rows.map(function (r) { return { Target: img, Class: 'os-pkgs', Vulnerabilities: [{ VulnerabilityID: r[1], PkgName: r[2], InstalledVersion: r[3], FixedVersion: r[4], Severity: r[5] }] }; }) }, null, 2) + '\n', '644');
+      } else {
+        fsWrite(ctx, opt.o, out.join('\n') + '\n', '644');
+      }
+      out.push('（报告已写入 ' + opt.o + '）');
+    }
+    if (opt.scanners && opt.scanners.indexOf('secret') !== -1) {
+      out.push('');
+      out.push('（--scanners vuln,secret 会同时扫硬编码密钥；检出的一律当作已泄露处理，必须换密钥而不是只删代码）');
+    }
+    return U.ok(out);
+  }
+
+  function kubeBenchCmd(argv, ctx, stdin, HOST) {
+    var opt = parseOpts(argv, ['targets', 'benchmark', 'check', 'json', 'outputfile', 'config', 'version'], ['json', 'run']);
+    var check = opt.check;
+    var out = [];
+    if (check === '1.2.1') {
+      return U.ok([
+        '[INFO] 1 Control Plane Security Configuration',
+        '[INFO] 1.2 API Server',
+        '[FAIL] 1.2.1 Ensure that the --anonymous-auth argument is set to false (Automated)',
+        '        修复：在 kube-apiserver 启动参数里加 --anonymous-auth=false，然后重启 apiserver',
+        '        ⚠ 托管集群（CCE/TKE/ACK）的 apiserver 参数由云厂商控制，客户侧通常无法修改，这一项要按 WARN 处理'
+      ]);
+    }
+    out.push('[INFO] 4 Worker Node Security Configuration');
+    out.push('[INFO] 4.1 Worker Node Configuration Files');
+    out.push('[PASS] 4.1.1 Ensure that the kubelet service file permissions are set to 600 or more restrictive (Automated)');
+    out.push('[PASS] 4.1.2 Ensure that the kubelet service file ownership is set to root:root (Automated)');
+    out.push('[INFO] 4.2 Kubelet');
+    out.push('[FAIL] 4.2.1 Ensure that the --anonymous-auth argument is set to false (Automated)');
+    out.push('[FAIL] 4.2.6 Ensure that the --make-iptables-util-chains argument is set to true (Automated)');
+    out.push('[WARN] 4.2.10 Ensure that the --tls-cert-file and --tls-private-key-file arguments are set (Manual)');
+    out.push('[PASS] 4.2.13 Ensure that the --rotate-certificates argument is set to true (Automated)');
+    out.push('');
+    out.push('== Remediation for master node ==');
+    out.push('4.2.1 If using the kubelet config file, edit the file /var/lib/kubelet/config.yaml and set authentication.anonymous.enabled to false');
+    out.push('');
+    out.push('== Summary ==');
+    out.push('12 checks PASS');
+    out.push('6 checks FAIL');
+    out.push('4 checks WARN');
+    out.push('0 checks INFO');
+    out.push('');
+    out.push('（FAIL 是明确不合规、需要处理；WARN 多数是"需要人工确认"，例如参数由云厂商托管 —— 别把 WARN 当成漏洞）');
+    if (opt.json) {
+      var w = fsWrite(ctx, '/tmp/kube-bench.json', JSON.stringify({ Tests: [{ Section: '4.2 Kubelet', Results: [{ TestNumber: '4.2.1', Status: 'FAIL' }, { TestNumber: '4.2.13', Status: 'PASS' }] }] }, null, 2) + '\n', '644');
+      if (w.error) out.push('（教学环境：/tmp 不可写）');
+      else out.push('（JSON 报告已写入 /tmp/kube-bench.json）');
+    }
+    return U.ok(out);
+  }
+
+  /* ======================================================================
+     9 · 恶意文件与加固审计：clamscan / freshclam / clamdscan / lynis
+     ====================================================================== */
+  function freshclamCmd(argv, ctx, stdin, HOST) {
+    return U.ok([
+      'ClamAV update process started at Mon Mar 18 09:51:00 2024',
+      'daily.cvd database is up-to-date (version: 27200, sigs: 2046000, f-level: 90, builder: raynman)',
+      'main.cvd database is up-to-date (version: 62, sigs: 6647020, f-level: 90, builder: sigmgr)',
+      'bytecode.cvd database is up-to-date (version: 334, sigs: 92, f-level: 90, builder: anvilleg)',
+      '',
+      '（病毒库必须先更新再扫描 —— 库过期等于没扫；生产上交给 clamav-freshclam 服务自动更新）'
+    ]);
+  }
+  function clamscanCmd(argv, ctx, stdin, HOST) {
+    var opt = parseOpts(argv, ['move', 'remove', 'exclude-dir', 'exclude', 'log', 'database', 'max-filesize', 'infected'],
+      ['r', 'i', 'infected', 'remove', 'quiet', 'no-summary', 'bell']);
+    var recursive = !!opt.r;
+    var quiet = !!opt.i || !!opt.infected;
+    var target = null;
+    for (var i = 0; i < argv.length; i++) {
+      var a = String(argv[i]);
+      if (a.charAt(0) === '-') {
+        if (['--move', '--exclude-dir', '--exclude', '--log', '--database', '--max-filesize'].indexOf(a) !== -1) i++;
+        continue;
+      }
+      target = a;
+    }
+    if (!target) return U.fail(['ERROR: Cannot access file', 'Usage: clamscan [options] [file/directory/-]']);
+    var node = fsNode(ctx, target);
+    if (!node) return U.fail(['ERROR: Cannot access file ' + target + ': No such file or directory']);
+    if (node.type !== 'dir' && !recursive) {
+      return U.fail(['ERROR: Cannot access file ' + target + ': Is a directory (use -r)',
+        '（扫描目录必须加 -r 递归）']);
+    }
+    var files = [];
+    if (node.type === 'dir') {
+      U.walkFiles(node, U.resolvePath(ctx.cwd, target), function (child, p) {
+        if (recursive && child.type === 'file') files.push(p);
+      });
+    } else files.push(U.resolvePath(ctx.cwd, target));
+    var EXCLUDE = opt['exclude-dir'] ? String(opt['exclude-dir']).replace(/^\^/, '').replace(/\$$/, '') : null;
+    if (EXCLUDE) files = files.filter(function (f) { return f.indexOf(EXCLUDE) !== 0; });
+    var out = ['Scanning ' + (opt.r ? 'recursively ' : '') + U.resolvePath(ctx.cwd, target)];
+    var infected = [];
+    files.forEach(function (f) {
+      var isBad = /\.exe$|\.xlsm$|\.scr$|\.bat$/.test(f);
+      if (isBad) {
+        infected.push(f);
+        if (quiet || true) out.push(f + ': Win.Trojan.Agent-1234567 FOUND');
+      } else if (!quiet) {
+        out.push(f + ': OK');
+      }
+    });
+    out.push('');
+    out.push('----------- SCAN SUMMARY -----------');
+    out.push('Known viruses: 8713612');
+    out.push('Engine version: 1.3.0');
+    out.push('Scanned directories: ' + (node.type === 'dir' ? 1 : 0));
+    out.push('Scanned files: ' + files.length);
+    out.push('Infected files: ' + infected.length);
+    out.push('Data scanned: ' + (files.length * 0.42).toFixed(2) + ' MB');
+    out.push('Time: 4.512 sec (0 m 4 s)');
+    out.push('Start Date: 2024:03:18 09:51:00');
+    out.push('End Date:   2024:03:18 09:51:04');
+    if (infected.length && opt.move) {
+      infected.forEach(function (f) {
+        var content = fsRead(ctx, f);
+        var dest = opt.move.replace(/\/$/, '') + '/' + U.baseName(f) + '.quarantine';
+        ensureDir(ctx, opt.move);
+        fsWrite(ctx, dest, content.content || '', '600');
+        rmNode(ctx, f);
+        out.push('（已把 ' + f + ' 移到隔离区 ' + dest + '：先隔离而不是 --remove，保留样本才能做后续分析）');
+      });
+    } else if (infected.length && opt.remove) {
+      infected.forEach(function (f) { rmNode(ctx, f); });
+      out.push('（--remove 会直接删除样本，无法再做溯源分析，生产上更推荐 --move 到隔离区）');
+    } else if (infected.length) {
+      out.push('（命中后默认只报告不动文件；处置请显式加 --move=<隔离目录>，确认无误再清理）');
+    }
+    return { out: out, err: [], code: infected.length ? 1 : 0 };
+  }
+  function clamdscanCmd(argv, ctx, stdin, HOST) {
+    var r = clamscanCmd(argv.concat(['-r']).filter(function (v, i, arr) { return arr.indexOf(v) === i || v !== '-r'; }), ctx, stdin, HOST);
+    if (r.err && r.err.length) return r;
+    r.out = ['----------- SCAN SUMMARY -----------', '（clamdscan 连接常驻的 clamd 服务，不重复加载病毒库，大目录下明显更快）'].concat(r.out);
+    return r;
+  }
+  function lynisCmd(argv, ctx, stdin, HOST) {
+    if (argv[0] === 'show' && argv[1] === 'modules') {
+      return U.ok(['authentication', 'banners', 'boot_services', 'containers', 'crypto', 'file_integrity',
+        'firewalls', 'hardening', 'kernel', 'logging', 'malware', 'networking', 'php', 'security_center', 'shells', 'ssh', 'storage', 'system_tools', 'time', 'users']);
+    }
+    var quick = argv.indexOf('--quick') !== -1;
+    var group = null;
+    for (var i = 0; i < argv.length; i++) {
+      if (argv[i] === '--tests-from-group' && argv[i + 1]) group = argv[i + 1];
+    }
+    var out = [];
+    out.push('[ Lynis 3.0.9 ]');
+    out.push('');
+    out.push('################################################################################');
+    out.push('#                                                                              #');
+    out.push('#   Lynis comes with ABSOLUTELY NO WARRANTY. This is free software, and you    #');
+    out.push('#   are welcome to redistribute it under the terms of the GNU General Public   #');
+    out.push('#   License. See LICENSE for details.                                          #');
+    out.push('#                                                                              #');
+    out.push('################################################################################');
+    out.push('');
+    if (group === 'authentication') {
+      out.push('[+] Authentication');
+      out.push('------------------------------------');
+      out.push('  - Pluggable Authentication Modules (PAM)                            [ FOUND ]');
+      out.push('  - Checking password aging for root                                  [ WARNING ]');
+      out.push('  - Checking SSH configuration (PermitRootLogin)                      [ WARNING ]');
+      out.push('  - Checking SSH configuration (MaxAuthTries)                         [ SUGGESTION ]');
+      out.push('');
+    } else {
+      out.push('[+] System Tools');
+      out.push('------------------------------------');
+      out.push('  - Checking systemd version                                          [ OK ]');
+      out.push('  - Checking for automation tool                                      [ FOUND ]');
+      out.push('');
+      out.push('[+] Kernel Hardening');
+      out.push('------------------------------------');
+      out.push('  - Checking kernel parameters (ASLR)                                 [ OK ]');
+      out.push('  - Checking kernel parameters (dmesg_restrict)                       [ SUGGESTION ]');
+      out.push('');
+      out.push('[+] Firewalls');
+      out.push('------------------------------------');
+      out.push('  - Checking firewall (firewalld)                                     [ FOUND ]');
+      out.push('  - Checking default zone rules                                       [ OK ]');
+      out.push('');
+      out.push('[+] Logging and Auditing');
+      out.push('------------------------------------');
+      out.push('  - Checking auditd                                                   [ OK ]');
+      out.push('  - Checking log rotation                                             [ OK ]');
+      out.push('');
+    }
+    out.push('################################################################################');
+    out.push('');
+    out.push('  Test and debug information is stored in /var/log/lynis.log');
+    out.push('  Report data is stored in /var/log/lynis-report.dat');
+    out.push('');
+    out.push('  Warnings (2):');
+    out.push('  ! No password set for single user mode');
+    out.push('  ! /etc/ssh/sshd_config:PermitRootLogin is set to yes');
+    out.push('');
+    out.push('  Suggestions (5):');
+    out.push('  * Install a file integrity tool to monitor changes (e.g. AIDE)');
+    out.push('  * Set a password on GRUB boot loader to prevent altering boot configuration');
+    out.push('  * Consider hardening SSH configuration (AllowTcpForwarding -> NO)');
+    out.push('  * Enable seccomp for service nginx');
+    out.push('  * Harden /etc/ssh/sshd_config (MaxAuthTries 6 -> 3)');
+    out.push('');
+    out.push('  Hardening index : 68 [#############       ]');
+    out.push('');
+    if (!quick) {
+      out.push('（lynis 只读不写，不会替你改任何配置；建议上线前跑一次拿基线分数，之后每月对比分数变化）');
+      out.push('（部分建议如禁用 IPv6、收紧文件权限会影响现有业务，必须人工评估后再执行）');
+    } else {
+      out.push('（--quick 只输出警告与建议摘要，适合放进日常巡检脚本）');
+    }
+    out.push('（教学环境：报告文件可查看 /var/log/lynis.log 与 /var/log/lynis-report.dat）');
+    return U.ok(out);
+  }
+
+  /* ======================================================================
+     10 · fail2ban-client
+     ====================================================================== */
+  var F2B = window.CC_SEC_F2B;
+  if (!F2B) {
+    F2B = window.CC_SEC_F2B = {
+      jails: {
+        sshd: { filter: 'sshd', actions: 'iptables-multiport', currentlyFailed: 3, totalFailed: 486, currentlyBanned: 2, totalBanned: 37, banned: ['198.51.100.77', '203.0.113.66'] }
+      }
+    };
+  }
+  function fail2banCmd(argv, ctx, stdin, HOST) {
+    var sub = argv[0];
+    if (!sub || sub === 'status') {
+      var lists = F2B.jails[M2_JAIL(argv[1])];
+      if (argv[1]) {
+        if (!lists) return U.fail(['2024-03-18 09:51:00,114 fail2ban                [1]: ERROR   NOK: (' + argv[1] + ') - Jails not found']);
+        return U.ok([
+          'Status for the jail: ' + argv[1],
+          '|- Filter',
+          '|  |- Currently failed:\t' + lists.currentlyFailed,
+          '|  |- Total failed:\t' + lists.totalFailed,
+          '|  `- File list:\t/var/log/secure',
+          '`- Actions',
+          '   |- Currently banned:\t' + lists.currentlyBanned,
+          '   |- Total banned:\t' + lists.totalBanned,
+          '   `- Banned IP list:\t' + lists.banned.join(' ')
+        ]);
+      }
+      var names = Object.keys(F2B.jails);
+      return U.ok([
+        'Status',
+        '|- Number of jail:\t' + names.length,
+        '`- Jail list:\t' + names.join(', ')
+      ]);
+    }
+    if (sub === 'banned') {
+      var all = [];
+      Object.keys(F2B.jails).forEach(function (j) { all = all.concat(F2B.jails[j].banned); });
+      return U.ok(all.length ? all : ['No IP address currently banned']);
+    }
+    if (sub === 'set') {
+      var jail = argv[1], action = argv[2], ip = argv[3];
+      if (!jail || !F2B.jails[jail]) return U.fail(['2024-03-18 09:51:00,114 fail2ban [1]: ERROR   NOK: (' + (jail || '') + ') - Jails not found']);
+      if (!action || !ip) return U.fail(['Usage: fail2ban-client set <jail> <banip|unbanip> <IP>']);
+      var list = F2B.jails[jail].banned;
+      if (action === 'banip') {
+        if (list.indexOf(ip) !== -1) return U.fail([ip + ' already banned']);
+        list.push(ip);
+        F2B.jails[jail].currentlyBanned = list.length;
+        return U.ok([ip]);
+      }
+      if (action === 'unbanip') {
+        var idx = list.indexOf(ip);
+        if (idx === -1) return U.fail([ip + ' is not banned']);
+        list.splice(idx, 1);
+        F2B.jails[jail].currentlyBanned = list.length;
+        return U.ok([ip]);
+      }
+      return U.fail(['Invalid action ' + action]);
+    }
+    if (sub === 'reload') {
+      return U.ok(['（配置重载完成；改 /etc/fail2ban/jail.local 后必须 reload 才生效）',
+        '⚠ 别忘了 ignoreip 里的跳板机与内网网段 —— 把运维自己封在门外是 fail2ban 最著名的事故']);
+    }
+    if (sub === 'restart') return U.ok(['（服务重启完成）']);
+    return U.fail(['Usage: fail2ban-client [status|set|reload|restart] ...']);
+  }
+  function M2_JAIL(x) { return x; }
+
+  /* ======================================================================
+     11 · 包完整性校验：rpm -V / debsums
+     ====================================================================== */
+  var RPM_DB = {
+    '/usr/bin/ps': 'procps-ng-3.3.15-14.el8.x86_64',
+    '/usr/bin/netstat': 'net-tools-2.0-0.52.el8.x86_64',
+    '/usr/bin/ls': 'coreutils-8.30-13.el8.x86_64',
+    '/usr/bin/top': 'procps-ng-3.3.15-14.el8.x86_64',
+    '/usr/sbin/sshd': 'openssh-server-8.0p1-19.el8.x86_64',
+    '/usr/sbin/nginx': 'nginx-1.20.1-1.el8.x86_64',
+    '/usr/bin/curl': 'curl-7.61.1-30.el8.x86_64'
+  };
+  function rpmCmd(argv, ctx, stdin, HOST) {
+    if (argv.indexOf('-Va') !== -1 || argv.indexOf('-V') !== -1 && argv.indexOf('-a') !== -1) {
+      return U.ok([
+        'S.5....T.  c /etc/ssh/sshd_config',
+        'S.5....T.    /usr/bin/ps',
+        '..5....T.    /usr/bin/netstat',
+        'missing     /etc/ld.so.preload.rpmsave',
+        '.......T.  c /etc/nginx/nginx.conf',
+        '.....UG..    /usr/bin/ls',
+        '.M.......    /var/log/btmp'
+      ]);
+    }
+    if (argv[0] === '-V') {
+      var pkgs = argv.slice(1).filter(function (a) { return a.charAt(0) !== '-'; });
+      if (!pkgs.length) return U.fail(['rpm: -V 需要包名']);
+      var unknown = pkgs.filter(function (p) { return ['coreutils', 'procps-ng', 'net-tools', 'openssh-server', 'nginx'].indexOf(p) === -1; });
+      if (unknown.length) return { out: [], err: unknown.map(function (p) { return 'package ' + p + ' is not installed'; }), code: 1 };
+      var out = [];
+      if (pkgs.indexOf('procps-ng') !== -1) out.push('S.5....T.    /usr/bin/ps');
+      if (pkgs.indexOf('net-tools') !== -1) out.push('..5....T.    /usr/bin/netstat');
+      if (pkgs.indexOf('coreutils') !== -1) out.push('.....UG..    /usr/bin/ls');
+      return U.ok(out.length ? out : ['（这些包的文件与包数据库记录一致）']);
+    }
+    if (argv[0] === '-qf' || argv[0] === '-q' && argv[1] === '--whatprovides') {
+      var path = argv[1] === '--whatprovides' ? argv[2] : argv[1];
+      var owner = RPM_DB[path];
+      if (!owner) return { out: [], err: ['file ' + (path || '') + ' is not owned by any package'], code: 1 };
+      return U.ok([owner]);
+    }
+    if (argv[0] === '-q') {
+      var name = argv[1];
+      if (!name) return U.fail(['rpm: -q 需要包名']);
+      var found = Object.keys(RPM_DB).filter(function (k) { return RPM_DB[k].indexOf(name + '-') === 0; });
+      if (!found.length) return { out: [], err: ['package ' + name + ' is not installed'], code: 1 };
+      return U.ok([RPM_DB[found[0]]]);
+    }
+    return U.fail(['（教学环境实现了 rpm -Va / -V / -q / -qf；安装卸载类操作不模拟）']);
+  }
+  function debsumsCmd(argv, ctx, stdin, HOST) {
+    if (argv.indexOf('-c') !== -1) {
+      return U.ok([
+        '/usr/bin/ps',
+        '/usr/bin/netstat',
+        '/etc/nginx/nginx.conf'
+      ]);
+    }
+    if (argv.indexOf('-l') !== -1) {
+      return U.ok(['（Deiban/Ubuntu 上 debsums 默认不校验配置文件，需要 --all 才包含）']);
+    }
+    return U.fail(['debsums: 未指定动作（常用 debsums -c 只列出校验失败的文件）']);
+  }
+
+  /* ======================================================================
+     12 · 补充：ssh-keygen / reboot / service
+     ----------------------------------------------------------------------
+     这三条本身不属于"安全命令实现"的核心，但 security 分类的示例里在用，
+     缺了会让学员照着敲却得到 command not found。
+     ====================================================================== */
+  var SSH_KEYS = window.CC_SEC_SSHKEYS;
+  if (!SSH_KEYS) {
+    SSH_KEYS = window.CC_SEC_SSHKEYS = {
+      '~/.ssh/id_ed25519_ci': { type: 'ED25519', bits: 256, fingerprint: 'SHA256:8Yq3kR7mZ1pQ4wN6vB2xL9tH5jC0sD3fG7hK1mP8nT4', comment: 'ops@ci-runner' },
+      '~/.ssh/id_rsa_switch': { type: 'RSA', bits: 4096, fingerprint: 'SHA256:3Fp9wQ2nL7xB5vC1mK8jH4gD6sA0zX9yU3rT7oP2iE5', comment: 'legacy@switch' },
+      '/etc/ssh/ssh_host_ed25519_key': { type: 'ED25519', bits: 256, fingerprint: 'SHA256:qT6vN9mK2xL5bC8dF1gH4jP7sW0zA3eR6yU9iO2pS5', comment: 'root@web-prod-01' }
+    };
+  }
+  function expandTilde(p) {
+    return String(p).replace(/^~/, '/root');
+  }
+  function sshKeygenCmd(argv, ctx, stdin, HOST) {
+    var opt = parseOpts(argv, ['t', 'b', 'C', 'f', 'a', 'N', 'm'], ['p', 'l', 'y', 'q']);
+    if (opt.l) {
+      var target = opt.f || opt._[0];
+      if (!target) return U.fail(['ssh-keygen: 需要 -f <公钥文件>']);
+      var key = SSH_KEYS[expandTilde(target).replace(/\.pub$/, '')] || null;
+      if (!key) return U.fail(['ssh-keygen: ' + target + ': No such file or directory']);
+      return U.ok([key.bits + ' ' + key.fingerprint + ' ' + key.comment + ' (' + key.type + ')']);
+    }
+    if (opt.p) {
+      var pf = opt.f || opt._[0];
+      if (!pf) return U.fail(['ssh-keygen: 需要 -f <私钥文件>']);
+      var k2 = SSH_KEYS[expandTilde(pf)];
+      if (!k2) return U.fail(['ssh-keygen: ' + pf + ': No such file or directory']);
+      return U.ok([
+        'Key has comment ' + k2.comment,
+        'Your identification has been saved with the new passphrase.',
+        '（教学环境不询问口令；真机上会两次提示输入新口令）'
+      ]);
+    }
+    var type = opt.t || 'rsa';
+    if (['rsa', 'ed25519', 'ecdsa', 'dsa'].indexOf(type) === -1) {
+      return U.fail(['ssh-keygen: unknown key type ' + type, '（可选：rsa / ed25519 / ecdsa —— 新系统默认选 ed25519）']);
+    }
+    var bits = Number(opt.b || (type === 'rsa' ? 3072 : (type === 'ecdsa' ? 256 : 256)));
+    if (type === 'rsa' && bits < 2048) {
+      return U.fail(['Invalid RSA key length: minimum is 2048 bits', '（RSA 低于 2048 位已被主流算法库拒绝）']);
+    }
+    if (type === 'ecdsa' && [256, 384, 521].indexOf(bits) === -1) {
+      return U.fail(['Invalid ECDSA key length: ' + bits, '（ecdsa 只支持 256 / 384 / 521）']);
+    }
+    var file = expandTilde(opt.f || '');
+    if (!file) return U.fail(['ssh-keygen: 需要 -f <私钥输出路径>', '（教学环境不支持交互式询问文件名）']);
+    var seed = sha256Hex(file + ':' + type + ':' + bits);
+    var comment = opt.C || (HOST.user + '@' + HOST.hostname);
+    var pubBody, privBody;
+    if (type === 'ed25519') {
+      pubBody = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI' + base64Encode(sha256Bytes(utf8Bytes(seed))).slice(0, 43);
+      privBody = '-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\n' +
+        base64Encode(sha256Bytes(utf8Bytes('priv:' + seed))).slice(0, 64) + '\n-----END OPENSSH PRIVATE KEY-----\n';
+    } else if (type === 'rsa') {
+      pubBody = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQ' + base64Encode(sha256Bytes(utf8Bytes(seed))).slice(0, 60);
+      privBody = '-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn\n' +
+        base64Encode(sha256Bytes(utf8Bytes('priv:' + seed))).slice(0, 64) + '\n-----END OPENSSH PRIVATE KEY-----\n';
+    } else {
+      pubBody = 'ecdsa-sha2-nistp' + bits + ' AAAA' + base64Encode(sha256Bytes(utf8Bytes(seed))).slice(0, 60);
+      privBody = '-----BEGIN EC PRIVATE KEY-----\n' + wrap64(base64Encode(sha256Bytes(utf8Bytes('priv:' + seed)))) + '\n-----END EC PRIVATE KEY-----\n';
+    }
+    var parent = U.parentOf(U.resolvePath(ctx.cwd, file));
+    if (!fsNode(ctx, parent)) {
+      return U.fail(['Saving key "' + opt.f + '" failed: No such file or directory', '（父目录不存在，先 mkdir -p 或换路径）']);
+    }
+    fsWrite(ctx, file, privBody, '600');
+    fsWrite(ctx, file + '.pub', pubBody + ' ' + comment + '\n', '644');
+    SSH_KEYS[U.resolvePath(ctx.cwd, file)] = {
+      type: type.toUpperCase(), bits: bits, comment: comment,
+      fingerprint: 'SHA256:' + base64Encode(sha256Bytes(utf8Bytes('fp:' + seed))).slice(0, 43)
+    };
+    return U.ok([
+      'Generating public/private ' + type + ' key pair.',
+      'Your identification has been saved in ' + opt.f,
+      'Your public key has been saved in ' + opt.f + '.pub',
+      'The key fingerprint is:',
+      'SHA256:' + base64Encode(sha256Bytes(utf8Bytes('fp:' + seed))).slice(0, 43) + ' ' + comment,
+      'The key randomart image is:',
+      '+--[ ' + (type === 'ed25519' ? 'ED25519' : type.toUpperCase() + ' ' + bits) + ' ]----+',
+      '|      .o+*B=o     |',
+      '|     . +o*.= .    |',
+      '|      o..o . o    |',
+      '|     . .  . .     |',
+      '|      . S o       |',
+      '|       . + .      |',
+      '|        . .       |',
+      '|           .      |',
+      '|                  |',
+      '+----[SHA256]-----+',
+      '',
+      '（私钥权限必须是 600；一机一钥、一环境一钥，泄露时才能单独吊销）'
+    ]);
+  }
+  function rebootCmd(argv, ctx, stdin, HOST) {
+    var hasAuto = fsNode(ctx, '/.autorelabel');
+    var out = ['（教学环境不会真的重启机器）'];
+    if (hasAuto) {
+      out.push('已检测到 /.autorelabel：真机重启时会**全盘重新打 SELinux 标签**，耗时取决于磁盘数据量，期间服务不可用。');
+      out.push('只在"从 Disabled 切回 Enforcing"时使用；生产上务必安排在维护窗口。');
+    } else {
+      out.push('真机上这条命令会立刻重启，SSH 会话断开。');
+    }
+    return U.ok(out);
+  }
+  function serviceCmd(argv, ctx, stdin, HOST) {
+    if (!argv.length) return U.fail(['Usage: service <option> | --status-all | [ service_name [ command | --full-restart ] ]']);
+    var name = argv[0], action = argv[1] || 'status';
+    if (name === '--status-all') {
+      return U.ok([' [ + ]  auditd', ' [ + ]  crond', ' [ + ]  docker', ' [ + ]  mysqld', ' [ + ]  nginx', ' [ - ]  firewalld', ' [ - ]  postfix']);
+    }
+    if (name === 'auditd') {
+      return U.ok(['Redirecting to /bin/systemctl ' + action + ' auditd.service']);
+    }
+    return U.ok(['Redirecting to /bin/systemctl ' + action + ' ' + name + '.service']);
+  }
+
+  /* ======================================================================
+     13 · LS_COLORS 兼容：ls -Z 看 SELinux 上下文
+     ----------------------------------------------------------------------
+     shell.js 里的 ls 还不认 -Z，示例 `ls -Z /data/www/index.html` 会报
+     "cannot access '…'"。这里注册一条**只处理 -Z 的包装**，其余参数原样交给
+     引擎自己的 ls —— 不覆盖它的任何行为。但 extend() 不覆盖已存在的命令，
+     所以改为：在 ls 的实现不存在时才注册（浏览器端 shell.js 一定先加载，
+     这条实际是给测试环境兜底的）。真正的修复见下面 lsZ 的调用点。
+     ====================================================================== */
+  function lsZ(argv, ctx, stdin, HOST, base) {
+    var wantZ = false, rest = [];
+    argv.forEach(function (a) {
+      if (/^-[a-zA-Z]*Z[a-zA-Z]*$/.test(a)) { wantZ = true; rest.push('-' + a.replace(/Z/g, '').replace(/^-*/, '')); }
+      else rest.push(a);
+    });
+    var res = base(rest.filter(function (a) { return a !== '-'; }), ctx, stdin, HOST);
+    if (!wantZ) return res;
+    var targets = rest.filter(function (a) { return a.charAt(0) !== '-'; });
+    if (!targets.length) targets = ['.'];
+    var out = [];
+    targets.forEach(function (t) {
+      var abs = U.resolvePath(ctx.cwd, t);
+      var node = U.findNode(ctx.root, abs);
+      if (!node) {
+        return { out: [], err: ["ls: cannot access '" + t + "': No such file or directory"], code: 2 };
+      }
+      if (node.type === 'dir') {
+        U.childrenSorted(node).forEach(function (n) {
+          var p = (abs === '/' ? '' : abs) + '/' + n;
+          out.push(seLabel(p) + ' ' + p);
+        });
+      } else {
+        out.push(seLabel(abs) + ' ' + abs);
+      }
+    });
+    return { out: out, err: [], code: 0 };
+  }
+
+/*__PART4__*/

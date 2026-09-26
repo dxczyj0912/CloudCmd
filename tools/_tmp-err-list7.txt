@@ -1,0 +1,29 @@
+cd /data/app
+git status
+git log --oneline
+git branch -a
+git checkout nope
+git checkout main
+git push
+git push origin main
+git pull
+git merge
+git commit -m x
+git add .
+git tag
+ulimit -n
+ulimit -a
+cat /proc/sys/fs/file-max
+cat /proc/sys/net/ipv4/ip_local_port_range
+sysctl net.ipv4.tcp_tw_reuse
+sysctl -a
+cat /data/bigfile.log
+head -c 100 /data/bigfile.log
+truncate -s 0 /data/bigfile.log
+df -h /data
+du -sh /data
+mount
+findmnt
+cat /etc/fstab
+touch /data/test/x
+dd if=/dev/zero of=/data/test/big bs=1M count=10

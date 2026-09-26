@@ -1,0 +1,21 @@
+.progress-top-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg-card);color:var(--text-dim);font:600 12px/1.2 var(--sans);white-space:nowrap;cursor:pointer}
+.progress-top-btn:hover{border-color:var(--accent);color:var(--accent)}
+#btn-progress-transfer.has-storage-error{color:#b42318;border-color:#fda29b}
+.progress-transfer-overlay[hidden]{display:none}
+.progress-transfer-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(12,19,34,.62)}
+.progress-transfer-panel{width:min(100%,620px);max-height:min(90vh,780px);overflow:auto;padding:22px;border:1px solid var(--border);border-radius:14px;background:var(--bg-card);color:var(--text);box-shadow:0 24px 80px rgba(0,0,0,.25);font:14px/1.6 var(--sans)}
+.progress-transfer-head{display:flex;align-items:start;gap:12px;justify-content:space-between}
+.progress-transfer-head h2{margin:0;font-size:21px;line-height:1.3}
+.progress-transfer-panel p{margin:10px 0;color:var(--text-dim)}
+.progress-transfer-close{width:34px;height:34px;flex:0 0 auto;border:1px solid var(--border);border-radius:7px;background:var(--bg-soft);font-size:20px;cursor:pointer}
+.progress-transfer-label{display:block;margin:16px 0 7px;font-weight:700}
+.progress-transfer-panel textarea{display:block;width:100%;min-height:104px;padding:10px;border:1px solid var(--border-strong);border-radius:7px;background:var(--bg-soft);color:var(--text);font:12px/1.5 var(--mono);resize:vertical}
+.progress-transfer-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.progress-transfer-actions button,.progress-transfer-file{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border:1px solid var(--border-strong);border-radius:7px;background:var(--bg-card);color:var(--text);font:600 13px/1.3 var(--sans);cursor:pointer}
+.progress-transfer-actions button:hover,.progress-transfer-file:hover{border-color:var(--accent);color:var(--accent)}
+.progress-transfer-actions .primary{border-color:var(--accent);background:var(--accent);color:#fff}
+.progress-transfer-actions .primary:hover{background:var(--accent-hover);color:#fff}
+.progress-transfer-file input{position:absolute;width:1px;height:1px;opacity:0}
+.progress-transfer-status{min-height:25px;margin-top:12px;color:var(--text-dim)}
+.progress-transfer-status.is-error{color:#b42318}
+@media(max-width:760px){.progress-top-btn span{display:none}.progress-top-btn{min-width:36px;min-height:36px;justify-content:center;padding:0 8px}.progress-transfer-overlay{padding:8px}.progress-transfer-panel{padding:16px;max-height:96vh}}

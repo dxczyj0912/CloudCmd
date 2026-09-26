@@ -1,0 +1,65 @@
+/* ==========================================================================
+   CloudCmd · 打印样式：把任意分类/命令打印成干净的速查卡
+   ========================================================================== */
+@page{margin:14mm 12mm}
+
+body{background:#fff !important;color:#000 !important;font-size:11pt}
+
+.topbar,.sidebar,.backdrop,.footer,.toast,.toolbar,
+.cmd-head-actions,.copy-btn,.star-btn,.stage-done-btn,.pager{display:none !important}
+
+/* 临时 Shell 窗口、悬浮按钮、拖拽条一律不进打印 */
+.shell-panel,.shell-fab,.shell-resizer,.shell-collapse,.shell-x{display:none !important}
+
+/* 练习平台（academy-lab.html）打印时只留讲义，终端与工具条隐去 */
+.lab-body .topbar,.lab-body .footer,
+.lab-body .term,.lab-body .lesson-toolbar,.lab-body .lesson-foot{display:none !important}
+.lab-body .lab{display:block;height:auto;min-height:0}
+.lab-body .lesson{border:0 !important;background:#fff !important;max-height:none !important}
+.lab-body .lesson-body{overflow:visible !important;max-height:none !important}
+.lab-body .cmdblock{break-inside:avoid;page-break-inside:avoid}
+
+.layout{display:block}
+.main{padding:0;max-width:none}
+
+.page-head{margin-bottom:10mm}
+.page-head h1{font-size:17pt}
+
+.cmd-card{
+  break-inside:avoid;page-break-inside:avoid;
+  border:1px solid #bbb !important;box-shadow:none !important;
+  margin-bottom:4mm;
+}
+.cmd-head{background:#f4f4f4 !important;cursor:default}
+.cmd-name{font-size:11pt}
+.cmd-summary{color:#333 !important}
+
+/* 打印时命令详情全部展开（由 JS 给 open 类） */
+.cmd-body{border-top:1px solid #ddd !important;background:#fff !important;padding:3mm}
+
+.code{
+  background:#f7f7f7 !important;border:1px solid #ccc !important;
+  break-inside:avoid;page-break-inside:avoid;
+}
+.code-head{display:none}
+.code pre{color:#000 !important;font-size:9.5pt;white-space:pre-wrap;word-break:break-all}
+
+.notes{background:#fff8e6 !important;border-left:3px solid #d90 !important}
+.notes li{color:#333 !important}
+
+.param-table th,.param-table td{border-color:#c9c9c9 !important;padding:1.2mm 2mm !important;font-size:9.5pt}
+.param-table td:first-child{color:#000 !important;font-weight:600}
+.param-table td:last-child{color:#333 !important}
+
+.badge{border:1px solid #999 !important;color:#000 !important;background:#fff !important}
+.inline-code{background:#f0f0f0 !important;border-color:#ccc !important;color:#000 !important}
+.related a{border:1px solid #bbb !important;color:#000 !important}
+a{color:#000 !important;text-decoration:none}
+
+.grid{grid-template-columns:repeat(2,1fr) !important}
+.cat-card{border:1px solid #bbb !important;break-inside:avoid}
+
+.roadmap::before{background:#ccc !important}
+.stage::before{border-color:#666 !important}
+.stage-card{border:1px solid #bbb !important;break-inside:avoid}
+.stage-body{display:block !important}

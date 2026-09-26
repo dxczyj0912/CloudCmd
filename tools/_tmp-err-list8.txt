@@ -1,0 +1,29 @@
+curl -m 5 http://127.0.0.1:8080/api/orders/8812
+curl -m 6 http://127.0.0.1:8080/api/orders/8812
+curl -i -m 6 http://127.0.0.1:8080/api/orders/8812
+curl -m 1 http://127.0.0.1:8080/api/orders
+curl http://127.0.0.1:8080/nope
+curl -sS http://10.0.2.15:3306
+curl --max-time 3 https://api.example.com/v1/users
+curl http://cache-prod-01:6379
+nc -zv 10.0.1.23 9999
+nc -zv 10.0.1.23 80
+nc -zv nope.example.com 80
+nc -zv 10.0.2.15 3306
+telnet 10.0.1.23 9999
+telnet 10.0.1.23 80
+ping cache-prod-01
+ping 8.8.8.8
+ping nope.invalid
+ssh deploy@10.0.1.24
+ssh root@10.0.1.24
+curl http://10.0.1.23:8080
+curl http://127.0.0.1:8081
+redis-cli -h nope ping
+redis-cli -h db-prod-01 ping
+redis-cli -h 127.0.0.1 ping
+mysql -h db-prod-01 -uroot -pwrong -e "SHOW DATABASES"
+mysql -h nope -uroot -p -e "SHOW DATABASES"
+mysql -uroot -p -e "use nope; select * from t"
+mysql -uroot -p -e "SHOW DATABASES"
+mysql -uroot -p -e "SELECT * FROM no_such_table"

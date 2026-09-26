@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CloudCmd · 云计算命令手册</title>
+<meta name="description" content="云计算全栈命令速查与学习手册：Linux、Docker、Kubernetes，830 条命令，离线可用，支持搜索与一键复制。">
+<meta name="theme-color" content="#2f6bff">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☁️</text></svg>">
+<link rel="stylesheet" href="assets/css/main.css?v=20260925a">
+<link rel="stylesheet" href="assets/css/progress-transfer.css?v=20260926a">
+<link rel="stylesheet" href="assets/css/print.css?v=20260925a" media="print">
+</head>
+<body>
+
+<a class="skip-link" href="#main">跳到主内容</a>
+
+<header class="topbar">
+  <button class="icon-btn only-mobile" id="btn-menu" type="button" aria-label="打开分类菜单">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+
+  <a class="brand" href="#/">
+    <span class="brand-logo" aria-hidden="true">☁️</span>
+    <span class="brand-text">
+      <strong>CloudCmd</strong>
+      <small>云计算命令手册</small>
+    </span>
+  </a>
+
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="search-input" type="search" autocomplete="off" spellcheck="false"
+           placeholder="搜索命令 / 中文说明 / 示例…" aria-label="搜索命令">
+    <kbd class="search-kbd only-desktop">/</kbd>
+  </div>
+
+  <button class="icon-btn" id="btn-shell" type="button" aria-label="打开临时 Shell 窗口（快捷键 `）" title="临时 Shell 窗口：边看文档边练（快捷键 `）" aria-pressed="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6.5 9.5 9.5 12l-3 2.5M12 15h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+
+  <button class="icon-btn" id="btn-progress-transfer" type="button" aria-label="备份或恢复学习进度" title="备份或恢复学习进度">⇄</button>
+
+  <button class="icon-btn" id="btn-theme" type="button" aria-label="切换深色模式" title="切换深色模式">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+  </button>
+
+  <a class="icon-btn" href="academy-lab.html" title="实时练习平台（左终端 + 右步骤讲义）" aria-label="打开实时练习平台">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13.5" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 20.5h8M12 17.5v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </a>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="分类导航">
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot">
+      <div class="progress-box" id="progress-box"></div>
+    </div>
+  </aside>
+  <div class="backdrop" id="backdrop" hidden></div>
+
+  <main class="main" id="main" tabindex="-1">
+    <!-- 文档内容在这个滚动容器里；临时 Shell 面板会作为兄弟节点插到 .content 里 -->
+  </main>
+
+  <!-- 临时 Shell 窗口：点顶栏按钮打开，占右侧一栏，边看文档边敲命令 -->
+  <aside class="shell-panel" id="shell-panel" hidden aria-label="临时 Shell 窗口">
+    <button class="shell-resizer" id="shell-resizer" type="button"
+            aria-label="拖动调整临时 Shell 宽度" title="拖动调整宽度"
+            aria-orientation="vertical" aria-valuemin="320" aria-valuemax="900" aria-valuenow="400"></button>
+    <div class="shell-head">
+      <span class="shell-head-title">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7l4 5-4 5M11 17h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        临时 Shell
+      </span>
+      <span class="shell-head-tip">命令可以直接复制到左边文档里对照</span>
+      <button class="icon-btn shell-collapse" type="button" id="shell-collapse"
+              aria-label="收缩临时 Shell" title="收缩到窄栏" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="shell-x" type="button" id="shell-close" aria-label="关闭 Shell 窗口" title="关闭（Esc）">
+        <span aria-hidden="true">✕</span>关闭
+      </button>
+    </div>
+    <div class="shell-body" id="shell-body"></div>
+  </aside>
+</div>
+
+<button class="shell-fab" type="button" id="shell-fab" hidden aria-label="打开临时 Shell 窗口">⌨️</button>
+
+<footer class="footer">
+  <span>CloudCmd · 离线可用的云计算命令手册</span>
+  <span class="dot">·</span>
+  <span id="stat-total">数据加载中…</span>
+  <span class="dot">·</span>
+  <a href="academy-lab.html">实时练习平台（左终端 + 右步骤讲义）</a>
+  <span class="dot">·</span>
+  <span>快捷键：<kbd>/</kbd> 搜索 <kbd>Esc</kbd> 关闭 <kbd>←</kbd><kbd>→</kbd> 切换练习</span>
+</footer>
+
+<!-- ============ 数据层（必须按此顺序加载） ============ -->
+<script>
+  /* 全局注册表：各 data 文件把自己挂到 CC_CATS / CC_DATA 上
+     CC_CATS[catId] = { id,index,name,icon,tagline,domain,stage,status,file }
+     CC_DATA[catId] = [ command, ... ] */
+  window.CC_CATS = window.CC_CATS || {};
+  window.CC_DATA = window.CC_DATA || {};
+</script>
+
+<script src="data/_registry.js"></script>
+<script src="data/linux-basic.js"></script>
+<script src="data/linux-text.js"></script>
+<script src="data/linux-user.js"></script>
+<script src="data/linux-net.js"></script>
+<script src="data/linux-storage.js"></script>
+<script src="data/docker.js"></script>
+<script src="data/kubernetes.js"></script>
+<script src="data/cheat.js"></script>
+<script src="data/roadmap.js"></script>
+
+<!-- 模拟终端：虚拟环境 + 练习课程（数据层，必须在 shell.js 之前） -->
+<script src="data/helm.js"></script>
+<script src="data/cicd.js"></script>
+<script src="data/security.js"></script>
+<script src="data/shell.js"></script>
+<script src="data/middleware.js"></script>
+<script src="data/db-cache.js"></script>
+<script src="data/cloud-cli.js"></script>
+<script src="data/iac.js"></script>
+<script src="data/kvm.js"></script>
+<script src="data/perf.js"></script>
+<script src="data/monitor.js"></script>
+<!-- 每日一练卡片（数据契约与质量样板见 data/cards.js 顶部注释） -->
+<script src="data/cards.js"></script>
+<script src="data/cards-linux.js"></script>
+<script src="data/cards-container.js"></script>
+<script src="data/cards-data.js"></script>
+<script src="data/cards-cloud.js"></script>
+<script src="data/cards-gaps.js"></script>
+<script src="data/cards-learning-chain.js"></script>
+<script src="data/cards-practice-paths.js"></script>
+<script src="data/termfs.js"></script>
+<script src="data/lessons.js"></script>
+<script src="data/lessons-linux.js"></script>
+<script src="data/lessons-container.js"></script>
+<script src="data/lessons-cloud.js"></script>
+<script src="data/lessons-data.js"></script>
+<script src="data/lessons-shell.js"></script>
+<script src="data/lessons-iac.js"></script>
+<script src="data/lessons-virt.js"></script>
+<script src="data/lessons-sec.js"></script>
+<script src="data/lessons-perf.js"></script>
+<script src="data/lessons-practice.js"></script>
+<script src="data/zz-lesson-assertions.js"></script>
+<!-- 知识库：命令手册之外的"为什么 / 报错在说什么 / 版本差异 / 认证缺口" -->
+<script src="data/concepts.js"></script>
+<script src="data/errors.js"></script>
+<script src="data/versions.js"></script>
+<script src="data/cert.js"></script>
+
+<!-- ============ 应用层 ============ -->
+<script src="assets/js/store.js?v=20260926b"></script>
+<script src="assets/js/progress-transfer.js?v=20260926a"></script>
+<script src="assets/js/search.js?v=20260925b"></script>
+<script src="assets/js/shell.js?v=20260925b"></script>
+<script src="assets/js/lesson-judge.js?v=20260926b"></script>
+<!-- 命令实现的扩展模块：必须排在 shell.js 之后，顺序见 tools/_cmdlist.js -->
+<script src="assets/js/sim-data.js?v=20260925b"></script>
+<script src="assets/js/cmd-k8s.js?v=20260925b"></script>
+<script src="assets/js/cmd-virt.js?v=20260925b"></script>
+<script src="assets/js/cmd-iac.js?v=20260925b"></script>
+<script src="assets/js/cmd-sec.js?v=20260925b"></script>
+<script src="assets/js/cmd-db.js?v=20260925b"></script>
+<script src="assets/js/cmd-ops.js?v=20260925b"></script>
+<script src="assets/js/cmd-basic2.js?v=20260925c"></script>
+<script src="assets/js/fs-extra.js?v=20260925c"></script>
+<script src="assets/js/cmd-basic3.js?v=20260925c"></script>
+<script src="assets/js/cmd-host.js?v=20260925d"></script>
+<script src="assets/js/cmd-text.js?v=20260925e"></script>
+<script src="assets/js/cmd-cloud.js?v=20260925f"></script>
+<script src="assets/js/render.js?v=20260926b"></script>
+<script src="assets/js/terminal.js?v=20260926b"></script>
+<script src="assets/js/drill.js?v=20260925b"></script>
+<script src="assets/js/router.js?v=20260925b"></script>
+<script src="assets/js/app.js?v=20260925b"></script>
+</body>
+</html>

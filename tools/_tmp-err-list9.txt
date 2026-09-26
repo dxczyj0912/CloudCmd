@@ -1,0 +1,41 @@
+cat /data
+cat /etc
+touch /nope/x
+mkdir /nope/a/b
+cp /etc/hosts /nope/hosts
+mv /etc/hosts /nope/hosts
+ln /nope /tmp/x
+head -1 /data
+wc -l /data
+sed -n 1p /data
+awk '{print}' /data
+tar czf /nope/a.tgz /data
+gzip /data
+mysql -h 10.0.2.15 -uroot -p -e "SHOW DATABASES"
+mysql -h 127.0.0.1 -uroot -p -e "SHOW DATABASES"
+mysql -uroot -p -e "SELECT * FROM orders.nope"
+hcloud
+hcloud ECS ListServersDetails
+hcloud ecs list
+hcloud configure list
+obsutil ls
+obsutil ls obs://nope
+obsutil cp /nope obs://prod-backup/
+helm repo add nope https://nope.example.com/charts
+helm install nope ./nope
+helm lint /nope
+helm pull nope/nope
+helm status nope
+helm upgrade nope ./x
+kubectl exec web-7d9c4b8f5-2xk9p -- nslookup cache-prod-01
+kubectl exec web-7d9c4b8f5-2xk9p -- env
+kubectl logs nope
+kubectl get secret
+kubectl get secret -n my-app
+kubectl delete pod nope
+kubectl scale deploy/web --replicas=0
+kubectl debug node/10.0.1.24 -it --image=busybox
+systemctl restart nginx
+systemctl status nginx --no-pager
+journalctl -u nginx -n 5
+supervisorctl status
