@@ -38,6 +38,12 @@ store.clear();
 ok('清空进度同时清空课程目标证据', !store.hasLessonEvidence('new') && !JSON.parse(storage['cloudcmd.v1']).lessonEvidence.new);
 store.importJSON({ lessonEvidence: { imported: true } });
 ok('导入进度恢复课程目标证据', store.hasLessonEvidence('imported'));
+let rejectedBadJson = false;
+try { store.importJSON('{"steps":[] }'); } catch (e) { rejectedBadJson = true; }
+ok('导入拒绝错误的桶类型', rejectedBadJson);
+let rejectedBadSrs = false;
+try { store.importJSON({ srs: { card: { ease: 'fast' } } }); } catch (e) { rejectedBadSrs = true; }
+ok('导入拒绝损坏的复习记录', rejectedBadSrs);
 
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'assets/js/lesson-judge.js'), 'utf8'), context);
 const judge = context.window.CC_LESSON_JUDGE;

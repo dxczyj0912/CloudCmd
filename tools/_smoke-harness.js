@@ -563,6 +563,16 @@
       var stored = ST.getTheme();
       return (['auto', 'light', 'dark'].indexOf(stored) !== -1) ? true : '主题状态异常: ' + stored;
     });
+    t('学习进度备份入口可用', function () {
+      var btn = document.getElementById('btn-progress-transfer');
+      if (!btn) return '没有进度备份按钮';
+      btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      var dialog = document.querySelector('.progress-transfer-overlay');
+      var area = dialog && dialog.querySelector('#progress-export');
+      var valid = !!dialog && !dialog.hidden && area && /"mastered"/.test(area.value);
+      if (dialog) dialog.querySelector('[data-close]').click();
+      return valid ? true : '备份对话框没有打开或内容为空';
+    });
 
     /* ================= 阶段二：进入分类页做真实 DOM 交互 ================= */
     mark('阶段一同步断言完成(' + out.length + ')');
