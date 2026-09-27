@@ -33,7 +33,7 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
 .back-home .ico{width:14px;height:14px}
 .brand{display:flex;align-items:center;gap:9px;flex:0 0 auto;color:var(--text)}
 .brand:hover{text-decoration:none}
-.brand-logo{font-size:22px;line-height:1}
+.brand-logo{display:block;width:32px;height:32px;object-fit:contain;flex:0 0 32px}
 .brand-text{display:flex;flex-direction:column;line-height:1.15}
 .brand-text strong{font-size:15px;letter-spacing:.2px}
 .brand-text small{font-size:11px;color:var(--text-faint)}

@@ -88,7 +88,7 @@ public class MainActivity extends Activity {
         try {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             if (info.versionName != null && !info.versionName.isEmpty()) {
-                s.setUserAgentString(s.getUserAgentString() + " CloudCmdApp/" + info.versionName);
+                s.setUserAgentString(s.getUserAgentString() + " CloudCmdApp/" + info.versionName + " CloudCmdCode/" + info.versionCode);
             }
         } catch (Throwable ignored) {
             /* 版本标记失败不影响离线使用 */

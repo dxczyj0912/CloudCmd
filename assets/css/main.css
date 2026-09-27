@@ -106,9 +106,10 @@ hr{border:0;border-top:1px solid var(--border);margin:22px 0}
 }
 .brand{display:flex;align-items:center;gap:9px;color:var(--text);flex:0 0 auto}
 .brand:hover{text-decoration:none}
-.brand-logo{font-size:22px;line-height:1}
+.brand-logo{display:block;width:32px;height:32px;object-fit:contain;flex:0 0 32px}
 .brand-text{display:flex;flex-direction:column;line-height:1.15}
 .brand-text strong{font-size:15px;letter-spacing:.2px}
+.brand-version{font-size:10px;font-weight:700;color:var(--text-faint);font-variant-numeric:tabular-nums}
 .brand-text small{font-size:11px;color:var(--text-faint)}
 
 .search-wrap{position:relative;flex:1 1 auto;max-width:560px;margin:0 auto}
@@ -792,7 +793,7 @@ kbd{
      `scrollWidth > innerWidth` —— 两个值都被撑到 434，比出来是"没溢出"。 */
   .topbar{gap:8px;padding:0 10px}
   .search-wrap{min-width:0;margin:0}
-  .topbar .brand-text{display:none}      /* 只留 ☁️ 图标，把宽度让给搜索框 */
+  .topbar .brand-text{display:none}      /* 窄屏只留品牌图标，把宽度让给搜索框 */
   .topbar .icon-btn{width:34px;height:34px;flex:0 0 auto}
   .topbar .icon-btn svg{width:18px;height:18px}
   .search-kbd{display:none}
@@ -909,7 +910,8 @@ kbd{
   border-radius:var(--radius);padding:8px 13px;
   font-size:12.5px;
 }
-.lab-bar-brand{font-weight:700;color:var(--text);flex:0 0 auto}
+.lab-bar-brand{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--text);flex:0 0 auto}
+.lab-bar-brand img{width:20px;height:20px;object-fit:contain}
 .lab-bar-sep{color:var(--border-strong)}
 .lab-bar-bc{color:var(--text-faint);flex:0 0 auto}
 .lab-bar-spacer{flex:1 1 auto;min-width:10px}

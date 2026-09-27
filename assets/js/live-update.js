@@ -30,6 +30,10 @@
     var match = String(window.navigator && window.navigator.userAgent || '').match(/CloudCmdApp\/([^\s]+)/i);
     return match ? match[1] : '';
   }
+  function currentAppCode() {
+    var match = String(window.navigator && window.navigator.userAgent || '').match(/CloudCmdCode\/([0-9]+)/i);
+    return match ? Number(match[1]) : 0;
+  }
   function compareVersion(left, right) {
     var a = String(left || '').split('.').map(function (part) { return Number(part) || 0; });
     var b = String(right || '').split('.').map(function (part) { return Number(part) || 0; });
@@ -52,7 +56,10 @@
   function showAppUpdate(value) {
     var current = currentAppVersion();
     var target = value && downloadUrl(value.apkUrl);
-    if (appUpdateShown || !current || !value || !value.available || !value.versionName || !target || compareVersion(value.versionName, current) <= 0) return;
+    if (appUpdateShown || !current || !value || !value.available || !value.versionName || !target) return;
+    var installedCode = currentAppCode();
+    var publishedCode = Number(value.versionCode) || 0;
+    if (installedCode && publishedCode ? publishedCode <= installedCode : compareVersion(value.versionName, current) <= 0) return;
     appUpdateShown = true;
     var bar = document.getElementById('app-update-bar');
     if (!bar) {

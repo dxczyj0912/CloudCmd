@@ -267,11 +267,20 @@ function contentType(file) {
 
 function appVersionForRequest(req) {
   const value = appVersion();
-  if (!value.apkUrl || !value.apkUrl.startsWith('/')) return value;
+  let response = value;
+  /* Older APKs only compare dotted versionName. During the public-version
+     reset to 0.0.1, return a compatible hint to those clients so they can
+     reach the new APK; modern clients compare the monotonic versionCode. */
+  const agent = String(req.headers['user-agent'] || '');
+  if (/^0\./.test(value.versionName) && !/CloudCmdCode\/[0-9]+/i.test(agent) &&
+      /CloudCmdApp\/1\.[0-9.]+/i.test(agent)) {
+    response = Object.assign({}, value, { versionName: '1.3.5', actualVersionName: value.versionName });
+  }
+  if (!response.apkUrl || !response.apkUrl.startsWith('/')) return response;
   const forwarded = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
   const scheme = req.socket.encrypted || forwarded === 'https' ? 'https' : 'http';
   const host = req.headers.host || 'localhost';
-  return Object.assign({}, value, { apkUrl: new URL(value.apkUrl, scheme + '://' + host).href });
+  return Object.assign({}, response, { apkUrl: new URL(response.apkUrl, scheme + '://' + host).href });
 }
 
 function serveStatic(req, res, pathname) {

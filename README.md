@@ -36,7 +36,7 @@ docker compose up -d --build
 
 配置 GitHub Actions Secrets 后，推送 `master` 会先检查再自动部署网页和同步服务；需要新 Android 安装包时，在 Actions 中单独构建并发布签名 APK。
 
-如果部署目录中放了更高版本的正式签名 APK（例如 `CloudCmd-1.3.apk`），Android App 在连接同步服务后也会提示“下载更新”；点击后由系统浏览器下载并确认安装。
+当前对外版本从 `0.0.1` 开始，安装包命名为 `CloudCmd-0.0.1.apk`。Android 的内部 `versionCode` 从 9 接续旧版，保证旧手机可以覆盖安装。连接同步服务后，App 会提示下载已发布的新安装包。
 
 ### 方式四：构建 Android 版
 
@@ -47,7 +47,7 @@ docker compose up -d --build
 | 离线 | 整个网站打包在 APK 里，飞行模式也能用 |
 | 权限 | `INTERNET` 仅用于用户主动配置同步服务；不配置时站内仍可完全离线 |
 | 系统要求 | minSdk 24（Android 7.0+）｜ targetSdk 34 |
-| 重建 | `node tools/build-apk.js --no-sign --version-code=3 --version-name=1.2`（工具链见下方） |
+| 重建 | `node tools/build-apk.js --no-sign --version-code=9 --version-name=0.0.1`（工具链见下方） |
 | 验证 | `node tools/apk-check.js` —— 逐字节比对包内文件，并在 375×667 下真渲染一遍 |
 
 > **APK 只是新增一个分发形态，没有动这个项目的立身之本。**
@@ -63,6 +63,7 @@ docker compose up -d --build
 
 正式发布前运行 `node tools/release-check.js --apk=CloudCmd-版本.apk`，并按
 [正式发布验收](docs/发布验收.md)完成签名、升级安装、真机输入法和进度迁移检查。
+正式签名构建并通过自检后，构建脚本会把根目录旧版 APK 移到 `backup/`；当前版本留在根目录。同名但内容不同的旧包会附加哈希后保存，不会覆盖原备份。
 
 ---
 
@@ -256,11 +257,12 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 云计算-DS/
 ├─ index.html                 主站唯一页面（SPA 外壳，双击即可打开）
 ├─ academy-lab.html           实时练习平台（左终端 + 右步骤讲义，独立页面）
-├─ CloudCmd-1.2.apk           Android 未签名构建产物（不能直接安装）
+├─ CloudCmd-0.0.1.apk         当前正式签名 Android 安装包（不提交到 Git）
+├─ backup/                    旧版本 APK 本地归档（不提交到 Git）
 ├─ android/                    Android 外壳工程（WebView + 图标资源，不含站点内容）
 │  ├─ AndroidManifest.xml      可选 INTERNET + adjustResize + configChanges
 │  ├─ java/…/MainActivity.java 单 Activity：WebView 配置、外链分流、返回键
-│  ├─ res/                     图标（自适应 vector + 各密度 PNG 由脚本生成）
+│  ├─ res/                     图标（自适应 PNG + 各密度 PNG）
 │  └─ keystore/                （不提交私钥；正式签名由构建环境注入）
 ├─ assets/
 │  ├─ css/main.css            全部样式（主题变量 + 布局 + 组件）

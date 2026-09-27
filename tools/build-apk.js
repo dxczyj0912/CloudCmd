@@ -35,7 +35,6 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const zip = require('./android/zip.js');
-const icons = require('./android/icons.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const ANDROID = path.join(ROOT, 'android');
@@ -57,8 +56,8 @@ const val = (f, d) => {
   return a ? a.slice(f.length + 1) : d;
 };
 
-const VERSION_CODE = parseInt(val('--version-code', '1'), 10);
-const VERSION_NAME = val('--version-name', '1.0');
+const VERSION_CODE = parseInt(val('--version-code', '9'), 10);
+const VERSION_NAME = val('--version-name', '0.0.1');
 const NO_SIGN = has('--no-sign');
 const SIGNING = {
   keystore: process.env.CLOUDCMD_KEYSTORE || '',
@@ -68,6 +67,15 @@ const SIGNING = {
 };
 const MIN_SDK = 24;
 const TARGET_SDK = 34;
+if (/^[0-9]+(?:\.[0-9]+){1,3}$/.test(VERSION_NAME)) {
+  const web = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const label = fs.readFileSync(path.join(ANDROID, 'res', 'values', 'strings.xml'), 'utf8');
+  if (!web.includes('class="brand-version">' + VERSION_NAME + '</span>') ||
+      !label.includes('CloudCmd ' + VERSION_NAME + '</string>')) {
+    console.error('Display version differs from --version-name. Update the web brand and Android app_name before building.');
+    process.exit(2);
+  }
+}
 
 /* ---------- 0. 找工具链 ---------- */
 const LOCAL = process.env.LOCALAPPDATA || '';
@@ -147,9 +155,7 @@ step(2, TOTAL, `拷贝网站资源：${assetFiles} 个文件 / ${(assetBytes / 1
 
 /* ---------- 3. 资源 + 图标 ---------- */
 fs.cpSync(path.join(ANDROID, 'res'), path.join(BUILD, 'res'), { recursive: true });
-/* API 26 以下没有自适应图标，用代码生成 PNG 兜底（不往仓库里塞二进制） */
-const pngCount = icons.generate(path.join(BUILD, 'res'));
-step(3, TOTAL, `资源就绪（含生成的 ${pngCount} 个 PNG 图标）`);
+step(3, TOTAL, '资源就绪（含各密度品牌 PNG 图标）');
 
 /* ---------- 4. aapt2 compile + link ---------- */
 try {
@@ -365,4 +371,5 @@ if (!NO_SIGN) {
 }
 
 console.log('\n' + (ok ? '✅ APK 构建完成并通过自检' : '❌ 自检发现问题，见上面 [MISS]/[BAD]'));
+if (ok && !NO_SIGN) run(process.execPath, [path.join(ROOT, 'tools', 'archive-apks.js'), '--current=' + finalName], { stdio: 'inherit' });
 process.exit(ok ? 0 : 1);
