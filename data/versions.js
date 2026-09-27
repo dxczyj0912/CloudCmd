@@ -51,7 +51,8 @@
       since: "--link 自 Docker 1.9（2015-11）引入自定义网络后即被官方标记为 legacy，文档长期标注 “The --link flag is a legacy feature”（具体移除时间以官方文档为准）",
       why: "--link 只在默认 bridge 上生效，靠往 /etc/hosts 塞条目和注入环境变量实现互通，是单向的、不能动态改，容器重建后 IP 一变配置就烂掉；自定义网络内嵌 Docker DNS，服务名即域名，还能做网络隔离（不同网络默认不通），这才是编排需要的模型。",
       risk: "照老博客敲 `--link` 起的容器，重启顺序一变就互相连不上，报错却是应用层的 `Unknown MySQL server host`，看着像数据库挂了；Swarm 与 Kubernetes 完全无视 --link，迁移时这层隐式依赖没有任何清单可查，只能靠人回忆。",
-      related: ["dk-network-connect","dk-network-modes","dk-network-create","dk-compose-up"]
+      related: ["dk-network-connect","dk-network-modes","dk-network-create","dk-compose-up"],
+      docs: "https://docs.docker.com/engine/network/links/"
     },
 
     {
@@ -88,7 +89,8 @@
       since: "kubelet 自 1.22（2021-08）起 KubeletConfiguration 的 cgroupDriver 默认值由 cgroupfs 改为 systemd，不一致时会打印告警；Docker 自身仍默认 cgroupfs，所以 daemon.json 必须显式对齐",
       why: "cgroupfs 与 systemd 是两套独立的 cgroup 管理器，同时存在时各自创建的 cgroup 互相不可见：systemd 算出的 slice 用量不含容器，kubelet 上报的 allocatable 与实际占用对不上，`systemctl status` 也看不到容器进程；统一到 systemd 才能让节点资源核算、OOM 计数、CPU 权重口径一致，也是后续接入 cgroup v2 的前提。",
       risk: "两个 driver 不一致的节点上，Pod 的 request/limit 被记进不同的 cgroup 树，出现节点明明有余量却调度不上、或容器被整机 OOM 杀掉却不产生 Pod 事件；升级 kubelet 后如果节点没改 daemon.json，kubelet 可能直接启动失败、节点 NotReady，而报错只说 “cgroup driver mismatch”。",
-      related: ["dk-daemon-json","k8s-kubeadm-init","k8s-troubleshoot-node-notready","k8s-cluster-info"]
+      related: ["dk-daemon-json","k8s-kubeadm-init","k8s-troubleshoot-node-notready","k8s-cluster-info"],
+      docs: "https://docs.docker.com/engine/containers/runmetrics/#control-groups"
     },
 
     {
@@ -189,7 +191,8 @@
       since: "kubeadm.k8s.io/v1beta3 自 Kubernetes 1.22（2021-08）起成为默认配置版本，v1beta2 同时被弃用；后续 v1beta4 自 1.27 起可用。kubeadm 停止接受 v1beta2 的确切版本以官方文档为准",
       why: "v1beta2 把 InitConfiguration、JoinConfiguration、ClusterConfiguration 放在同一个文件里用 --- 分隔，字段散落各处（advertiseAddress 在 Init 段、controlPlaneEndpoint 在 Cluster 段、networking 又在 Cluster 段），字段位置写错也不报错；v1beta3 明确拆开各段结构，把 API 端点集中到 localAPIEndpoint，并强制用 --config 传文件，好让 kubeadm 在真正改动机器之前完成校验。",
       risk: "拿 1.20 时代的 kubeadm-config.yaml 去 `kubeadm init --config` 初始化 1.22+ 集群，会因为不认识的字段或段落归属错误直接失败，报 unknown field 或 could not unmarshal，而集群已经写了一半（kubelet 已拉起、证书已生成），清理要 kubeadm reset 重来；`kubeadm upgrade` 读取的是集群里 kubeadm-config ConfigMap 的内容，老集群升级前不先跑 `kubeadm config migrate`，会在升级中途停下，此时控制面组件版本已经不一致。",
-      related: ["k8s-kubeadm-init","k8s-kubeadm-join","k8s-kubeadm-upgrade","k8s-kubeadm-reset"]
+      related: ["k8s-kubeadm-init","k8s-kubeadm-join","k8s-kubeadm-upgrade","k8s-kubeadm-reset"],
+      docs: "https://kubernetes.io/docs/reference/config-api/kubeadm-config.v1beta3/"
     },
 
     {
@@ -201,7 +204,8 @@
       since: "topologyKeys 在 Kubernetes 1.21（2021-04）被弃用；拓扑感知路由先由注解 service.kubernetes.io/topology-aware-hints 承接（1.24 起默认 Auto），再迁移到 trafficDistribution 字段（1.31 起 GA）。当前可用字段与确切分界以官方最新文档为准",
       why: "topologyKeys 让用户写一条“就近降级链”，但 endpoint 计算是每个节点各自做的，字段在实现里被解释成硬性过滤：本节点无可用 endpoint 时直接失败而不是降级，再加上用户普遍写 * 兜底，实际效果与“就近优先”的预期相反；trafficDistribution 只表达意图（PreferClose / PreferSameZone 等），由 kube-proxy 结合节点位置实现就近路由，语义单一、可演进。",
       risk: "集群升到移除 topologyKeys 的版本后，`kubectl apply` 报 `unknown field \"spec.topologyKeys\"`，Service 更新不上去，只能改清单；如果 kubectl 以非严格模式静默丢弃该字段，Service 会退回全量跨区负载均衡，跨 AZ 流量费与延迟悄悄上升，业务只表现为“变慢了”，很难联想到是一次 apply 掉的字段。",
-      related: ["k8s-service","k8s-endpointslices","k8s-troubleshoot-svc","k8s-get"]
+      related: ["k8s-service","k8s-endpointslices","k8s-troubleshoot-svc","k8s-get"],
+      docs: "https://kubernetes.io/docs/concepts/services-networking/service/#traffic-distribution"
     },
 
     {
@@ -226,7 +230,8 @@
       since: "Kubernetes 1.24（2022-05）起不再为 ServiceAccount 自动创建长期有效的 token Secret（LegacyServiceAccountTokenNoAutoGeneration 默认开启）；短期令牌走 TokenRequest API（1.22 GA）",
       why: "自动生成的 Secret 令牌**永不过期**，一旦泄漏就等于集群内身份的永久后门，而 Secret 又常被 `kubectl get secret -A -o yaml` 整份导出到日志或工单里；TokenRequest 签发的令牌有小时级 TTL、绑定 Audience、可按需轮换，把长期凭证换成可撤销的短期凭证是零信任方向的硬要求。",
       risk: "依赖 `sa.secrets[0].name` 取令牌的脚本（CI 里写死 kubeconfig、监控 agent 用固定 token 连 apiserver）在 1.24+ 上取到空值，报 index out of range 或 401，现象是“CI 突然连不上集群”；用 `kubectl get secrets -A` 巡检的脚本也会因为看不到 token Secret 而误报“凭证丢失”，进而人工补一个长期 Secret，把安全改进又退回原点。",
-      related: ["k8s-create-token","k8s-sa-token","k8s-create-serviceaccount","k8s-auth-whoami"]
+      related: ["k8s-create-token","k8s-sa-token","k8s-create-serviceaccount","k8s-auth-whoami"],
+      docs: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/"
     },
 
     {
@@ -286,7 +291,8 @@
       since: "RHEL 8（2019-05）起 firewalld 默认使用 nftables 后端，`iptables` 命令由 iptables-nft 兼容层提供；RHEL 9 移除了 iptables-services 包与 iptables 服务。RHEL 8.0 上后端启用的具体细节以官方文档为准",
       why: "iptables 是“每个表各一条链、逐条遍历匹配”，规则多了就是 O(n) 比较，且 ipv4、ipv6、ebtables 各一套语法与各自的保存/恢复机制；nftables 用统一的规则集（set/map/verdict）与原子事务替换整张规则集，支持集合匹配，性能和可维护性都更好，也不必再分别维护 ip6tables。",
       risk: "在 RHEL 8+ 上手工 `iptables -I INPUT` 加的规则与 firewall-cmd 管理的规则集不在同一处，`firewall-cmd --reload` 或 firewalld 重启会把手工规则清掉，表现为“临时放行的端口过一阵又不通了”；RHEL 9 上 `systemctl enable iptables` 直接失败（单元不存在），原来靠这个服务恢复规则的机器重启后默认策略会变，要么全放通成为安全事件，要么全拒绝导致业务中断；排查时 `iptables -L` 与 `nft list ruleset` 结果不一致，又会让人重复叠加规则。",
-      related: ["ln-iptables","ln-nft","ln-firewall-cmd","ln-troubleshoot-firewall"]
+      related: ["ln-iptables","ln-nft","ln-firewall-cmd","ln-troubleshoot-firewall"],
+      docs: "https://wiki.nftables.org/wiki-nftables/index.php/Moving_from_iptables_to_nftables"
     },
 
     {
@@ -335,7 +341,8 @@
       since: "RHEL 7 / CentOS 7（2014）起 systemd 为默认 init 并保留 SysVinit 兼容层；RHEL 9 系发行版已不再支持 /etc/init.d 遗留脚本。各发行版的保留策略以官方文档为准",
       why: "SysVinit 脚本把“启动成功了吗、进程还在吗、依赖就绪了吗”全交给脚本作者用 sleep 与 ps 判断，PID 文件一旦被删或进程改名，status/stop 就失效；systemd 用 cgroup 跟踪服务的主进程与全部子孙进程，Restart= 声明自愈策略，After=/Requires= 声明依赖，退出码与日志统一由 journald 记录，不再依赖脚本自己维护的状态文件。",
       risk: "自研 init 脚本在 systemd 机器上要么完全不工作（`systemctl start myapp` 报 Unit not found），要么被 sysv-generator 包装成一个“看起来能启”的服务：这种包装无法跟踪 fork 出去的守护进程，`systemctl stop` 后子进程仍在跑、端口仍被占用，再启动报 Address already in use，而 `systemctl status` 显示 active（主脚本早退出了），排障时最容易被这个假状态误导。",
-      related: ["lu-systemd-unit","sh-systemd-wrapper","lu-systemctl-daemon-reload","lu-service"]
+      related: ["lu-systemd-unit","sh-systemd-wrapper","lu-systemctl-daemon-reload","lu-service"],
+      docs: "https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html"
     },
 
     {
@@ -432,7 +439,8 @@
       since: "MySQL 8.0（2018-04）起 caching_sha2_password 成为默认认证插件，取代 5.7 时代的 mysql_native_password；MySQL 8.4 起 mysql_native_password 默认不再启用",
       why: "mysql_native_password 用 SHA1 挑战应答，口令哈希可被离线暴力破解，也不支持通道绑定；caching_sha2_password 用 SHA-256，配合 RSA 公钥或 TLS 传输口令，并把认证成功的结果缓存在服务端，重复连接不必再走完整握手（这也是它叫 caching 的原因）。安全强度提高的代价就是对老客户端不兼容。",
       risk: "5.7 时代的客户端连 8.0 时握手失败，报 `Authentication plugin 'caching_sha2_password' cannot be loaded` 或 `Client does not support authentication protocol requested by server`，而不少驱动只笼统报“访问被拒绝”，让人先去查账号密码与授权；在应用侧临时用 mysql_native_password 建账号属于把降级当解决方案，口令强度回到可离线破解的水平，安全扫描会判不合格，且 8.4 之后还要再迁一次。",
-      related: ["db-mysql-client","db-mysql-create-user","db-mysql-connect-timeout","db-mysql-grant"]
+      related: ["db-mysql-client","db-mysql-create-user","db-mysql-connect-timeout","db-mysql-grant"],
+      docs: "https://dev.mysql.com/doc/refman/8.4/en/caching-sha2-pluggable-authentication.html"
     },
 
     {
@@ -468,7 +476,8 @@
       since: "MySQL 8.0.22（2020-10）引入 SHOW REPLICA STATUS 与 CHANGE REPLICATION SOURCE TO 等新语法，并把 MASTER/SLAVE 系命令标记为弃用（去术语化）；MySQL 8.4 起旧语法被移除",
       why: "这是 MySQL 去术语化（移除 master/slave 这类带奴役隐喻的词汇）的一部分，同时借改名把复制相关命令统一到 REPLICATION SOURCE / REPLICA 的表述；新旧语法功能等价，改名不代表语义变化，因此可以逐条替换而不必停机。",
       risk: "监控脚本解析 SHOW SLAVE STATUS 的字段名（Slave_IO_Running、Seconds_Behind_Master）—— 8.0.22+ 输出字段是否已改成 Replica_* 取决于具体版本，同一套正则跨版本会取到空值，告警规则静默失效，主从延迟涨到几小时也没有告警；在 8.4 上命令直接报语法错误，备份/巡检脚本每次执行都失败，如果错误被重定向进日志而没人看，等于复制监控长期缺失。",
-      related: ["db-mysql-show-replica-status","db-mysql-change-replication-source","db-mysql-replication-lag","db-mysql-processlist"]
+      related: ["db-mysql-show-replica-status","db-mysql-change-replication-source","db-mysql-replication-lag","db-mysql-processlist"],
+      docs: "https://dev.mysql.com/doc/refman/8.4/en/show-replica-status.html"
     },
 
     {
@@ -517,7 +526,8 @@
       since: "华为云 ECS 在新版接口中提供 CreateServers 等操作与 /v3/{project_id}/cloudservers 等路径，与沿用 OpenStack Nova 风格的老接口长期并存；某个操作属于哪一代、KooCLI 各版本默认调用哪一代，以华为云官方 API Explorer 与 KooCLI 文档为准",
       why: "老接口沿用 OpenStack Nova 的风格（请求体里嵌套 server、参数名与 OpenStack 对齐、project 走查询参数），新接口按华为云自身的 API 规范重写：统一用 X-Project-Id 之类的头部传参、统一错误码与分页模型、字段命名规范化；动机是摆脱 OpenStack API 的历史包袱，让 ECS 与 EVS、VPC、IMS 等云服务保持一致的调用与鉴权约定。",
       risk: "照旧文档写的调用在 KooCLI 上会因为操作名或参数名不匹配直接报错（`Not found the operation` 或参数校验失败）；更麻烦的是 KooCLI 升级后默认调用的接口版本可能变化，脚本**无声地换了一套接口** —— 返回体字段路径变了，用 --cli-json-filter 或 jq 取值的脚本拿到 null，后续把空 IP、空 ID 写进 DNS、CMDB 或 ssh 命令，错误现场离根因很远；批量创建场景下新老接口的限额与语义不同，缺少幂等保护的脚本会重复创建机器并产生费用。",
-      related: ["hw-ecs-list","hw-ecs-create","hw-hcloud-config-init","hw-cross-dryrun"]
+      related: ["hw-ecs-list","hw-ecs-create","hw-hcloud-config-init","hw-cross-dryrun"],
+      docs: "https://support.huaweicloud.com/api-ecs/"
     },
 
     {

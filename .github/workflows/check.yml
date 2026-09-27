@@ -1,10 +1,19 @@
 name: CloudCmd checks
 on:
   push:
+    branches: [master]
   pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: windows-latest
+    env:
+      CLOUDCMD_VERSION_CODE: '1'
+      CLOUDCMD_VERSION_NAME: '0.0.0-ci'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,5 +30,52 @@ jobs:
         run: ./tools/android/setup-toolchain.ps1
       - name: Unsigned APK build and content parity
         run: |
-          node tools/build-apk.js --no-sign --version-code=2 --version-name=1.1
-          node tools/apk-check.js --apk=CloudCmd-1.1.apk
+          node tools/build-apk.js --no-sign --version-code=${{ env.CLOUDCMD_VERSION_CODE }} --version-name=${{ env.CLOUDCMD_VERSION_NAME }}
+          node tools/apk-check.js --apk=CloudCmd-${{ env.CLOUDCMD_VERSION_NAME }}.apk
+
+  deploy:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloudcmd-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package verified commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=tar HEAD | gzip -n > cloudcmd-source.tar.gz
+          sha256sum cloudcmd-source.tar.gz | cut -d ' ' -f1 > cloudcmd-source.sha256
+      - name: Configure trusted SSH connection
+        shell: bash
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_SSH_KEY" && test -n "$DEPLOY_KNOWN_HOSTS"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Upload and deploy
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_HOST" && test -n "$DEPLOY_USER"
+          port="${DEPLOY_SSH_PORT:-22}"
+          [[ "$port" =~ ^[0-9]+$ ]]
+          remote_file="/tmp/cloudcmd-${GITHUB_SHA}-${GITHUB_RUN_ID}.tar.gz"
+          remote_script="/tmp/cloudcmd-deploy-${GITHUB_SHA}-${GITHUB_RUN_ID}.sh"
+          ssh_opts=(-o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519)
+          scp "${ssh_opts[@]}" -P "$port" cloudcmd-source.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_file}"
+          scp "${ssh_opts[@]}" -P "$port" tools/deploy-server.sh "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_script}"
+          digest="$(cat cloudcmd-source.sha256)"
+          ssh "${ssh_opts[@]}" -p "$port" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "bash '${remote_script}' '${remote_file}' '${digest}' '${GITHUB_SHA}'"

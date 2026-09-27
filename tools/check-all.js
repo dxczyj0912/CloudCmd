@@ -39,6 +39,7 @@ const CHECKS = [
   { name: '步骤级证据', file: 'lesson-assertion-check.js', need: 'node', desc: '逐课验证输出/文件状态断言，不把模拟说明当证据' },
   { name: '课程结果可达性', file: 'lesson-outcome-audit.js', need: 'node', desc: '逐步执行课程时必须能观察到目标结果' },
   { name: '安全构建', file: 'security-check.js', need: 'node', desc: '签名凭证外置且仓库不含私钥' },
+  { name: '部署服务契约', file: 'deploy-check.js', need: 'node', desc: '健康检查、APK 更新元数据和私有文件访问边界' },
   { name: '渲染与交互', file: 'render-check.js', need: 'browser', desc: '主站页面与交互（无头 Chrome）' },
   { name: '练习平台与移动端', file: 'lab-check.js', need: 'browser', desc: '实验台、手机竖屏/横屏' },
   { name: 'APK 一致性', file: 'apk-check.js', need: 'browser', desc: 'APK 里的 www 与源码逐字节一致 + 真机尺寸渲染' }

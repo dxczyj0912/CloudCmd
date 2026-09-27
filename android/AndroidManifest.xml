@@ -3,21 +3,22 @@
   CloudCmd · 云计算命令手册（Android 外壳）
 
   这是一个纯 WebView 外壳：整个网站在 assets/www/ 里，离线可用。
-  ★ 它不申请任何权限，连 INTERNET 都没有。原因：
-    · 站内命令、课程、卡片与模拟终端都是本地文件
-    · 官方文档外链交给系统浏览器打开（ACTION_VIEW），不需要自己联网
-  权限表为空是这个应用最值得说的一件事：一个学习工具不该要你的任何权限。
+  INTERNET 只用于用户主动配置同步服务时的进度同步和内容版本检查；不配置服务时，
+  站内命令、课程、卡片与模拟终端仍然完全离线。无域名部署使用 HTTP 公网 IP，
+  因此允许明文连接；正式公网环境建议改用 HTTPS。
 
   注：XML 注释里不能出现连续两个减号，所以这里不用横线分隔。
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.cloudcmd.handbook">
 
-    <!-- 刻意留空：不需要任何权限 -->
+    <!-- 可选同步需要联网；站内功能不依赖网络。 -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="false"
         android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"

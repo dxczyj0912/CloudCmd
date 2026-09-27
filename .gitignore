@@ -13,3 +13,16 @@
 !/tools/_stepscan.js
 !/tools/_grep.js
 !/tools/_target-step-ids.json
+
+# 部署服务运行时数据与临时浏览器页面。
+/server-data/
+/data/__smoke.html
+/android/build/
+/android/assets/www/
+*.p12
+*.jks
+*.keystore
+*.idsig
+/apk/
+/backup/
+.env

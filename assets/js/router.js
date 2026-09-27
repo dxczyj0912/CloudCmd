@@ -63,7 +63,7 @@
     if (parts[0] === 'favorites') return { name: 'favorites' };
     if (parts[0] === 'roadmap') return { name: 'roadmap' };
     if (parts[0] === 'cheat') return { name: 'cheat' };
-    if (parts[0] === 'drill') return { name: 'drill' };
+    if (parts[0] === 'drill') return { name: 'drill', cardId: query.card || '', extra: query.extra === '1' };
     /* 知识库：#/kb/<concepts|errors|versions|cert> */
     if (parts[0] === 'kb') return { name: 'kb', kind: parts[1] || 'concepts' };
     if (parts[0] === 'practice') {
@@ -85,7 +85,7 @@
       case 'favorites': return { html: V.viewFavorites(), active: '__favorites' };
       case 'roadmap':   return { html: V.viewRoadmap(), active: '__roadmap' };
       case 'cheat':     return { html: V.viewCheat(), active: '__cheat' };
-      case 'drill':     return { html: V.viewDrill(), active: '__drill' };
+      case 'drill':     return { html: V.viewDrill({ cardId: loc.cardId, extra: loc.extra }), active: '__drill' };
       case 'kb':        return { html: V.viewKb(loc.kind), active: '__kb-' + loc.kind };
       case 'practiceList':
         return { html: window.CC_TERM.viewPracticeCards(loc.catId), active: loc.catId || '__practice' };

@@ -1,0 +1,24 @@
+{
+  "project": "CloudCmd",
+  "version": "1.2",
+  "environment": {
+    "name": "staging-example",
+    "kind": "隔离测试环境",
+    "operator": "填写执行人",
+    "checkedAt": "2026-09-27T00:00:00.000Z",
+    "rollbackPlan": "填写回滚命令、快照或资源清理方式",
+    "region": "填写区域；无云资源时写 local"
+  },
+  "evidence": [
+    {
+      "id": "network-001",
+      "area": "network",
+      "target": "填写目标主机或服务",
+      "command": "填写实际执行的命令，不要写凭证",
+      "result": "填写关键结果、退出码和判定依据",
+      "checkedAt": "2026-09-27T00:00:00.000Z",
+      "status": "passed",
+      "artifact": "docs/evidence/network-001.txt"
+    }
+  ]
+}

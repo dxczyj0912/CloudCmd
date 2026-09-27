@@ -267,7 +267,7 @@ if (NO_SIGN) {
     javaTool(TOOLS.apksignerJar, null, [
       'sign',
       '--ks', SIGNING.keystore, '--ks-key-alias', SIGNING.alias,
-      '--ks-pass', 'pass:' + SIGNING.storepass, '--key-pass', 'pass:' + SIGNING.keypass,
+      '--ks-pass', 'env:CLOUDCMD_KEYSTORE_PASS', '--key-pass', 'env:CLOUDCMD_KEY_PASS',
       '--v1-signing-enabled', 'true', '--v2-signing-enabled', 'true',
       /* 关掉 v4：它会在 APK 旁边多生成一个 .idsig 文件，只对
          `adb install --incremental` 有用，边载分发用不上，留着是噪音 */
@@ -287,7 +287,7 @@ console.log('\n' + '='.repeat(60));
 console.log('  APK：' + finalPath);
 console.log('  大小：' + sizeMB + ' MB ｜ versionCode ' + VERSION_CODE + ' ｜ versionName ' + VERSION_NAME);
 console.log('  minSdk ' + MIN_SDK + ' ｜ targetSdk ' + TARGET_SDK + ' ｜ 包名 com.cloudcmd.handbook');
-console.log('  权限：无');
+  console.log('  权限：INTERNET（仅同步服务启用时使用）');
 console.log('='.repeat(60));
 
 /* ---------- 自检 ----------
@@ -342,8 +342,11 @@ if (fs.existsSync(TOOLS.aapt)) {
     const pick = /^(package|launchable-activity|sdkVersion|targetSdkVersion|application-label|uses-permission|application-icon-320)/m;
     console.log('\naapt dump badging（对 ASCII 副本执行）：');
     badging.split('\n').filter(l => pick.test(l)).forEach(l => console.log('  ' + l));
-    if (/uses-permission/.test(badging)) { ok = false; console.log('  [BAD ] 竟然声明了权限'); }
-    else console.log('  [OK  ] 未声明任何权限');
+    const permissions = badging.split('\n').filter(l => /^uses-permission:/.test(l));
+    const unexpected = permissions.filter(l => l.indexOf("android.permission.INTERNET") === -1);
+    if (unexpected.length) { ok = false; console.log('  [BAD ] 声明了非预期权限：' + unexpected.join(' / ')); }
+    else if (permissions.length) console.log('  [OK  ] 仅声明 INTERNET（同步服务可选）');
+    else console.log('  [OK  ] 未声明权限（构建工具未输出 uses-permission）');
   } catch (e) {
     console.log('（aapt 自检失败：' + String(e.stderr || e.message).split('\n')[0] + '）');
   }

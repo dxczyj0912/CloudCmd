@@ -2,8 +2,9 @@
 <resources>
     <!-- 与站点的主色一致（见 assets/css/main.css 的 accent 变量）。
          注意：XML 注释里不能出现连续两个减号，所以这里不直接写 CSS 变量名。 -->
-    <color name="brand">#2F6BFF</color>
-    <color name="brand_dark">#1F4FD8</color>
-    <color name="bg_light">#FFFFFF</color>
-    <color name="bg_dark">#0F1420</color>
+    <color name="brand">#3268EA</color>
+    <color name="brand_dark">#2458D5</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_light">#F5F7FB</color>
+    <color name="bg_dark">#0D121B</color>
 </resources>

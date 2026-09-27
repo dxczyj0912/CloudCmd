@@ -2,14 +2,15 @@
 <html lang="zh-CN" data-academy-view>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>CloudCmd · 实时练习平台</title>
 <meta name="description" content="CloudCmd 实时练习平台：左侧模拟终端，右侧步骤讲义，覆盖 Linux、Docker、Kubernetes、华为云 CLI、监控排障等场景，离线可用。">
 <meta name="theme-color" content="#2f6bff">
+<script src="assets/js/theme.js?v=20260927a"></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☁️</text></svg>">
-<link rel="stylesheet" href="assets/css/main.css?v=20260925a">
-<link rel="stylesheet" href="assets/css/lab.css?v=20260927a">
-<link rel="stylesheet" href="assets/css/progress-transfer.css?v=20260926a">
+<link rel="stylesheet" href="assets/css/main.css?v=20260927d">
+<link rel="stylesheet" href="assets/css/lab.css?v=20260927c">
+<link rel="stylesheet" href="assets/css/progress-transfer.css?v=20260927b">
 <link rel="stylesheet" href="assets/css/print.css?v=20260927a" media="print">
 </head>
 <body class="lab-body">
@@ -56,6 +57,15 @@
 
     <div class="term-body" id="term-body" tabindex="0" role="log" aria-live="polite" aria-label="终端输出">
       <pre class="term-out" id="term-out"></pre>
+    </div>
+
+    <!-- 输入区独立成可调高度的 dock：输出很多时可以把它压低，调试长命令时可以拉高。 -->
+    <div class="term-input-dock" id="term-input-dock">
+      <div class="term-input-resizer" id="term-input-resizer" role="separator" tabindex="0"
+           aria-orientation="horizontal" aria-valuemin="44" aria-valuemax="220" aria-valuenow="58"
+           aria-controls="term-input-dock" aria-label="调整终端输入区高度" title="拖动调整输入区高度">
+        <span aria-hidden="true"></span>
+      </div>
       <div class="term-line-input" id="term-input-row">
         <span class="term-prompt">root@cloudcmd-lab01:~#</span><span class="term-caret" id="term-ghost"></span><span class="term-cursor" aria-hidden="true"></span>
       </div>
@@ -158,7 +168,9 @@
 <script src="data/lessons-practice.js"></script>
 <script src="data/zz-lesson-assertions.js"></script>
 <script src="assets/js/store.js?v=20260926c"></script>
-<script src="assets/js/progress-transfer.js?v=20260926a"></script>
+<script src="assets/js/sync.js?v=20260927d"></script>
+<script src="assets/js/progress-transfer.js?v=20260927d"></script>
+<script src="assets/js/live-update.js?v=20260927d"></script>
 <script src="assets/js/shell.js?v=20260925a"></script>
 <script src="assets/js/lesson-judge.js?v=20260926b"></script>
 <!-- 命令实现的扩展模块：必须排在 shell.js 之后，顺序见 tools/_cmdlist.js -->
@@ -175,6 +187,6 @@
 <script src="assets/js/cmd-host.js?v=20260925d"></script>
 <script src="assets/js/cmd-text.js?v=20260925e"></script>
 <script src="assets/js/cmd-cloud.js?v=20260925f"></script>
-<script src="assets/js/academy-lab.js?v=20260927a"></script>
+<script src="assets/js/academy-lab.js?v=20260927b"></script>
 </body>
 </html>

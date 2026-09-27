@@ -49,12 +49,11 @@
 
   /* ---------------- 主题 ---------------- */
 
-  var mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
   function applyTheme() {
+    if (window.CC_THEME) return window.CC_THEME.apply();
     var mode = window.CC_STORE.getTheme();
-    var eff = mode;
-    if (mode === 'auto') eff = (mql && mql.matches) ? 'dark' : 'light';
+    var eff = mode === 'auto' ?
+      (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : mode;
     document.documentElement.setAttribute('data-theme', eff);
   }
 
@@ -526,17 +525,79 @@
     });
   }
 
+  function bindShellInputResizer(host) {
+    var term = host.querySelector('[data-term]');
+    var handle = host.querySelector('.term-input-resizer');
+    if (!term || !handle) return;
+
+    var key = 'cloudcmd.shellInputHeight';
+    var wanted = 64;
+    try {
+      var saved = parseInt(localStorage.getItem(key), 10);
+      if (isFinite(saved)) wanted = saved;
+    } catch (e) { /* 隐私模式 */ }
+
+    function limit() { return Math.max(64, Math.min(240, term.clientHeight - 150)); }
+    function apply(height, persist) {
+      wanted = Math.max(64, Math.min(240, Math.round(height)));
+      var max = limit();
+      var actual = Math.min(wanted, max);
+      term.style.setProperty('--shell-input-h', actual + 'px');
+      handle.setAttribute('aria-valuemax', String(max));
+      handle.setAttribute('aria-valuenow', String(actual));
+      handle.setAttribute('aria-valuetext', actual + ' 像素');
+      if (persist) {
+        try { localStorage.setItem(key, String(wanted)); } catch (e) { /* 隐私模式 */ }
+      }
+    }
+
+    var drag = null;
+    handle.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      drag = { id: e.pointerId, y: e.clientY, height: parseInt(getComputedStyle(term).getPropertyValue('--shell-input-h'), 10) || 64 };
+      handle.classList.add('is-dragging');
+      document.documentElement.classList.add('shell-input-resizing');
+      try { handle.setPointerCapture(e.pointerId); } catch (ignore) { /* ignore */ }
+    });
+    handle.addEventListener('pointermove', function (e) {
+      if (drag && drag.id === e.pointerId) apply(drag.height + drag.y - e.clientY, false);
+    });
+    function endDrag(e) {
+      if (!drag || drag.id !== e.pointerId) return;
+      try { handle.releasePointerCapture(e.pointerId); } catch (ignore) { /* ignore */ }
+      handle.classList.remove('is-dragging');
+      document.documentElement.classList.remove('shell-input-resizing');
+      drag = null;
+      apply(wanted, true);
+    }
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+    handle.addEventListener('keydown', function (e) {
+      var step = e.shiftKey ? 24 : 8;
+      if (e.key === 'ArrowUp') { e.preventDefault(); apply(wanted + step, true); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); apply(wanted - step, true); }
+      else if (e.key === 'Home') { e.preventDefault(); apply(64, true); }
+      else if (e.key === 'End') { e.preventDefault(); apply(limit(), true); }
+      else if (e.key === 'Enter') { e.preventDefault(); apply(64, true); }
+    });
+    window.addEventListener('resize', function () { apply(wanted, false); });
+    apply(wanted, false);
+  }
+
   function renderShellPanel() {
     var host = document.getElementById('shell-body');
     if (!host || host.getAttribute('data-ready') === '1') return;
     host.innerHTML = window.CC_TERM.terminalHtml({
       compact: true,
       free: true,
+      resizableInput: true,
       title: 'student@web-prod-01 · 临时会话',
       placeholder: '敲命令试试，例如 ls -lh /var/log/nginx'
     });
     host.setAttribute('data-ready', '1');
     window.CC_TERM.bindPanel(host);
+    bindShellInputResizer(host);
   }
 
   /* 面板默认在 .layout 里（fixed/hidden），打开时挪进 .content，
@@ -717,11 +778,6 @@
 
   function boot() {
     applyTheme();
-    if (mql && mql.addEventListener) {
-      mql.addEventListener('change', function () {
-        if (window.CC_STORE.getTheme() === 'auto') applyTheme();
-      });
-    }
 
     window.CC_SEARCH.build();
 

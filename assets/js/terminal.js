@@ -360,10 +360,18 @@
       '<span class="t-dim">输入 </span><span class="t-cmd">help</span><span class="t-dim"> 看支持的命令，输入 </span><span class="t-cmd">ls</span><span class="t-dim"> 开始探索。</span>' +
       '</div>' +
       '</div>' +
-      '<div class="term-input-row">' +
+      (opts.resizableInput
+        ? '<div class="term-input-resizer" role="separator" tabindex="0" aria-orientation="horizontal" ' +
+          'aria-valuemin="64" aria-valuemax="240" aria-valuenow="64" aria-controls="shell-input-row" ' +
+          'aria-label="调整临时 Shell 输入区高度" title="拖动调整输入区高度"><span aria-hidden="true"></span></div>'
+        : '') +
+      '<div class="term-input-row"' + (opts.resizableInput ? ' id="shell-input-row"' : '') + '>' +
       '<span class="t-prompt" data-term-prompt>' + esc(sh.prompt()) + '</span>' +
-      '<input class="term-input" type="text" spellcheck="false" autocomplete="off" ' +
-      'placeholder="' + esc(opts.placeholder || '在这里输入命令，回车执行') + '" aria-label="命令输入">' +
+      (opts.resizableInput
+        ? '<textarea class="term-input" rows="1" wrap="soft" spellcheck="false" autocomplete="off" ' +
+          'placeholder="' + esc(opts.placeholder || '在这里输入命令，回车执行') + '" aria-label="命令输入"></textarea>'
+        : '<input class="term-input" type="text" spellcheck="false" autocomplete="off" ' +
+          'placeholder="' + esc(opts.placeholder || '在这里输入命令，回车执行') + '" aria-label="命令输入">') +
       '</div>' +
       '</div>';
   }

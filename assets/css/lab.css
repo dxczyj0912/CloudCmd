@@ -57,6 +57,17 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
 .lab-resizer:hover span,.lab-resizer:focus-visible span,.lab-resizer.is-dragging span{height:82px;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
 .lab.is-dragging,.lab.is-dragging *{cursor:col-resize!important;user-select:none!important}
 
+/* 终端输入区：独立 dock，顶部横条就是可拖动的高度控制柄。 */
+.term-input-dock{position:relative;display:flex;flex-direction:column;flex:0 0 var(--term-input-h,58px);min-height:44px;border-top:1px solid rgba(255,255,255,.12);background:#111827;color:var(--code-text)}
+.term-input-resizer{position:relative;z-index:3;display:flex;align-items:center;justify-content:center;flex:0 0 13px;min-height:13px;cursor:row-resize;touch-action:none;user-select:none;background:rgba(255,255,255,.035)}
+.term-input-resizer::before{content:"";position:absolute;inset:-12px 0}
+.term-input-resizer span{width:42px;height:3px;border-radius:3px;background:rgba(255,255,255,.28);transition:width .15s ease,background .15s ease,box-shadow .15s ease}
+.term-input-resizer:hover span,.term-input-resizer:focus-visible span,.term-input-resizer.is-dragging span{width:72px;background:var(--accent);box-shadow:0 0 0 3px rgba(47,107,255,.18)}
+.term-input-dock .term-line-input{flex:1 1 auto;min-height:0;padding:7px 13px;align-items:flex-start;overflow-y:auto;overflow-x:hidden;color:var(--code-text);font-family:var(--mono);font-size:13px;line-height:1.65}
+.term-input-dock .term-cursor{margin-top:2px}
+.term-input-dock:not(:focus-within) .term-cursor{display:none}
+.term-input-dock:focus-within{border-top-color:rgba(47,107,255,.7)}
+.term.is-input-dragging,.term.is-input-dragging *{cursor:row-resize!important;user-select:none!important}
 body.is-resizing{user-select:none}
 
 /* ---------- 模拟终端 ---------- */
@@ -90,7 +101,7 @@ body.is-resizing{user-select:none}
 .term-body:not(.is-focus) .term-cursor{display:none}
 @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.term-cursor{animation:none}}
-.term-real-input{display:block;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;background:transparent;font-size:16px;pointer-events:none}
+.term-real-input{position:absolute;left:13px;right:13px;top:13px;width:calc(100% - 26px);height:calc(100% - 13px);opacity:0;border:0;padding:0;background:transparent;font-size:16px;cursor:text}
 .t-dim{color:var(--code-text)}.t-muted{color:var(--code-dim)}.t-ok{color:#5ee08e}.t-warn{color:#ffd479}.t-err{color:#ff8b8f}.t-hl{color:#8ed6ff}.t-echo{color:#eaf0ff;font-weight:600}
 
 /* ---------- 讲义 ---------- */
@@ -158,6 +169,7 @@ body.is-resizing{user-select:none}
   .lab-body .topbar{height:auto;min-height:58px;flex-wrap:wrap;gap:9px;padding:10px 12px}
   .academy-status{display:none}.back-home{order:2}.brand{order:1}.lab-body .topbar .academy-kicker{display:block;order:3;width:100%;margin-left:0}
   .lab{gap:10px;padding:10px}.term{min-height:380px}.term-body{padding:13px;font-size:12px}
+  .term-input-dock{flex-basis:var(--term-input-h,58px)}
   .lesson{min-height:0}.lesson-toolbar{min-height:52px;padding:9px 11px}.lesson-head{padding:15px 14px 13px}.lh-title{font-size:17px}
   .lesson-tabs{padding:9px 14px}.lesson-doc{padding:15px 14px 23px;font-size:13.5px}.lesson-foot{padding:7px 9px}
   .lf-nav{max-width:50%;font-size:11px}.select-wrap-mini{margin-left:0;max-width:100%}.tb-select{min-width:0;max-width:100%}
@@ -209,8 +221,8 @@ body.is-resizing{user-select:none}
   .term-bar-text small{display:none}
   .term-bar-btn{display:inline-flex;width:36px;height:36px}
   .term-body{padding:10px 11px;font-size:12.5px;line-height:1.6}
-  /* 真实输入框紧跟提示符参与滚动，聚焦时不会跳到视口外。 */
-  .term-real-input{font-size:16px}
+  /* 输入框留在可视区内，避免移动端聚焦时先滚动页面再弹出软键盘。 */
+  .term-real-input{left:0;right:0;top:13px;bottom:0;width:100%;height:calc(100% - 13px);font-size:16px}
   /* 触摸端不要 300ms 双击缩放延迟 */
   .tk,.cb-run,.cb-copy,.tb-check,.lf-nav,.back-home,.term-bar-btn,.lesson-tabs button{touch-action:manipulation}
   /* 滚动到底不要再把整页带着一起弹（iOS 橡皮筋） */
@@ -248,6 +260,7 @@ body.is-resizing{user-select:none}
   .lh-title{font-size:15px;line-height:1.3}
   .lh-subtitle{display:none}
   .lesson-tabs{flex-wrap:nowrap;overflow-x:auto;padding:6px 10px;gap:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .lesson-tab-meta{display:none} /* 步骤数已在上一行显示，给课程目录和练习开关留位置 */
   .lesson-tabs::-webkit-scrollbar{display:none}
   .lesson-tabs > *{flex:0 0 auto}
   .lesson-doc{padding:12px 12px 18px;font-size:14px;line-height:1.75}

@@ -15,7 +15,7 @@
     '<div class="progress-transfer-panel">' +
       '<div class="progress-transfer-head"><h2 id="progress-transfer-title">学习进度备份与恢复</h2>' +
       '<button class="progress-transfer-close" type="button" data-close aria-label="关闭">×</button></div>' +
-      '<p>进度仅保存在本机浏览器或 App 中。换设备、清除网站数据或卸载 App 前，请复制或下载备份。</p>' +
+      '<p>进度默认保存在本机；配置同步服务后，可在网页、手机浏览器和 App 之间合并进度。</p>' +
       '<label class="progress-transfer-label" for="progress-export">当前进度备份</label>' +
       '<textarea id="progress-export" readonly spellcheck="false" aria-label="当前进度备份 JSON"></textarea>' +
       '<div class="progress-transfer-actions"><button type="button" data-copy>复制备份</button>' +
@@ -26,6 +26,16 @@
       '<div class="progress-transfer-actions"><label class="progress-transfer-file">选取 JSON 文件' +
       '<input type="file" data-file accept=".json,application/json" aria-label="选取进度备份 JSON 文件"></label>' +
       '<button class="primary" type="button" data-import>导入并恢复</button></div>' +
+      '<div class="progress-sync-section"><h3>跨设备同步</h3>' +
+      '<label class="progress-transfer-label" for="progress-sync-api">同步服务地址</label>' +
+      '<input id="progress-sync-api" class="progress-sync-input" type="url" data-sync-api placeholder="例如 https://learn.example.com">' +
+      '<label class="progress-transfer-label" for="progress-sync-code">同步码</label>' +
+      '<input id="progress-sync-code" class="progress-sync-input progress-sync-code" type="text" data-sync-code inputmode="text" autocomplete="off" spellcheck="false" placeholder="创建或输入 12 位同步码" maxlength="20">' +
+      '<div class="progress-transfer-actions"><button type="button" data-sync-create>新建同步码</button>' +
+      '<button type="button" data-sync-connect>连接同步</button>' +
+      '<button type="button" data-sync-now>立即同步</button>' +
+      '<button type="button" data-sync-disconnect>断开</button></div>' +
+      '<div class="progress-sync-status" role="status" aria-live="polite"></div></div>' +
       '<div class="progress-transfer-status" role="status" aria-live="polite"></div>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -33,6 +43,10 @@
   var exportArea = overlay.querySelector('#progress-export');
   var importArea = overlay.querySelector('#progress-import');
   var status = overlay.querySelector('.progress-transfer-status');
+  var syncApi = overlay.querySelector('[data-sync-api]');
+  var syncCode = overlay.querySelector('[data-sync-code]');
+  var syncStatus = overlay.querySelector('.progress-sync-status');
+  var sync = window.CC_SYNC;
   var refreshOnClose = false;
 
   function say(message, error) {
@@ -45,9 +59,22 @@
     trigger.title = error || '备份或恢复学习进度';
     if (error && !overlay.hidden) say(error, true);
   }
+  function updateSyncStatus(value) {
+    if (!syncStatus) return;
+    syncStatus.textContent = value && value.message ? value.message : '未连接同步服务';
+    syncStatus.classList.toggle('is-error', !!(value && value.level === 'error'));
+  }
+  function syncConfig() {
+    if (!sync || !sync.getConfig) return;
+    var value = sync.getConfig();
+    syncApi.value = value.api || '';
+    syncCode.value = value.code || '';
+    updateSyncStatus(sync.getStatus && sync.getStatus());
+  }
   function open() {
     exportArea.value = store.exportJSON();
     importArea.value = '';
+    syncConfig();
     overlay.hidden = false;
     document.body.style.overflow = 'hidden';
     say(store.storageError() || '备份包含收藏、课程、步骤和每日一练进度。', !!store.storageError());
@@ -115,6 +142,29 @@
     } catch (error) { say('导入失败：' + error.message, true); }
     updateWarning();
   });
+  overlay.querySelector('[data-sync-create]').addEventListener('click', function () {
+    if (!sync) { updateSyncStatus({ level: 'error', message: '当前版本没有同步服务模块' }); return; }
+    sync.create(syncApi.value, function (error, value) {
+      if (!error && value) { syncCode.value = value.code || ''; say('同步码已创建：' + value.code + '，在另一台设备输入同一同步码即可连接。'); }
+      else if (error) updateSyncStatus({ level: 'error', message: error.message });
+    });
+  });
+  overlay.querySelector('[data-sync-connect]').addEventListener('click', function () {
+    if (!sync) { updateSyncStatus({ level: 'error', message: '当前版本没有同步服务模块' }); return; }
+    sync.connect(syncApi.value, syncCode.value, function (error) {
+      if (error) updateSyncStatus({ level: 'error', message: error.message });
+      else say('同步已连接；另一台设备的进度会自动合并。');
+    });
+  });
+  overlay.querySelector('[data-sync-now]').addEventListener('click', function () {
+    if (!sync) { updateSyncStatus({ level: 'error', message: '当前版本没有同步服务模块' }); return; }
+    sync.syncNow(function (error) { if (error) updateSyncStatus({ level: 'error', message: error.message }); else say('已完成一次同步。'); });
+  });
+  overlay.querySelector('[data-sync-disconnect]').addEventListener('click', function () {
+    if (sync) sync.disconnect();
+    syncConfig();
+  });
+  if (sync && sync.onStatus) sync.onStatus(updateSyncStatus);
   window.addEventListener('cc:storage-error', updateWarning);
   updateWarning();
 })();

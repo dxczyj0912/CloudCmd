@@ -1,0 +1,23 @@
+services:
+  cloudcmd:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      PORT: "8787"
+      HOST: "0.0.0.0"
+      CLOUDCMD_DATA_DIR: "/data"
+      # 服务会自动选择最高版本的 CloudCmd-*.apk；使用外部下载地址时设置 CLOUDCMD_APK_URL。
+      # 生产环境请改成实际站点来源，或由 HTTPS 反向代理统一处理。
+      CLOUDCMD_CORS_ORIGIN: "${CLOUDCMD_CORS_ORIGIN:-*}"
+      CLOUDCMD_APK_URL: "${CLOUDCMD_APK_URL:-}"
+      CLOUDCMD_APK_FILE: "${CLOUDCMD_APK_FILE:-}"
+      CLOUDCMD_APP_VERSION: "${CLOUDCMD_APP_VERSION:-}"
+      CLOUDCMD_APP_VERSION_CODE: "${CLOUDCMD_APP_VERSION_CODE:-}"
+    volumes:
+      - cloudcmd-data:/data
+      - ./apk:/app/apk:ro
+    restart: unless-stopped
+
+volumes:
+  cloudcmd-data:

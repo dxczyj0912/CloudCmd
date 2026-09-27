@@ -116,6 +116,9 @@
     try {
       window.localStorage.setItem(KEY, JSON.stringify(state));
       storageError = '';
+      if (window.dispatchEvent && typeof window.CustomEvent === 'function') {
+        window.dispatchEvent(new window.CustomEvent('cc:progress-local-change'));
+      }
       return true;
     } catch (e) {
       notifyStorageError('学习进度未能保存，请导出备份：' + e.message);
@@ -186,6 +189,9 @@
       if (!save()) {
         state = JSON.parse(before);
         throw new Error('进度未能写入本机存储，导入已取消');
+      }
+      if (window.dispatchEvent && typeof window.CustomEvent === 'function') {
+        window.dispatchEvent(new window.CustomEvent('cc:progress-sync'));
       }
       return true;
     },

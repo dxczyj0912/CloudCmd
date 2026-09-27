@@ -165,20 +165,22 @@
     var html = '';
     html += '<div class="wrap">';
     html += '<div class="hero">' +
+      '<div class="hero-kicker">CLOUDCMD · 随查随练</div>' +
       '<h1>学云计算，从敲对第一条命令开始</h1>' +
-      '<p>把云计算全栈会用到的命令按知识体系整理成一本能"点开就能用、照着就能敲"的中文手册。' +
-      '全部数据本地内置，断网也能查；每条命令都可一键复制。</p>' +
+      '<p>云计算命令按知识体系整理，查得到、敲得动。离线可用，示例可复制，练习有即时反馈。</p>' +
       '<div class="hero-cta">' +
       '<a class="btn-primary" href="#/practice">⌨️ 进实时练习终端</a>' +
-      '<span class="hero-cta-note">' + (window.CC_LESSONS || []).length + ' 个真实排障场景，敲完立刻看到输出</span>' +
       (function () {
         /* 每日一练的入口只在真有卡片时才出现 —— 点了进空页面比没有入口更糟 */
         var n = window.CC_DRILL ? window.CC_DRILL.all().length : 0;
         if (!n) return '';
-        return '<a class="btn-ghost hero-drill" href="#/drill">🎴 每日一练</a>' +
-          '<span class="hero-cta-note">' + esc(window.CC_DRILL.dueLine()) + ' · 共 ' + n + ' 张卡</span>';
+        return '<a class="btn-ghost hero-drill" href="#/drill">每日一练</a>';
       })() +
       '</div>' +
+      '<p class="hero-cta-note">' + (window.CC_LESSONS || []).length + ' 个实战场景 · ' +
+      (window.CC_DRILL && window.CC_DRILL.all().length
+        ? window.CC_DRILL.all().length + ' 张复习卡'
+        : '敲完立刻看到输出') + '</p>' +
       '<div class="hero-stats">' +
       '<div class="hero-stat"><b>' + readyCats + '</b><span>已上线分类</span></div>' +
       '<div class="hero-stat"><b>' + total + '</b><span>条命令</span></div>' +
@@ -484,6 +486,47 @@
         }
       }
       h += '<div class="block"><div class="block-title">相关命令</div><div class="related">' + links + '</div></div>';
+    }
+
+    /* 学习链路：命令详情是最稳定的汇合点，反向接回课程、复习卡和故障剧本。 */
+    var linkedLessons = (window.CC_LESSONS || []).filter(function (lesson) {
+      return (lesson.steps || []).some(function (step) { return step.ref === cmd.id; });
+    });
+    var linkedCards = (window.CC_CARDS || []).filter(function (card) {
+      return (card.cmdIds || []).indexOf(cmd.id) !== -1;
+    });
+    var linkedCheats = (window.CC_CHEAT || []).filter(function (cheat) {
+      return (cheat.cmdIds || []).indexOf(cmd.id) !== -1;
+    });
+    if (linkedLessons.length || linkedCards.length || linkedCheats.length) {
+      var learning = '';
+      if (linkedLessons.length) {
+        learning += '<div class="learning-group"><b>实时练习</b>';
+        linkedLessons.slice(0, 6).forEach(function (lesson) {
+          learning += '<a href="academy-lab.html#/lab/cc-' + encodeURIComponent(lesson.id) + '">' +
+            esc(lesson.title || lesson.id) + '</a>';
+        });
+        if (linkedLessons.length > 6) learning += '<span class="learning-more">还有 ' + (linkedLessons.length - 6) + ' 节</span>';
+        learning += '</div>';
+      }
+      if (linkedCards.length) {
+        learning += '<div class="learning-group"><b>每日一练</b>';
+        linkedCards.slice(0, 6).forEach(function (card) {
+          learning += '<a href="#/drill?card=' + encodeURIComponent(card.id) + '">' +
+            esc(card.front || card.id).slice(0, 42) + '</a>';
+        });
+        if (linkedCards.length > 6) learning += '<span class="learning-more">还有 ' + (linkedCards.length - 6) + ' 张</span>';
+        learning += '</div>';
+      }
+      if (linkedCheats.length) {
+        learning += '<div class="learning-group"><b>故障速查</b>';
+        linkedCheats.slice(0, 4).forEach(function (cheat) {
+          learning += '<a href="#/cheat">' + esc(cheat.title || cheat.name || cheat.id) + '</a>';
+        });
+        if (linkedCheats.length > 4) learning += '<span class="learning-more">还有 ' + (linkedCheats.length - 4) + ' 条</span>';
+        learning += '</div>';
+      }
+      h += '<div class="block"><div class="block-title">学习链路</div><div class="learning-links">' + learning + '</div></div>';
     }
 
     /* 官方文档 */
@@ -1156,7 +1199,8 @@
 
   /* 卡片正面 / 背面共用的渲染。整张卡"翻面"由 app.js 切 .is-flipped 控制，
      这里只出内容、不做状态 —— 状态在 DOM 上，刷新页面就重置。 */
-  function viewDrill() {
+  function viewDrill(opts) {
+    opts = opts || {};
     var h = '<div class="wrap drill-wrap">';
     h += '<div class="page-head"><h1>🎴 每日一练</h1>' +
       '<div class="page-sub">正面给现象，背面给命令和判据。把命令送进模拟终端跑一遍，比读十遍释义管用。' +
@@ -1170,8 +1214,15 @@
 
     /* #/drill?extra=1 表示"今天练完了，再要 5 张新卡" ——
        用 URL 表达而不是塞一个全局标志，这样刷新/分享都不会错乱 */
-    var extraOnly = /[?&]extra=1/.test(String(location.hash));
+    var extraOnly = opts.extra === true || /[?&]extra=1/.test(String(location.hash));
     var q = window.CC_DRILL.buildQueue(extraOnly ? 5 : undefined, { freshOnly: extraOnly });
+    if (!extraOnly && opts.cardId) {
+      var requested = window.CC_DRILL.byId(opts.cardId);
+      if (requested) {
+        q.list = [requested].concat(q.list.filter(function (card) { return card.id !== requested.id; })).slice(0, q.roundLimit);
+        q.roundLimit = q.list.length;
+      }
+    }
     var st = window.CC_DRILL.stats();
 
     /* 顶部状态条。⚠️ 刻意**不**显示"总掌握率"这种像成绩单的数字 —— 见 drill.js 顶部注释 */

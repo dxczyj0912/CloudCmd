@@ -2,7 +2,7 @@
 
 > 一个**零依赖、离线可用、可搜索**的云计算命令速查与学习网站。
 > 双击 `index.html` 就能用，不需要装任何东西，断网也能查。
-> Android 版可构建为零权限、离线 APK；当前仓库中的 `CloudCmd-1.2.apk` 是**未签名构建产物，不能直接安装**。
+> Android 版可构建为默认离线、带可选 `INTERNET` 权限的 APK；调试构建可不签名，正式安装必须使用仓库外的签名密钥。
 
 ---
 
@@ -22,16 +22,30 @@ python -m http.server 8080
 
 然后浏览器访问提示的地址。两种方式功能完全一致。
 
-### 方式三：构建 Android 版
+### 方式三：部署网页与跨设备同步
 
-当前 **`CloudCmd-1.2.apk` 未签名，不能直接安装**。如需安装或分发，先用仓库外的签名凭证重建并验证签名。
+需要网页、手机和 App 共享进度时，在服务器运行：
+
+```bash
+node server.js
+# 或
+docker compose up -d --build
+```
+
+默认访问 `http://服务器地址:8787/`。生产环境请放在 HTTPS 反向代理后，打开页面的“进度备份与同步”，用同步码配对设备。部署版每 30 秒检查内容版本，`data/` 或 `assets/` 更新后会提示刷新。完整配置见 [部署与同步](docs/部署与同步.md)。
+
+如果部署目录中放了更高版本的正式签名 APK（例如 `CloudCmd-1.3.apk`），Android App 在连接同步服务后也会提示“下载更新”；点击后由系统浏览器下载并确认安装。
+
+### 方式四：构建 Android 版
+
+正式安装或分发必须使用仓库外的签名凭证重建并验证签名。`--no-sign` 只用于调试构建，不能安装或覆盖升级。
 
 | | |
 | --- | --- |
 | 离线 | 整个网站打包在 APK 里，飞行模式也能用 |
-| 权限 | **零**。连 `INTERNET` 都没有 —— 官方文档外链交给系统浏览器打开 |
+| 权限 | `INTERNET` 仅用于用户主动配置同步服务；不配置时站内仍可完全离线 |
 | 系统要求 | minSdk 24（Android 7.0+）｜ targetSdk 34 |
-| 重建 | `node tools/build-apk.js --no-sign --version-code=2 --version-name=1.1`（工具链见下方） |
+| 重建 | `node tools/build-apk.js --no-sign --version-code=3 --version-name=1.2`（工具链见下方） |
 | 验证 | `node tools/apk-check.js` —— 逐字节比对包内文件，并在 375×667 下真渲染一遍 |
 
 > **APK 只是新增一个分发形态，没有动这个项目的立身之本。**
@@ -59,7 +73,7 @@ python -m http.server 8080
 | 🔍 **全局搜索** | 同时搜命令名、中文说明、参数、示例、注意事项；支持中文与英文混搜与自然语言提问 |
 | 📋 **一键复制** | 每条命令与每个示例都能一键复制，`file://` 下同样可用 |
 | ⭐ **收藏与进度** | 标记“已掌握”、收藏常用命令、练习完成状态，都存在浏览器本地，刷新不丢 |
-| ⇄ **进度备份** | 首页和实时练习页都能复制/下载 JSON 备份，并在换设备时校验后合并恢复 |
+| ⇄ **进度备份与同步** | 首页和实时练习页都能复制/下载 JSON 备份；部署版可用同步码在网页、手机和 App 之间合并进度，并通过 SSE 实时通知 |
 | 🗺️ **学习路线图** | 9 个阶段，每阶段有目标、关键命令、实战项目、验收标准 |
 | 🚑 **故障速查** | 按“现象”找“命令组合”，如 CPU 高、磁盘满、Pod 起不来、502 |
 | 🚦 **难度分级** | 每条命令标 L1 入门 → L4 专家，可按难度筛选 |
@@ -161,7 +175,7 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 - 终端右上角可**一键切全屏终端**（讲义让位），看完再切回来
 - **软键盘适配**：用 `visualViewport` 把页面高度压到可视区，输入行不会被键盘盖住
 - 触摸目标全部放大（运行/复制 40px、快捷键 38px、星标 42px）；输入框 ≥16px（否则 iOS 聚焦会自动放大整页）
-- 自检：`node tools/lab-check.js`（**124 项断言**，其中 37 项专门跑手机视口：竖屏 375×667 与横屏 667×375）
+- 自检：`node tools/lab-check.js`（**133 项断言**，其中 37 项专门跑手机视口：竖屏 375×667 与横屏 667×375）
 
 **它不能做什么**（页面上也明确标注了）：
 
@@ -208,13 +222,14 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 ```bash
 node tools/validate-data.js     # 数据契约：字段完整性、id 唯一性、裸占位符、related 断链、summary 长度、路线图覆盖
 node tools/shell-check.js       # 模拟终端行为（含全部课程的答案、备用答案、逐步命令、静默错误回归）
-node tools/render-check.js      # 无头 Chrome 里跑 131 项真实 DOM 冒烟测试（含每日一练的翻面/打分/送终端/进度备份）
-node tools/lab-check.js         # 练习平台：124 项冒烟测试（真 shell / 讲义 / 步骤打卡 / 路由 / 手机竖屏与横屏）
+node tools/render-check.js      # 无头 Chrome 里跑 132 项真实 DOM 冒烟测试（含每日一练的翻面/打分/送终端/进度备份）
+node tools/lab-check.js         # 练习平台：133 项冒烟测试（真 shell / 讲义 / 步骤打卡 / 路由 / 手机竖屏与横屏）
 node tools/card-check.js        # 每日一练卡片：398 张，18 分类全覆盖；289 张有 run 且都在模拟器里跑通
 node tools/coverage-report.js   # 生成命令/课程/卡片覆盖率报告，列出仍需补课的命令
 node tools/learning-chain-inventory.js # 生成 830 条命令的完整教/练/实战清单与 CSV
 node tools/progress-judge-check.js # 统一进度迁移与严格判题契约
 node tools/lesson-assertion-check.js # 逐课验证步骤输出和文件状态，不以模拟提示文字判通过
+node tools/real-lab-check.js --manifest=docs/真实环境验收模板.json # 只校验证据清单，不执行真实命令
 node tools/security-check.js    # 检查 APK 构建不携带固定签名密码或私钥
 node tools/apk-check.js         # APK 内容：逐字节比对包内文件 + 在 375×667 下真渲染
 node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟；真死链与反爬/限流分开报）
@@ -229,6 +244,7 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 学习链路的逐条盘点见 [学习链路全量清单](docs/学习链路全量清单.md)；
 [CSV 明细](docs/学习链路命令明细.csv)包含全部 830 条命令的课程、卡片和故障剧本关联。
 哪些缺口值得补、哪些应暂缓或避免机械自动化，见 [学习链路补强取舍](docs/学习链路补强取舍.md)（含逐条 CSV）。
+模拟器之外的网络、权限、云资源和数据恢复验收见 [真实环境验收](docs/真实环境验收.md)。
 
 ---
 
@@ -240,7 +256,7 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 ├─ academy-lab.html           实时练习平台（左终端 + 右步骤讲义，独立页面）
 ├─ CloudCmd-1.2.apk           Android 未签名构建产物（不能直接安装）
 ├─ android/                    Android 外壳工程（WebView + 图标资源，不含站点内容）
-│  ├─ AndroidManifest.xml      零权限清单 + adjustResize + configChanges
+│  ├─ AndroidManifest.xml      可选 INTERNET + adjustResize + configChanges
 │  ├─ java/…/MainActivity.java 单 Activity：WebView 配置、外链分流、返回键
 │  ├─ res/                     图标（自适应 vector + 各密度 PNG 由脚本生成）
 │  └─ keystore/                （不提交私钥；正式签名由构建环境注入）

@@ -947,6 +947,7 @@
         var input = panel.querySelector('.term-input');
         var out = panel.querySelector('[data-term-out]');
         if (!input || !out) return '终端结构不全';
+        if (input.tagName !== 'TEXTAREA') return '临时 Shell 没有可换行的输入区';
         input.value = 'ls -lh /var/log/nginx';
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true }));
         if (!/access\.log/.test(out.textContent)) return '面板终端没执行出结果';
@@ -1029,6 +1030,31 @@
         var after = panel.getBoundingClientRect().width;
         document.getElementById('shell-collapse').click();
         return after < before ? true : '拖动前=' + Math.round(before) + ' / 拖动后=' + Math.round(after);
+      });
+
+      d('临时 Shell：输入区可上下拖动并用键盘调整', function () {
+        var panel = document.getElementById('shell-panel');
+        var row = panel.querySelector('#shell-input-row');
+        var handle = panel.querySelector('.term-input-resizer');
+        if (!row || !handle) return '缺少输入区或高度拖动手柄';
+        var before = row.getBoundingClientRect().height;
+        var r = handle.getBoundingClientRect();
+        function pointer(type, y) {
+          handle.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, button: 0, pointerId: 7, pointerType: 'mouse', clientX: r.left + 25, clientY: y
+          }));
+        }
+        pointer('pointerdown', r.top + 7);
+        pointer('pointermove', r.top - 49);
+        pointer('pointerup', r.top - 49);
+        var dragged = row.getBoundingClientRect().height;
+        handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+        var keyed = row.getBoundingClientRect().height;
+        var saved = Number(localStorage.getItem('cloudcmd.shellInputHeight'));
+        localStorage.removeItem('cloudcmd.shellInputHeight');
+        return dragged > before + 30 && keyed < dragged - 5 &&
+          Math.abs(saved - keyed) < 2 && Number(handle.getAttribute('aria-valuenow')) === keyed
+          ? true : '高度：' + before + ' → ' + dragged + ' → ' + keyed + '，保存值=' + saved;
       });
 
       d('临时 Shell：Esc 能关（哪怕光标在终端里）', function () {
