@@ -89,20 +89,29 @@ jobs:
         shell: bash
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
-          test -n "$DEPLOY_SSH_KEY" && test -n "$DEPLOY_KNOWN_HOSTS"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+          test -n "$DEPLOY_SSH_KEY" || test -n "$DEPLOY_PASSWORD"
           install -d -m 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          if [[ -n "$DEPLOY_SSH_KEY" ]]; then
+            printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+          elif ! command -v sshpass >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq sshpass
+          fi
       - name: Publish to the live update endpoint
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
           VERSION_NAME: ${{ inputs.version_name }}
           VERSION_CODE: ${{ inputs.version_code }}
         run: |
@@ -115,7 +124,15 @@ jobs:
           apk="CloudCmd-${VERSION_NAME}.apk"
           remote_file="/tmp/cloudcmd-apk-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.apk"
           digest="$(sha256sum "$apk" | cut -d ' ' -f1)"
-          ssh_opts=(-o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519)
-          scp "${ssh_opts[@]}" -P "$port" "$apk" "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_file}"
-          ssh "${ssh_opts[@]}" -p "$port" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          transport=()
+          ssh_opts=(-o StrictHostKeyChecking=yes -o IdentitiesOnly=yes)
+          if [[ -f ~/.ssh/id_ed25519 ]]; then
+            ssh_opts+=(-o BatchMode=yes -i ~/.ssh/id_ed25519)
+          else
+            export SSHPASS="$DEPLOY_PASSWORD"
+            transport=(sshpass -e)
+            ssh_opts+=(-o PreferredAuthentications=password -o PubkeyAuthentication=no)
+          fi
+          "${transport[@]}" scp "${ssh_opts[@]}" -P "$port" "$apk" "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_file}"
+          "${transport[@]}" ssh "${ssh_opts[@]}" -p "$port" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "bash /opt/cloudcmd/tools/publish-apk.sh '${remote_file}' '${VERSION_NAME}' '${VERSION_CODE}' '${digest}' '${GITHUB_SHA}'"

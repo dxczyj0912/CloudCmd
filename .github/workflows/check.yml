@@ -52,20 +52,29 @@ jobs:
         shell: bash
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
-          test -n "$DEPLOY_SSH_KEY" && test -n "$DEPLOY_KNOWN_HOSTS"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+          test -n "$DEPLOY_SSH_KEY" || test -n "$DEPLOY_PASSWORD"
           install -d -m 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          if [[ -n "$DEPLOY_SSH_KEY" ]]; then
+            printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+          elif ! command -v sshpass >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq sshpass
+          fi
       - name: Upload and deploy
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
         run: |
           set -euo pipefail
           test -n "$DEPLOY_HOST" && test -n "$DEPLOY_USER"
@@ -73,9 +82,17 @@ jobs:
           [[ "$port" =~ ^[0-9]+$ ]]
           remote_file="/tmp/cloudcmd-${GITHUB_SHA}-${GITHUB_RUN_ID}.tar.gz"
           remote_script="/tmp/cloudcmd-deploy-${GITHUB_SHA}-${GITHUB_RUN_ID}.sh"
-          ssh_opts=(-o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519)
-          scp "${ssh_opts[@]}" -P "$port" cloudcmd-source.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_file}"
-          scp "${ssh_opts[@]}" -P "$port" tools/deploy-server.sh "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_script}"
+          transport=()
+          ssh_opts=(-o StrictHostKeyChecking=yes -o IdentitiesOnly=yes)
+          if [[ -f ~/.ssh/id_ed25519 ]]; then
+            ssh_opts+=(-o BatchMode=yes -i ~/.ssh/id_ed25519)
+          else
+            export SSHPASS="$DEPLOY_PASSWORD"
+            transport=(sshpass -e)
+            ssh_opts+=(-o PreferredAuthentications=password -o PubkeyAuthentication=no)
+          fi
+          "${transport[@]}" scp "${ssh_opts[@]}" -P "$port" cloudcmd-source.tar.gz "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_file}"
+          "${transport[@]}" scp "${ssh_opts[@]}" -P "$port" tools/deploy-server.sh "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_script}"
           digest="$(cat cloudcmd-source.sha256)"
-          ssh "${ssh_opts[@]}" -p "$port" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          "${transport[@]}" ssh "${ssh_opts[@]}" -p "$port" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "bash '${remote_script}' '${remote_file}' '${digest}' '${GITHUB_SHA}'"

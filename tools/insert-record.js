@@ -57,6 +57,10 @@ function recordId(lines, block) {
 
 /* ── 编号维护 ───────────────────────────────────────────────────────────── */
 function renumber(src) {
+  /* GitHub 的 Windows checkout 会把仓库里的 LF 转成 CRLF。先按统一换行
+     计算编号，再恢复原换行；否则 --check 会把每行的 \r 误判为内容差异。 */
+  const eol = src.indexOf('\r\n') !== -1 ? '\r\n' : '\n';
+  src = src.replace(/\r\n/g, '\n');
   const lines = src.split('\n');
   const blocks = recordBlocks(src);
   const total = blocks.length;
@@ -107,7 +111,7 @@ function renumber(src) {
     outLines[gi] = outLines[gi].replace(groupRe, (m, a, _old, c) => a + '（' + n + ' 条）' + c);
   });
 
-  return { text: outLines.join('\n'), total: total, groups: groupIdx.length };
+  return { text: outLines.join('\n').replace(/\n/g, eol), total: total, groups: groupIdx.length };
 }
 
 /* ── 校验模式 ───────────────────────────────────────────────────────────── */
