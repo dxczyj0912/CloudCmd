@@ -11,6 +11,11 @@ on:
         description: 'New Android versionCode, greater than the published version'
         required: true
         type: string
+      publish:
+        description: 'Publish the signed APK to the server after all checks pass'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -77,6 +82,7 @@ jobs:
 
   publish:
     needs: build
+    if: inputs.publish == true
     runs-on: ubuntu-latest
     concurrency:
       group: cloudcmd-production

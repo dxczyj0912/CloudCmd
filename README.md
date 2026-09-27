@@ -34,6 +34,8 @@ docker compose up -d --build
 
 默认访问 `http://服务器地址:8787/`。生产环境请放在 HTTPS 反向代理后，打开页面的“进度备份与同步”，用同步码配对设备。部署版每 30 秒检查内容版本，`data/` 或 `assets/` 更新后会提示刷新。完整配置见 [部署与同步](docs/部署与同步.md)。
 
+配置 GitHub Actions Secrets 后，推送 `master` 会先检查再自动部署网页和同步服务；需要新 Android 安装包时，在 Actions 中单独构建并发布签名 APK。
+
 如果部署目录中放了更高版本的正式签名 APK（例如 `CloudCmd-1.3.apk`），Android App 在连接同步服务后也会提示“下载更新”；点击后由系统浏览器下载并确认安装。
 
 ### 方式四：构建 Android 版
