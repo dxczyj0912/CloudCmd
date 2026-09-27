@@ -44,10 +44,31 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
 
 /* ---------- 主体 ---------- */
 .lab{
+  --lab-left:min(38%,680px);
   flex:1 1 auto;min-height:0;width:calc(100% - 32px);max-width:2400px;margin:0 auto;
-  display:grid;grid-template-columns:minmax(360px,min(38%,680px)) minmax(0,1fr);
+  display:grid;grid-template-columns:minmax(360px,var(--lab-left)) 10px minmax(0,1fr);
   gap:14px;padding:14px 18px
 }
+
+/* 桌面端拖拽分隔条：中间留出明确的抓取区域，鼠标和键盘都可操作。 */
+.lab-resizer{position:relative;z-index:5;display:flex;align-items:center;justify-content:center;min-width:10px;cursor:col-resize;touch-action:none;user-select:none}
+.lab-resizer::before{content:"";position:absolute;inset:0 -7px}
+.lab-resizer span{width:4px;height:58px;border-radius:4px;background:var(--border-strong);transition:height .15s ease,background .15s ease,box-shadow .15s ease}
+.lab-resizer:hover span,.lab-resizer:focus-visible span,.lab-resizer.is-dragging span{height:82px;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.lab.is-dragging,.lab.is-dragging *{cursor:col-resize!important;user-select:none!important}
+
+/* 终端输入区：独立 dock，顶部横条就是可拖动的高度控制柄。 */
+.term-input-dock{position:relative;display:flex;flex-direction:column;flex:0 0 var(--term-input-h,58px);min-height:44px;border-top:1px solid rgba(255,255,255,.12);background:#111827;color:var(--code-text)}
+.term-input-resizer{position:relative;z-index:3;display:flex;align-items:center;justify-content:center;flex:0 0 13px;min-height:13px;cursor:row-resize;touch-action:none;user-select:none;background:rgba(255,255,255,.035)}
+.term-input-resizer::before{content:"";position:absolute;inset:-12px 0}
+.term-input-resizer span{width:42px;height:3px;border-radius:3px;background:rgba(255,255,255,.28);transition:width .15s ease,background .15s ease,box-shadow .15s ease}
+.term-input-resizer:hover span,.term-input-resizer:focus-visible span,.term-input-resizer.is-dragging span{width:72px;background:var(--accent);box-shadow:0 0 0 3px rgba(47,107,255,.18)}
+.term-input-dock .term-line-input{flex:1 1 auto;min-height:0;padding:7px 13px;align-items:flex-start;overflow-y:auto;overflow-x:hidden;color:var(--code-text);font-family:var(--mono);font-size:13px;line-height:1.65}
+.term-input-dock .term-cursor{margin-top:2px}
+.term-input-dock:not(:focus-within) .term-cursor{display:none}
+.term-input-dock:focus-within{border-top-color:rgba(47,107,255,.7)}
+.term.is-input-dragging,.term.is-input-dragging *{cursor:row-resize!important;user-select:none!important}
+body.is-resizing{user-select:none}
 
 /* ---------- 模拟终端 ---------- */
 .term{
@@ -80,7 +101,7 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
 .term-body:not(.is-focus) .term-cursor{display:none}
 @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.term-cursor{animation:none}}
-.term-real-input{position:absolute;left:-9999px;top:0;width:10px;height:10px;opacity:0;border:0;padding:0;background:transparent}
+.term-real-input{position:absolute;left:13px;right:13px;top:13px;width:calc(100% - 26px);height:calc(100% - 13px);opacity:0;border:0;padding:0;background:transparent;font-size:16px;cursor:text}
 .t-dim{color:var(--code-text)}.t-muted{color:var(--code-dim)}.t-ok{color:#5ee08e}.t-warn{color:#ffd479}.t-err{color:#ff8b8f}.t-hl{color:#8ed6ff}.t-echo{color:#eaf0ff;font-weight:600}
 
 /* ---------- 讲义 ---------- */
@@ -142,12 +163,13 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
 
 @media (max-width:1100px){
   body.lab-body{overflow:auto}.academy-kicker{display:none}
-  .lab{grid-template-columns:1fr;width:100%;min-height:0;padding:12px}.term{min-height:430px}.lesson{min-height:560px}
+  .lab{grid-template-columns:1fr;width:100%;min-height:0;padding:12px}.lab-resizer{display:none}.term{min-height:430px}.lesson{min-height:560px}
 }
 @media (max-width:600px){
   .lab-body .topbar{height:auto;min-height:58px;flex-wrap:wrap;gap:9px;padding:10px 12px}
   .academy-status{display:none}.back-home{order:2}.brand{order:1}.lab-body .topbar .academy-kicker{display:block;order:3;width:100%;margin-left:0}
   .lab{gap:10px;padding:10px}.term{min-height:380px}.term-body{padding:13px;font-size:12px}
+  .term-input-dock{flex-basis:var(--term-input-h,58px)}
   .lesson{min-height:0}.lesson-toolbar{min-height:52px;padding:9px 11px}.lesson-head{padding:15px 14px 13px}.lh-title{font-size:17px}
   .lesson-tabs{padding:9px 14px}.lesson-doc{padding:15px 14px 23px;font-size:13.5px}.lesson-foot{padding:7px 9px}
   .lf-nav{max-width:50%;font-size:11px}.select-wrap-mini{margin-left:0;max-width:100%}.tb-select{min-width:0;max-width:100%}
@@ -199,10 +221,8 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
   .term-bar-text small{display:none}
   .term-bar-btn{display:inline-flex;width:36px;height:36px}
   .term-body{padding:10px 11px;font-size:12.5px;line-height:1.6}
-  /* 无头输入框在桌面被放到 -9999px（反正看不见）。手机上不能这么放：
-     聚焦一个屏幕外的元素时，移动端浏览器会先滚动过去，软键盘再弹出来，
-     画面会跳一下。改成放在终端自己的底部 —— 位置本来就在可视区内。 */
-  .term-real-input{left:0;right:0;top:auto;bottom:0;width:auto;height:38px;font-size:16px}
+  /* 输入框留在可视区内，避免移动端聚焦时先滚动页面再弹出软键盘。 */
+  .term-real-input{left:0;right:0;top:13px;bottom:0;width:100%;height:calc(100% - 13px);font-size:16px}
   /* 触摸端不要 300ms 双击缩放延迟 */
   .tk,.cb-run,.cb-copy,.tb-check,.lf-nav,.back-home,.term-bar-btn,.lesson-tabs button{touch-action:manipulation}
   /* 滚动到底不要再把整页带着一起弹（iOS 橡皮筋） */
@@ -283,6 +303,7 @@ svg.ico{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;strok
   .term{order:0;height:auto;min-height:0;max-height:none}
   .lesson{order:0}
   body.term-full .lab{grid-template-columns:1fr}
+  body.term-full .lab-resizer{display:none}
   body.term-full .term{height:auto;min-height:0}
   body.lab-body{padding-bottom:0}
 

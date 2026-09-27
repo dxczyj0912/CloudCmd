@@ -13,7 +13,7 @@ body{background:#fff !important;color:#000 !important;font-size:11pt}
 
 /* 练习平台（academy-lab.html）打印时只留讲义，终端与工具条隐去 */
 .lab-body .topbar,.lab-body .footer,
-.lab-body .term,.lab-body .lesson-toolbar,.lab-body .lesson-foot{display:none !important}
+.lab-body .term,.lab-body .lab-resizer,.lab-body .lesson-toolbar,.lab-body .lesson-foot{display:none !important}
 .lab-body .lab{display:block;height:auto;min-height:0}
 .lab-body .lesson{border:0 !important;background:#fff !important;max-height:none !important}
 .lab-body .lesson-body{overflow:visible !important;max-height:none !important}

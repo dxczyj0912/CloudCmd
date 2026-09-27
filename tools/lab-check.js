@@ -301,6 +301,50 @@ async function main() {
   console.log('\n[6] 布局与稳定性');
   ok('讲义可独立滚动', await evalJS('(function(){var b=document.querySelector(".lesson-body");return b.scrollHeight>b.clientHeight})()'));
   ok('终端占主体约 38%（给讲义更多阅读宽度）', await evalJS('(function(){var t=document.querySelector(".term"),l=document.querySelector(".lab");var ratio=t.getBoundingClientRect().width/l.getBoundingClientRect().width;return Math.abs(ratio-0.38)<0.035})()'));
+  const resized = await evalJS(`(function(){
+    var lab=document.querySelector('.lab'), term=document.querySelector('.term');
+    var split=document.getElementById('lab-resizer'), input=document.getElementById('term-input-dock');
+    var handle=document.getElementById('term-input-resizer');
+    var leftBefore=term.getBoundingClientRect().width, inputBefore=input.getBoundingClientRect().height;
+    function pointer(el,type,x,y,id){el.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:id,pointerType:'mouse',button:0,clientX:x,clientY:y}));}
+    var s=split.getBoundingClientRect();
+    pointer(split,'pointerdown',s.x+5,s.y+30,11);
+    pointer(split,'pointermove',s.x+125,s.y+30,11);
+    pointer(split,'pointerup',s.x+125,s.y+30,11);
+    var leftAfter=term.getBoundingClientRect().width;
+    split.dispatchEvent(new KeyboardEvent('keydown',{bubbles:true,key:'ArrowLeft'}));
+    var leftKey=term.getBoundingClientRect().width;
+    var h=handle.getBoundingClientRect();
+    pointer(handle,'pointerdown',h.x+30,h.y+5,12);
+    pointer(handle,'pointermove',h.x+30,h.y-55,12);
+    pointer(handle,'pointerup',h.x+30,h.y-55,12);
+    var inputAfter=input.getBoundingClientRect().height;
+    handle.dispatchEvent(new KeyboardEvent('keydown',{bubbles:true,key:'ArrowDown'}));
+    var inputKey=input.getBoundingClientRect().height;
+    return {
+      leftBefore:leftBefore,leftAfter:leftAfter,leftKey:leftKey,
+      inputBefore:inputBefore,inputAfter:inputAfter,inputKey:inputKey,
+      savedLeft:localStorage.getItem('cloudcmd.lab.left'),
+      savedInput:localStorage.getItem('cloudcmd.lab.inputHeight'),
+      splitNow:split.getAttribute('aria-valuenow'),inputNow:handle.getAttribute('aria-valuenow'),
+      overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1
+    };
+  })()`);
+  ok('拖动中线能改变左右宽度', resized.leftAfter > resized.leftBefore + 70, `${resized.leftBefore} → ${resized.leftAfter}`);
+  ok('中线支持键盘方向键', resized.leftKey < resized.leftAfter - 10);
+  ok('拖动输入区把手能改变高度', resized.inputAfter > resized.inputBefore + 35, `${resized.inputBefore} → ${resized.inputAfter}`);
+  ok('输入区把手支持键盘方向键', resized.inputKey < resized.inputAfter - 5);
+  ok('两处尺寸已保存并更新无障碍数值', !!resized.savedLeft && !!resized.savedInput && !!resized.splitNow && !!resized.inputNow);
+  ok('拖动后页面仍无横向溢出', !resized.overflow);
+  await send('Page.navigate', { url: PAGE });
+  await settle(900);
+  ok('刷新后保留拖动尺寸', await evalJS(`(function(){
+    var lab=document.querySelector('.lab'),term=document.querySelector('.term');
+    var input=document.getElementById('term-input-dock');
+    return Math.abs(term.getBoundingClientRect().width/lab.getBoundingClientRect().width*100-Number(localStorage.getItem('cloudcmd.lab.left')))<1 &&
+      Math.abs(input.getBoundingClientRect().height-Number(localStorage.getItem('cloudcmd.lab.inputHeight')))<2;
+  })()`));
+  await evalJS('localStorage.removeItem("cloudcmd.lab.left");localStorage.removeItem("cloudcmd.lab.inputHeight")');
   ok('页面无横向溢出', await evalJS('document.documentElement.scrollWidth<=window.innerWidth+1'));
   ok('页面无未捕获 JS 异常', pageErrors.length === 0, pageErrors.slice(0, 2).join(' | '));
 
