@@ -563,9 +563,7 @@
   /* ───────── 输入：回车 / 历史 / 清屏 ───────── */
   function syncGhost() {
     ghostEl.textContent = realInput.value;
-    var row = $('#term-input-row');
-    if (row) row.scrollTop = row.scrollHeight;
-    scrollDown();
+    scrollDown(true);
   }
   function submit() {
     var v = realInput.value;
@@ -582,18 +580,14 @@
     bodyEl.classList.add('is-focus');
   }
 
-  /* ───────── 可调布局：左右分栏 + 终端输入区 ─────────
-     两个拖拽点都用 Pointer Events，同一套逻辑覆盖鼠标、触摸板和触屏；
-     分隔条同时支持键盘方向键，且只保存用户主动调整过的值。 */
+  /* ───────── 桌面左右分栏 ───────── */
   function bindResizable() {
     var lab = $('.lab');
     var split = $('#lab-resizer');
-    var inputSplit = $('#term-input-resizer');
     var term = $('#term');
-    var inputDock = $('#term-input-dock');
-    if (!lab || !split || !inputSplit || !term || !inputDock) return;
+    if (!lab || !split || !term) return;
 
-    var leftMin = 25, leftMax = 62, inputMin = 44, inputMax = 220;
+    var leftMin = 25, leftMax = 62;
     function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
     function remember(key, value) {
       try { localStorage.setItem(key, String(value)); } catch (e) { /* file:// / 隐私模式 */ }
@@ -618,29 +612,16 @@
       split.setAttribute('aria-valuenow', Math.round(pct));
       if (save) remember('cloudcmd.lab.left', pct.toFixed(2));
     }
-    function inputLimit() {
-      var h = term.getBoundingClientRect().height || 0;
-      return clamp(Math.round(h - 112), 100, inputMax);
-    }
-    function setInputHeight(value, save) {
-      var max = inputLimit();
-      var px = clamp(Number(value) || 58, inputMin, max);
-      inputDock.style.setProperty('--term-input-h', Math.round(px) + 'px');
-      inputSplit.setAttribute('aria-valuemax', max);
-      inputSplit.setAttribute('aria-valuenow', Math.round(px));
-      if (save) remember('cloudcmd.lab.inputHeight', Math.round(px));
-    }
     var savedLeft = read('cloudcmd.lab.left');
     if (savedLeft !== null) setLeft(savedLeft, false);
     else split.setAttribute('aria-valuenow', Math.round(leftValue()));
-    setInputHeight(read('cloudcmd.lab.inputHeight') || 58, false);
 
     var active = null;
-    function endDrag(el, handleCls, owner, ownerCls) {
+    function endDrag() {
       if (!active) return;
-      try { el.releasePointerCapture(active.id); } catch (e) { /* capture may already be released */ }
-      el.classList.remove(handleCls);
-      (owner || lab).classList.remove(ownerCls || handleCls);
+      try { split.releasePointerCapture(active.id); } catch (e) { /* capture may already be released */ }
+      split.classList.remove('is-dragging');
+      lab.classList.remove('is-dragging');
       active = null;
       document.body.classList.remove('is-resizing');
     }
@@ -659,8 +640,8 @@
       if (!r.width) return;
       setLeft(active.start + ((e.clientX - active.x) / r.width) * 100, false);
     });
-    split.addEventListener('pointerup', function (e) { if (active && active.id === e.pointerId) { remember('cloudcmd.lab.left', parseFloat(getComputedStyle(lab).getPropertyValue('--lab-left')) || 38); endDrag(split, 'is-dragging', lab, 'is-dragging'); } });
-    split.addEventListener('pointercancel', function (e) { if (active && active.id === e.pointerId) endDrag(split, 'is-dragging', lab, 'is-dragging'); });
+    split.addEventListener('pointerup', function (e) { if (active && active.id === e.pointerId) { remember('cloudcmd.lab.left', parseFloat(getComputedStyle(lab).getPropertyValue('--lab-left')) || 38); endDrag(); } });
+    split.addEventListener('pointercancel', function (e) { if (active && active.id === e.pointerId) endDrag(); });
     split.addEventListener('keydown', function (e) {
       var now = leftValue();
       var step = e.shiftKey ? 5 : 2;
@@ -670,35 +651,6 @@
       else if (e.key === 'End') { e.preventDefault(); setLeft(leftMax, true); }
       else if (e.key === 'Enter') { e.preventDefault(); setLeft(Math.min(38, 680 / lab.getBoundingClientRect().width * 100), true); }
     });
-
-    inputSplit.addEventListener('pointerdown', function (e) {
-      if (e.button !== undefined && e.button !== 0) return;
-      e.preventDefault();
-      active = { id: e.pointerId, y: e.clientY, start: parseFloat(getComputedStyle(inputDock).getPropertyValue('--term-input-h')) || 58 };
-      inputSplit.classList.add('is-dragging');
-      term.classList.add('is-input-dragging');
-      document.body.classList.add('is-resizing');
-      try { inputSplit.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-    });
-    inputSplit.addEventListener('pointermove', function (e) {
-      if (!active || active.id !== e.pointerId) return;
-      setInputHeight(active.start + active.y - e.clientY, false);
-    });
-    inputSplit.addEventListener('pointerup', function (e) { if (active && active.id === e.pointerId) { remember('cloudcmd.lab.inputHeight', parseFloat(getComputedStyle(inputDock).getPropertyValue('--term-input-h')) || 58); endDrag(inputSplit, 'is-dragging', term, 'is-input-dragging'); } });
-    inputSplit.addEventListener('pointercancel', function (e) { if (active && active.id === e.pointerId) endDrag(inputSplit, 'is-dragging', term, 'is-input-dragging'); });
-    inputSplit.addEventListener('keydown', function (e) {
-      var now = parseFloat(getComputedStyle(inputDock).getPropertyValue('--term-input-h')) || 58;
-      var step = e.shiftKey ? 24 : 8;
-      if (e.key === 'ArrowUp') { e.preventDefault(); setInputHeight(now + step, true); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); setInputHeight(now - step, true); }
-      else if (e.key === 'Home') { e.preventDefault(); setInputHeight(inputMin, true); }
-      else if (e.key === 'End') { e.preventDefault(); setInputHeight(inputLimit(), true); }
-      else if (e.key === 'Enter') { e.preventDefault(); setInputHeight(58, true); }
-    });
-    inputDock.addEventListener('pointerdown', function (e) {
-      if (!e.target.closest('.term-input-resizer')) setTimeout(focusTerm, 0);
-    });
-    window.addEventListener('resize', function () { setInputHeight(parseFloat(getComputedStyle(inputDock).getPropertyValue('--term-input-h')) || 58, false); });
   }
 
   /* 命令历史：键盘 ↑↓ 与手机端快捷键条的 ↑↓ 共用这一份逻辑，
@@ -850,6 +802,9 @@
     bodyEl.addEventListener('mousedown', function (e) {
       if (e.target.closest('a')) return;
       setTimeout(focusTerm, 0);
+    });
+    bodyEl.addEventListener('click', function (e) {
+      if (!e.target.closest('a')) focusTerm();
     });
     bodyEl.addEventListener('mouseup', function () { bodyEl.classList.remove('is-focus'); });
     realInput.addEventListener('input', syncGhost);
