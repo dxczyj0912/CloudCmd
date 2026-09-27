@@ -632,7 +632,7 @@
 
   function viewFavorites() {
     var h = '<div class="wrap">';
-    h += '<div class="page-head"><h1>⭐ 我的收藏</h1><div class="page-sub">收藏数据保存在浏览器本地，不会上传。</div></div>';
+    h += '<div class="page-head"><h1>⭐ 我的收藏</h1><div class="page-sub">收藏保存在本机；连接同步服务后会同步到配对设备。</div></div>';
 
     var ids = [], all = window.CC_SEARCH;
     /* 从索引里按收藏顺序取 */

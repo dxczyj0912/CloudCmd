@@ -484,7 +484,7 @@
 
     /* 顶部实验条：题目信息 + 状态 + 主操作（对齐在线实验平台的工具条） */
     h += '<div class="lab-bar">' +
-      '<span class="lab-bar-brand"><img src="assets/img/cloudcmd-mark.png?v=0.0.1" alt="">CloudCmd 0.0.1 云计算命令手册</span>' +
+      '<span class="lab-bar-brand"><img src="assets/img/cloudcmd-mark.png?v=0.0.2" alt="">CloudCmd 0.0.2 云计算命令手册</span>' +
       '<span class="lab-bar-sep">/</span>' +
       '<span class="lab-bar-bc">实时练习' + (cat ? ' / ' + esc(cat.name) : '') + '</span>' +
       '<span class="lab-bar-spacer"></span>' +

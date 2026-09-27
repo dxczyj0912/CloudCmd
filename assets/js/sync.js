@@ -8,6 +8,7 @@
   var pollTimer = null;
   var pushTimer = null;
   var pushing = false;
+  var pushAgain = false;
   var applying = false;
   var listeners = [];
   var current = { level: 'idle', message: '未连接同步服务', connected: false, code: '', revision: 0 };
@@ -81,13 +82,15 @@
     });
   }
   function push(done) {
-    if (pushing || !config.code || !apiBase() || !window.CC_STORE) { if (done) done(null); return; }
+    if (pushing) { pushAgain = true; if (done) done(null); return; }
+    if (!config.code || !apiBase() || !window.CC_STORE) { if (done) done(null); return; }
     pushing = true;
     request('PUT', apiBase() + '/api/sync/sessions/' + encodeURIComponent(config.code), {
       revision: revision,
       state: JSON.parse(window.CC_STORE.exportJSON())
     }, function (error, value) {
       pushing = false;
+      if (pushAgain) { pushAgain = false; schedulePush(); }
       if (error) { say('error', error.message, { connected: false }); if (done) done(error); return; }
       revision = Number(value.revision || revision);
       applyRemote(value.state);
@@ -106,7 +109,8 @@
     if (window.EventSource) {
       stream = new window.EventSource(apiBase() + '/api/sync/sessions/' + encodeURIComponent(config.code) + '/events');
       stream.onopen = function () { say('ok', '同步服务已连接', { connected: true }); };
-      stream.onmessage = function () { pull(); };
+      /* 服务端发送具名 progress 事件；onmessage 只接收未命名事件。 */
+      stream.addEventListener('progress', function () { pull(); });
       stream.onerror = function () { say('error', '同步连接暂时中断，正在重试', { connected: false }); };
     }
     pollTimer = setInterval(function () { pull(); }, 60000);

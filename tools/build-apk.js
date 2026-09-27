@@ -56,8 +56,8 @@ const val = (f, d) => {
   return a ? a.slice(f.length + 1) : d;
 };
 
-const VERSION_CODE = parseInt(val('--version-code', '9'), 10);
-const VERSION_NAME = val('--version-name', '0.0.1');
+const VERSION_CODE = parseInt(val('--version-code', '10'), 10);
+const VERSION_NAME = val('--version-name', '0.0.2');
 const NO_SIGN = has('--no-sign');
 const SIGNING = {
   keystore: process.env.CLOUDCMD_KEYSTORE || '',

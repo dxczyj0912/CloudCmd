@@ -7,7 +7,9 @@
 
   var KEY = 'cloudcmd.v1';
   var LEGACY_PRACTICE_KEY = 'cloudcmd.practice.v1';
+  var ACTOR_KEY = 'cloudcmd.sync.actor';
   var storageError = '';
+  var actor = '';
 
   var state = {
     mastered: {},   /* { commandId: true } */
@@ -16,6 +18,7 @@
     lessons: {},    /* { lessonId: true } */
     lessonEvidence: {}, /* { lessonId: true } 课程目标输出已在步骤中观察到 */
     steps: {},      /* { 'lessonId#0': true } 步骤完成状态 */
+    marks: {},      /* 每项的启用或取消记录，跨设备同步时保留取消操作 */
     theme: 'auto',  /* 'auto' | 'light' | 'dark' */
     /* 每日一练的间隔重复状态：{ cardId: {ease, interval, due, reps, lapses, last} }
        due / last 用 YYYYMMDD 整数，便于跨天比较且不受时区影响 */
@@ -74,16 +77,12 @@
       if (['auto', 'light', 'dark'].indexOf(obj.theme) === -1) throw new Error('主题设置不正确');
     }
     if (!found) throw new Error('备份中没有可识别的学习进度');
+    window.CC_MARKS.validate(obj);
   }
 
   function applyObject(obj) {
     if (!obj || typeof obj !== 'object') return;
-    mergeBucket(state.mastered, obj.mastered);
-    mergeBucket(state.favorites, obj.favorites);
-    mergeBucket(state.stages, obj.stages);
-    mergeBucket(state.lessons, obj.lessons);
-    mergeBucket(state.lessonEvidence, obj.lessonEvidence);
-    mergeBucket(state.steps, obj.steps);
+    window.CC_MARKS.merge(state, obj);
     if (obj.theme) state.theme = obj.theme;
     mergeBucket(state.srs, obj.srs);
     if (obj.drill && typeof obj.drill === 'object') {
@@ -126,11 +125,21 @@
     }
   }
 
+  function actorId() {
+    if (actor) return actor;
+    try { actor = window.localStorage.getItem(ACTOR_KEY) || ''; } catch (ignore) { /* 内存兜底 */ }
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(actor)) {
+      actor = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      try { window.localStorage.setItem(ACTOR_KEY, actor); } catch (ignore) { /* 内存兜底 */ }
+    }
+    return actor;
+  }
+
   function toggle(bucket, id) {
     var b = state[bucket];
-    if (b[id]) { delete b[id]; } else { b[id] = true; }
+    window.CC_MARKS.record(state, bucket, id, !b[id], actorId());
     save();
-    return !!b[id];
+    return !!state[bucket][id];
   }
 
   window.CC_STORE = {
@@ -156,14 +165,14 @@
 
     /* ---- 练习完成状态 ---- */
     isLessonDone: function (id) { return !!state.lessons[id]; },
-    addLessonDone: function (id) { state.lessons[id] = true; save(); },
+    addLessonDone: function (id) { window.CC_MARKS.record(state, 'lessons', id, true, actorId()); save(); },
     lessonsDoneCount: function () { return Object.keys(state.lessons).length; },
     hasLessonEvidence: function (id) { return !!state.lessonEvidence[id]; },
-    addLessonEvidence: function (id) { state.lessonEvidence[id] = true; save(); },
+    addLessonEvidence: function (id) { window.CC_MARKS.record(state, 'lessonEvidence', id, true, actorId()); save(); },
 
     /* ---- 步骤完成状态（实验台右侧的编号步骤） ---- */
     isStepDone: function (id) { return !!state.steps[id]; },
-    addStepDone: function (id) { state.steps[id] = true; save(); },
+    addStepDone: function (id) { window.CC_MARKS.record(state, 'steps', id, true, actorId()); save(); },
     stepsDoneCount: function () { return Object.keys(state.steps).length; },
 
     /* ---- 每日一练：间隔重复 ----
@@ -201,12 +210,11 @@
       return JSON.stringify(state, null, 2);
     },
     clear: function () {
-      state.mastered = {};
-      state.favorites = {};
-      state.stages = {};
-      state.lessons = {};
-      state.lessonEvidence = {};
-      state.steps = {};
+      window.CC_MARKS.buckets.forEach(function (bucket) {
+        Object.keys(state[bucket]).forEach(function (id) {
+          window.CC_MARKS.record(state, bucket, id, false, actorId());
+        });
+      });
       state.srs = {};
       state.drill = { lastDone: 0, streak: 0, best: 0, totalDays: 0, reviews: 0, dailyDate: 0, dailyReviewed: 0, rounds: 0 };
       save();

@@ -218,6 +218,9 @@
         favBtn.classList.toggle('on', on);
         favBtn.innerHTML = on ? ICON_STAR_ON : ICON_STAR;
         toast(on ? '已加入收藏' : '已取消收藏');
+        if (!on && window.CC_ROUTER.parse(window.location.hash).name === 'favorites') {
+          window.CC_ROUTER.render();
+        }
         refreshProgress();
         refreshSidebarCounts();
         return;

@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const crypto = require('crypto');
+const syncMarks = require('./assets/js/sync-marks.js');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 8787);
@@ -47,14 +48,6 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function mergeBucket(target, source) {
-  if (!source || typeof source !== 'object' || Array.isArray(source)) return;
-  Object.keys(source).forEach(function (key) {
-    if (key === '__proto__' || key === 'constructor' || key === 'prototype') return;
-    if (source[key] === true) target[key] = true;
-  });
-}
-
 function validState(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail('state 必须是 JSON 对象');
   const encoded = JSON.stringify(value);
@@ -66,16 +59,15 @@ function validState(value) {
   });
   if (value.srs != null && (typeof value.srs !== 'object' || Array.isArray(value.srs))) fail('srs 格式不正确');
   if (value.drill != null && (typeof value.drill !== 'object' || Array.isArray(value.drill))) fail('drill 格式不正确');
+  try { syncMarks.validate(value); }
+  catch (error) { fail(error.message, 400); }
   return value;
 }
 
-/* 进度是可合并集合；并发设备提交时保留双方已经完成的项目。 */
+/* Per-item records preserve both additions and cancellations across devices. */
 function mergeState(current, incoming) {
   const result = clone(current || {});
-  ['mastered', 'favorites', 'stages', 'lessons', 'lessonEvidence', 'steps'].forEach(function (bucket) {
-    result[bucket] = result[bucket] || {};
-    mergeBucket(result[bucket], incoming[bucket]);
-  });
+  syncMarks.merge(result, incoming);
   result.srs = result.srs || {};
   if (incoming.srs && typeof incoming.srs === 'object') {
     Object.keys(incoming.srs).forEach(function (id) {
@@ -355,7 +347,7 @@ async function handle(req, res) {
   if (url.pathname.startsWith('/api/')) {
     if (url.pathname === '/api/sync/sessions' && req.method === 'POST') {
       const body = await bodyJson(req);
-      const state = validState(body.state || {});
+      const state = mergeState({}, validState(body.state || {}));
       const code = newCode();
       const session = { code: code, revision: 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), state: state };
       sessions.set(code, session); persist();

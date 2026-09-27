@@ -633,6 +633,18 @@
         return (on && saved) ? true : '未写入收藏（isFavorite=' + on + ' / localStorage=' + saved + '）';
       });
 
+      d('取消收藏后写入同步取消记录', function () {
+        var id = list[1].id;
+        var card = document.getElementById('cmd-' + id);
+        var btn = card && card.querySelector('[data-fav]');
+        if (!btn || !ST.isFavorite(id)) return '前置收藏未成功';
+        btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        var saved = JSON.parse(localStorage.getItem('cloudcmd.v1') || '{}');
+        var mark = saved.marks && saved.marks.favorites && saved.marks.favorites[id];
+        return !ST.isFavorite(id) && mark && mark.on === false && !btn.classList.contains('on')
+          ? true : '取消收藏未持久化或按钮仍显示已收藏';
+      });
+
       d('已掌握按钮可切换并更新进度条', function () {
         var id = list[2].id;
         var card = document.getElementById('cmd-' + id);

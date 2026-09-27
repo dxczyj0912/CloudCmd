@@ -22,6 +22,7 @@ const context = {
 };
 context.window.window = context.window;
 vm.createContext(context);
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'assets/js/sync-marks.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(ROOT, 'assets/js/store.js'), 'utf8'), context);
 const store = context.window.CC_STORE;
 const checks = [];
@@ -38,6 +39,20 @@ store.clear();
 ok('清空进度同时清空课程目标证据', !store.hasLessonEvidence('new') && !JSON.parse(storage['cloudcmd.v1']).lessonEvidence.new);
 store.importJSON({ lessonEvidence: { imported: true } });
 ok('导入进度恢复课程目标证据', store.hasLessonEvidence('imported'));
+store.toggleFavorite('favorite-cancel-test');
+store.toggleFavorite('favorite-cancel-test');
+ok('本机可以取消收藏', !store.isFavorite('favorite-cancel-test'));
+store.importJSON({ favorites: { 'favorite-cancel-test': true } });
+ok('旧设备的收藏快照不能恢复已取消的收藏', !store.isFavorite('favorite-cancel-test'));
+const cancelled = JSON.parse(store.exportJSON()).marks.favorites['favorite-cancel-test'];
+ok('取消操作被保存为同步记录', cancelled.on === false && cancelled.at > 0);
+store.importJSON({ favorites: { 'favorite-cancel-test': true }, marks: { favorites: {
+  'favorite-cancel-test': { on: true, at: cancelled.at + 1, actor: 'other-device' }
+} } });
+ok('较新的跨设备收藏操作可重新收藏', store.isFavorite('favorite-cancel-test'));
+store.clear();
+ok('清空进度会记录收藏取消操作', !store.isFavorite('favorite-cancel-test') &&
+  JSON.parse(store.exportJSON()).marks.favorites['favorite-cancel-test'].on === false);
 let rejectedBadJson = false;
 try { store.importJSON('{"steps":[] }'); } catch (e) { rejectedBadJson = true; }
 ok('导入拒绝错误的桶类型', rejectedBadJson);
