@@ -34,6 +34,13 @@ if [[ -d "$live" ]]; then
     if [[ -f "$file" ]]; then cp -n "$file" "$stage/apk/"; fi
   done
 fi
+# The pre-automation server publishes 1.3.4 (versionCode 8) without a manifest.
+# Record that baseline so the first CI release cannot reuse or lower its code.
+if [[ ! -f "$stage/apk/release.json" && -f "$stage/apk/CloudCmd-1.3.4.apk" ]]; then
+  baseline_sha="$(sha256sum "$stage/apk/CloudCmd-1.3.4.apk" | cut -d ' ' -f1)"
+  printf '{"versionName":"1.3.4","versionCode":8,"file":"CloudCmd-1.3.4.apk","sha256":"%s"}\n' \
+    "$baseline_sha" > "$stage/apk/release.json"
+fi
 printf '%s\n' "$commit" > "$stage/.deployment-commit"
 
 docker compose -p cloudcmd --project-directory "$stage" -f "$stage/docker-compose.yml" config --quiet

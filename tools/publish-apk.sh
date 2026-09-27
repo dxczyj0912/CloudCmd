@@ -24,12 +24,15 @@ actual="$(sha256sum "$uploaded" | cut -d ' ' -f1)"
 [[ "$actual" == "$expected" ]] || { echo 'APK digest mismatch' >&2; exit 2; }
 
 manifest="$apk_dir/release.json"
+previous=8 # The existing signed 1.3.4 APK uses versionCode 8.
 if [[ -f "$manifest" ]]; then
-  previous="$(sed -nE 's/.*"versionCode"[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p' "$manifest" | head -n 1)"
-  [[ -z "$previous" || "$code" -gt "$previous" ]] || {
-    echo 'versionCode must exceed the published APK versionCode' >&2; exit 2;
-  }
+  recorded="$(sed -nE 's/.*"versionCode"[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p' "$manifest" | head -n 1)"
+  [[ -n "$recorded" ]] || { echo 'Published APK manifest is invalid' >&2; exit 2; }
+  previous="$recorded"
 fi
+[[ "$code" -gt "$previous" ]] || {
+  echo 'versionCode must exceed the published APK versionCode' >&2; exit 2;
+}
 
 target="$apk_dir/CloudCmd-$version.apk"
 [[ ! -e "$target" ]] || { echo 'This APK version already exists' >&2; exit 2; }
