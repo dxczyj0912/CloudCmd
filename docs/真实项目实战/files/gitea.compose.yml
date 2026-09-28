@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16.10
+    environment:
+      POSTGRES_DB: gitea
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD:?Set GITEA_DB_PASSWORD in the lab env file}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  gitea:
+    image: gitea/gitea:1.25.5
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: db:5432
+      GITEA__database__NAME: gitea
+      GITEA__database__USER: gitea
+      GITEA__database__PASSWD: ${GITEA_DB_PASSWORD:?Set GITEA_DB_PASSWORD in the lab env file}
+      GITEA__server__ROOT_URL: http://127.0.0.1:13000/
+    ports:
+      - "127.0.0.1:13000:3000"
+    volumes:
+      - gitea-data:/data
+    restart: unless-stopped
+
+volumes:
+  pg-data:
+  gitea-data:
