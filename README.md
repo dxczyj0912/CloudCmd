@@ -250,6 +250,8 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 哪些缺口值得补、哪些应暂缓或避免机械自动化，见 [学习链路补强取舍](docs/学习链路补强取舍.md)（含逐条 CSV）。
 模拟器之外的网络、权限、云资源和数据恢复验收见 [真实环境验收](docs/真实环境验收.md)。
 
+想按真实项目从简单到难动手，可以从 [初级到中级的 16 关连续实战](docs/真实项目实战/README.md) 开始：先围绕 CloudCmd 练云账号、部署、网络、存储、备份和监控，再完成 [Gitea、Terraform、Online Boutique、Argo CD、OpenTelemetry 与双机故障切换](docs/真实项目实战/06-中级实战路线.md)。另有 [Ceph 三节点](docs/真实项目实战/10-Ceph三节点存储实战.md)和 [OpenStack 私有云](docs/真实项目实战/11-OpenStack私有云实战.md)选修，按真实环境的故障与恢复证据验收。
+
 ---
 
 ## 目录结构

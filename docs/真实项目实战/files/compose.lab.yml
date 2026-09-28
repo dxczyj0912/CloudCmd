@@ -1,0 +1,17 @@
+services:
+  cloudcmd:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:18788:8787"
+    environment:
+      PORT: "8787"
+      HOST: "0.0.0.0"
+      CLOUDCMD_DATA_DIR: "/data"
+    volumes:
+      - cloudcmd-data:/data
+    restart: unless-stopped
+
+volumes:
+  cloudcmd-data:
