@@ -235,6 +235,38 @@
       return h.indexOf('href="#/c/middleware?stack=redis"') !== -1 &&
         h.indexOf('id="cmd-list"') === -1 ? true : '缺 Redis 入口或直接展示了混合命令';
     });
+    t('分类与技术栈显示各自的命令掌握进度', function () {
+      var original = ST.isMastered;
+      ST.isMastered = function (id) { return id === 'lb-cd'; };
+      var overview, selected, reading;
+      try {
+        overview = V.viewCategory('linux-basic', {});
+        selected = V.viewCategory('linux-basic', { stack: 'navigation' });
+        reading = V.viewCategory('linux-basic', { stack: 'reading' });
+      } finally { ST.isMastered = original; }
+      var root = document.createElement('div');
+      root.innerHTML = overview;
+      var all = root.querySelector('.category-progress [role="progressbar"]');
+      var nav = root.querySelector('.stack-card[href="#/c/linux-basic?stack=navigation"]');
+      var other = root.querySelector('.stack-card[href="#/c/linux-basic?stack=reading"]');
+      var detail = document.createElement('div');
+      detail.innerHTML = selected;
+      var stack = detail.querySelector('.category-progress [role="progressbar"]');
+      var navTotal = detail.querySelectorAll('.cmd-card').length;
+      var readingDetail = document.createElement('div');
+      readingDetail.innerHTML = reading;
+      var readingTotal = readingDetail.querySelectorAll('.cmd-card').length;
+      var navLabel = nav && nav.querySelector('.stack-progress-label b');
+      var otherLabel = other && other.querySelector('.stack-progress-label b');
+      var navFill = nav && nav.querySelector('.stack-progress-bar i');
+      return all && all.getAttribute('aria-valuenow') === '1' &&
+        all.getAttribute('aria-valuemax') === String(window.CC_DATA['linux-basic'].length) &&
+        navLabel && navLabel.textContent.trim() === '1 / ' + navTotal &&
+        navFill && navFill.style.width === Math.round(100 / navTotal) + '%' &&
+        otherLabel && otherLabel.textContent.trim() === '0 / ' + readingTotal &&
+        stack && stack.getAttribute('aria-valuenow') === '1' && stack.getAttribute('aria-valuemax') === String(navTotal)
+        ? true : '分类或技术栈进度与已掌握命令不一致';
+    });
     t('Redis 技术栈只展示原始 Redis 命令，不复制数据', function () {
       var h = V.viewCategory('middleware', { stack: 'redis' });
       var ids = (h.match(/data-id="([^"]+)"/g) || []).map(function (x) { return x.slice(9, -1); });
@@ -742,7 +774,12 @@
         btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         var prog = document.getElementById('progress-box');
         var txt = prog ? prog.textContent : '';
-        return (ST.isMastered(id) && /\d+\s*\/\s*\d+/.test(txt)) ? true : '进度未更新: ' + txt;
+        var category = document.querySelector('.category-progress [role="progressbar"]');
+        var categoryText = document.querySelector('.category-progress-label strong');
+        return ST.isMastered(id) && /\d+\s*\/\s*\d+/.test(txt) && category &&
+          category.getAttribute('aria-valuenow') === '1' &&
+          categoryText && categoryText.textContent.trim() === '已掌握 1 / ' + list.length
+          ? true : '进度未更新: ' + txt + ' / ' + (categoryText ? categoryText.textContent : '无分类进度');
       });
 
       /* 「标记为已掌握」的外形曾经坏过：那个勾图标没有尺寸约束，

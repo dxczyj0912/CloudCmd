@@ -369,19 +369,29 @@ html[data-theme="dark"] .hero{background:radial-gradient(circle at 0 0,rgba(104,
 .cat-card.soon:hover{transform:none;border-color:var(--border);box-shadow:none}
 
 /* 分类 → 技术栈 → 命令 */
+.category-progress{max-width:520px;padding:11px 14px;margin:-4px 0 20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card)}
+.category-progress-label{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:12.5px;color:var(--text-dim)}
+.category-progress-label strong{color:var(--text);font-variant-numeric:tabular-nums}
+.category-progress-bar,.stack-progress-bar{display:block;height:6px;border-radius:999px;background:var(--bg-soft);overflow:hidden}
+.category-progress-bar i,.stack-progress-bar i{display:block;height:100%;border-radius:999px;background:var(--ok)}
 .stack-heading{font-size:15px;margin:2px 0 14px;color:var(--text)}
 .stack-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
 .stack-card{
-  display:flex;align-items:center;gap:11px;min-width:0;min-height:76px;padding:14px 15px;
+  display:flex;flex-direction:column;gap:8px;min-width:0;min-height:106px;padding:12px 14px;
   border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);
   color:var(--text);box-shadow:var(--shadow);transition:border-color .14s,transform .14s;
 }
 .stack-card:hover{border-color:var(--accent);transform:translateY(-2px);text-decoration:none}
 .stack-card:focus-visible,.stack-back:focus-visible,.stack-all:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stack-card-top{display:flex;align-items:center;gap:9px;min-width:0}
 .stack-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;background:var(--accent-soft);font-size:20px}
-.stack-name{font-size:14px;font-weight:650;min-width:0}
-.stack-count{font-size:11px;color:var(--text-faint);white-space:nowrap;margin-left:auto}
-.stack-arrow{color:var(--accent);font-size:17px}
+.stack-card-title{flex:1 1 auto;min-width:0}
+.stack-name{display:block;font-size:13.5px;font-weight:650;line-height:1.3;overflow-wrap:anywhere}
+.stack-count{display:block;margin-top:3px;font-size:11px;color:var(--text-faint)}
+.stack-arrow{flex:0 0 auto;color:var(--accent);font-size:17px}
+.stack-progress-label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-faint)}
+.stack-progress-label b{color:var(--text-dim);font-variant-numeric:tabular-nums}
+.stack-progress-bar{height:5px}
 .stack-all,.stack-back{display:inline-flex;align-items:center;min-height:40px;margin:14px 0 18px;font-size:13px;font-weight:600}
 .stack-back{margin:0 0 14px}
 
@@ -795,10 +805,8 @@ kbd{
       收藏星标原为 30×30、筛选按钮 31 高，在手机上按不准 */
 @media (max-width:760px){
   .stack-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px}
-  .stack-card{flex-wrap:wrap;gap:6px;min-height:84px;padding:12px}
+  .stack-card{gap:7px;min-height:108px;padding:12px}
   .stack-icon{flex-basis:32px;width:32px;height:32px;font-size:17px}
-  .stack-name{flex:1 1 calc(100% - 60px)}
-  .stack-count{margin-left:0}
   /* #search-input 是 ID 选择器，普通 input 规则压不过它，必须点名 */
   input,select,textarea,.search-input,#search-input{font-size:16px}
   /* 临时 Shell 面板里的终端输入框同理：12.5px 会让 iOS 聚焦时放大整页 */

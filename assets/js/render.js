@@ -261,6 +261,15 @@
     return '#/c/' + encodeURIComponent(catId) + '?stack=' + encodeURIComponent(stackId);
   }
 
+  function commandProgress(commands) {
+    var done = 0;
+    for (var i = 0; i < commands.length; i++) {
+      if (window.CC_STORE.isMastered(commands[i].id)) done++;
+    }
+    return { done: done, total: commands.length,
+      pct: commands.length ? Math.round(done / commands.length * 100) : 0 };
+  }
+
   function viewCategory(catId, opts) {
     opts = opts || {};
     var cat = window.CC_CATS_META.byId(catId);
@@ -303,16 +312,26 @@
         '共 ' + list.length + ' 条命令' : esc(cat.tagline || '') + '　·　' +
         (showAll ? '本类共 ' + list.length + ' 条命令' : '请选择技术栈查看命令')) + '</div></div>';
 
+    var pageProgress = commandProgress(stack ? list : nativeList);
+    html += '<div class="category-progress">' +
+      '<div class="category-progress-label"><span>命令掌握进度</span><strong>已掌握 ' +
+      pageProgress.done + ' / ' + pageProgress.total + '</strong></div>' +
+      '<span class="category-progress-bar" role="progressbar" aria-label="命令掌握进度" aria-valuemin="0" aria-valuenow="' +
+      pageProgress.done + '" aria-valuemax="' + pageProgress.total + '"><i style="width:' + pageProgress.pct + '%"></i></span>' +
+      '</div>';
+
     if (stacks.length && !stack && !showAll) {
       html += '<h2 class="stack-heading">按技术栈查命令</h2><div class="stack-grid">';
       for (var st = 0; st < stacks.length; st++) {
         var group = stacks[st];
-        var n = stackCommands(group).length;
+        var progress = commandProgress(stackCommands(group));
         html += '<a class="stack-card" href="' + stackHref(catId, group.id) + '">' +
-          '<span class="stack-icon" aria-hidden="true">' + group.icon + '</span>' +
-          '<span class="stack-name">' + esc(group.name) + '</span>' +
-          '<span class="stack-count">' + n + ' 条命令</span>' +
-          '<span class="stack-arrow" aria-hidden="true">→</span></a>';
+          '<span class="stack-card-top"><span class="stack-icon" aria-hidden="true">' + group.icon + '</span>' +
+          '<span class="stack-card-title"><span class="stack-name">' + esc(group.name) + '</span>' +
+          '<span class="stack-count">' + progress.total + ' 条命令</span></span>' +
+          '<span class="stack-arrow" aria-hidden="true">→</span></span>' +
+          '<span class="stack-progress-label">已掌握 <b>' + progress.done + ' / ' + progress.total + '</b></span>' +
+          '<span class="stack-progress-bar" aria-hidden="true"><i style="width:' + progress.pct + '%"></i></span></a>';
       }
       html += '</div><a class="stack-all" href="' + stackHref(catId, 'all') +
         '">查看本类全部 ' + nativeList.length + ' 条命令 →</a></div>';

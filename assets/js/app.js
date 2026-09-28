@@ -244,6 +244,7 @@
         if (card) card.classList.toggle('mastered', mon);
         toast(mon ? '已标记为掌握' : '已取消标记');
         refreshProgress();
+        refreshCategoryProgress();
         applyFilter();
         return;
       }
@@ -391,6 +392,19 @@
   function refreshProgress() {
     var box = document.getElementById('progress-box');
     if (box) box.innerHTML = window.CC_VIEW.renderProgress();
+  }
+
+  function refreshCategoryProgress() {
+    var bar = document.querySelector('.category-progress [role="progressbar"]');
+    var cards = document.querySelectorAll('#cmd-list .cmd-card');
+    if (!bar || !cards.length) return;
+    var done = 0;
+    for (var i = 0; i < cards.length; i++) if (cards[i].classList.contains('mastered')) done++;
+    var label = document.querySelector('.category-progress-label strong');
+    if (label) label.textContent = '已掌握 ' + done + ' / ' + cards.length;
+    bar.setAttribute('aria-valuenow', String(done));
+    var fill = bar.querySelector('i');
+    if (fill) fill.style.width = Math.round(done / cards.length * 100) + '%';
   }
 
   function refreshSidebarCounts() {
