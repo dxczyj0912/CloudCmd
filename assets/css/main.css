@@ -368,6 +368,23 @@ html[data-theme="dark"] .hero{background:radial-gradient(circle at 0 0,rgba(104,
 .cat-card.soon{opacity:.6}
 .cat-card.soon:hover{transform:none;border-color:var(--border);box-shadow:none}
 
+/* 分类 → 技术栈 → 命令 */
+.stack-heading{font-size:15px;margin:2px 0 14px;color:var(--text)}
+.stack-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.stack-card{
+  display:flex;align-items:center;gap:11px;min-width:0;min-height:76px;padding:14px 15px;
+  border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);
+  color:var(--text);box-shadow:var(--shadow);transition:border-color .14s,transform .14s;
+}
+.stack-card:hover{border-color:var(--accent);transform:translateY(-2px);text-decoration:none}
+.stack-card:focus-visible,.stack-back:focus-visible,.stack-all:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stack-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:10px;background:var(--accent-soft);font-size:20px}
+.stack-name{font-size:14px;font-weight:650;min-width:0}
+.stack-count{font-size:11px;color:var(--text-faint);white-space:nowrap;margin-left:auto}
+.stack-arrow{color:var(--accent);font-size:17px}
+.stack-all,.stack-back{display:inline-flex;align-items:center;min-height:40px;margin:14px 0 18px;font-size:13px;font-weight:600}
+.stack-back{margin:0 0 14px}
+
 /* ---------- 8. 工具条（筛选） ---------- */
 .toolbar{
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -777,6 +794,11 @@ kbd{
    2. 手指的触摸目标要比鼠标大：iOS HIG 建议 44pt、Material 建议 48dp。
       收藏星标原为 30×30、筛选按钮 31 高，在手机上按不准 */
 @media (max-width:760px){
+  .stack-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px}
+  .stack-card{flex-wrap:wrap;gap:6px;min-height:84px;padding:12px}
+  .stack-icon{flex-basis:32px;width:32px;height:32px;font-size:17px}
+  .stack-name{flex:1 1 calc(100% - 60px)}
+  .stack-count{margin-left:0}
   /* #search-input 是 ID 选择器，普通 input 规则压不过它，必须点名 */
   input,select,textarea,.search-input,#search-input{font-size:16px}
   /* 临时 Shell 面板里的终端输入框同理：12.5px 会让 iOS 聚焦时放大整页 */

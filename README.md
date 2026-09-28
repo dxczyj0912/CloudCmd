@@ -36,7 +36,7 @@ docker compose up -d --build
 
 配置 GitHub Actions Secrets 后，推送 `master` 会先检查再自动部署网页和同步服务；需要新 Android 安装包时，在 Actions 中单独构建并发布签名 APK。
 
-对外版本从 `0.0.1` 开始；当前为 `0.0.2`，安装包命名为 `CloudCmd-0.0.2.apk`。Android 内部 `versionCode` 为 10，保证旧手机可以覆盖安装。连接同步服务后，App 会提示下载已发布的新安装包。
+对外版本从 `0.0.1` 开始；当前为 `0.0.3`，安装包命名为 `CloudCmd-0.0.3.apk`。Android 内部 `versionCode` 为 11，保证旧手机可以覆盖安装。连接同步服务后，App 会提示下载已发布的新安装包。
 `0.0.2` 修复了跨设备同步后取消收藏会被旧记录恢复的问题；已掌握、阶段和课程进度的取消或清空操作也会作为同步记录保留。
 
 ### 方式四：构建 Android 版
@@ -48,7 +48,7 @@ docker compose up -d --build
 | 离线 | 整个网站打包在 APK 里，飞行模式也能用 |
 | 权限 | `INTERNET` 仅用于用户主动配置同步服务；不配置时站内仍可完全离线 |
 | 系统要求 | minSdk 24（Android 7.0+）｜ targetSdk 34 |
-| 重建 | `node tools/build-apk.js --no-sign --version-code=10 --version-name=0.0.2`（工具链见下方） |
+| 重建 | `node tools/build-apk.js --no-sign --version-code=11 --version-name=0.0.3`（工具链见下方） |
 | 验证 | `node tools/apk-check.js` —— 逐字节比对包内文件，并在 375×667 下真渲染一遍 |
 
 > **APK 只是新增一个分发形态，没有动这个项目的立身之本。**
@@ -196,7 +196,7 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 
 ## 内容规模
 
-**Phase 1 与 Phase 2 全部交付：18 个分类、830 条命令**，全部离线可用。
+**18 个分类、863 条命令**，全部离线可用。每个分类可先选技术栈，再查看对应命令；也能查看本类全部命令。
 
 | 分类 | 条数 | 说明 |
 | --- | --- | --- |
@@ -204,7 +204,7 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 | ✂️ 文本处理三剑客 | 42 | grep / sed / awk / jq，日志分析实战组合 |
 | 👤 用户权限与系统管理 | 56 | 用户组、权限位、systemd、cron |
 | 🌐 网络与排障 | 56 | ip / ss / curl / tcpdump / ssh 端口转发 / 防火墙 |
-| 💾 磁盘与存储 | 46 | 分区、LVM 扩容、挂载、容量与 IO 排查、华为云 EVS 挂盘流程 |
+| 💾 磁盘与存储 | 65 | 分区、LVM、挂载、Ceph 集群/RBD/CephFS/RGW、容量与 IO 排查 |
 | 📜 Shell 脚本编程 | 36 | 变量与引号、流程控制、重定向管道、严格模式与健壮性、实战模板 |
 | 🐳 Docker 容器 | 56 | 镜像、容器、网络、数据卷、Compose、华为云 SWR |
 | ☸️ Kubernetes | 80 | 资源对象、调度与 RBAC、kubeadm/etcdctl 运维、四条排错链路、华为云 CCE |
@@ -212,10 +212,10 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 | 🧩 中间件 | 30 | Nginx / Tomcat / HAProxy / Keepalived / ETCD |
 | 🗄️ 数据库与缓存 | 56 | MySQL 备份与慢查询、Redis 大 key、Kafka、MongoDB、RabbitMQ |
 | 📊 监控与日志 | 42 | 系统观测四件套、日志体系、Prometheus/Grafana、JVM |
-| ☁️ **华为云 CLI** | **71** | KooCLI `hcloud`、`obsutil`、ECS/VPC/EVS/ELB/RDS/IAM/CES/CCE、AWS/Azure 对照 |
+| ☁️ **公有云 CLI** | **71** | KooCLI `hcloud`、`obsutil`、ECS/VPC/EVS/ELB/RDS/IAM/CES/CCE、AWS/Azure CLI |
 | 🏗️ Terraform / Ansible | 45 | `init/plan/apply`、状态管理与远端后端、Ansible 模块与 Playbook |
 | 🔁 CI/CD 与 Git | 41 | Git 常用流程、Jenkinsfile、`.gitlab-ci.yml` |
-| 📦 虚拟化与镜像 | 25 | KVM/`virsh`、`qemu-img`、cloud-init、镜像制作 |
+| 📦 虚拟化与私有云 | 39 | KVM/`virsh`、`qemu-img`、cloud-init、OpenStack 的 Nova/Neutron/Cinder/Swift |
 | 🔐 安全与合规 | 38 | openssl 证书、SELinux、审计与入侵排查、镜像扫描、AK/SK 泄露应急 |
 | ⚡ 性能压测与调优 | 25 | ab/wrk/sysbench/fio、内核参数、JVM 线程栈分析 |
 
@@ -226,11 +226,11 @@ index.html#/practice/awk-topip  →  academy-lab.html#/lab/cc-awk-topip
 ```bash
 node tools/validate-data.js     # 数据契约：字段完整性、id 唯一性、裸占位符、related 断链、summary 长度、路线图覆盖
 node tools/shell-check.js       # 模拟终端行为（含全部课程的答案、备用答案、逐步命令、静默错误回归）
-node tools/render-check.js      # 无头 Chrome 里跑 132 项真实 DOM 冒烟测试（含每日一练的翻面/打分/送终端/进度备份）
+node tools/render-check.js      # 无头 Chrome 验证分类、技术栈、命令详情与交互
 node tools/lab-check.js         # 练习平台：133 项冒烟测试（真 shell / 讲义 / 步骤打卡 / 路由 / 手机竖屏与横屏）
 node tools/card-check.js        # 每日一练卡片：398 张，18 分类全覆盖；289 张有 run 且都在模拟器里跑通
 node tools/coverage-report.js   # 生成命令/课程/卡片覆盖率报告，列出仍需补课的命令
-node tools/learning-chain-inventory.js # 生成 830 条命令的完整教/练/实战清单与 CSV
+node tools/learning-chain-inventory.js # 生成 863 条命令的完整教/练/实战清单与 CSV
 node tools/progress-judge-check.js # 统一进度迁移与严格判题契约
 node tools/lesson-assertion-check.js # 逐课验证步骤输出和文件状态，不以模拟提示文字判通过
 node tools/real-lab-check.js --manifest=docs/真实环境验收模板.json # 只校验证据清单，不执行真实命令
@@ -246,7 +246,7 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 > 才能出练习课。目前 338 个命令名的覆盖对照表在 `docs/内容规范.md` §5.3。
 
 学习链路的逐条盘点见 [学习链路全量清单](docs/学习链路全量清单.md)；
-[CSV 明细](docs/学习链路命令明细.csv)包含全部 830 条命令的课程、卡片和故障剧本关联。
+[CSV 明细](docs/学习链路命令明细.csv)包含全部 863 条命令的课程、卡片和故障剧本关联。
 哪些缺口值得补、哪些应暂缓或避免机械自动化，见 [学习链路补强取舍](docs/学习链路补强取舍.md)（含逐条 CSV）。
 模拟器之外的网络、权限、云资源和数据恢复验收见 [真实环境验收](docs/真实环境验收.md)。
 
@@ -258,7 +258,7 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 云计算-DS/
 ├─ index.html                 主站唯一页面（SPA 外壳，双击即可打开）
 ├─ academy-lab.html           实时练习平台（左终端 + 右步骤讲义，独立页面）
-├─ CloudCmd-0.0.2.apk         当前正式签名 Android 安装包（不提交到 Git）
+├─ CloudCmd-0.0.3.apk         当前正式签名 Android 安装包（不提交到 Git）
 ├─ backup/                    旧版本 APK 本地归档（不提交到 Git）
 ├─ android/                    Android 外壳工程（WebView + 图标资源，不含站点内容）
 │  ├─ AndroidManifest.xml      可选 INTERNET + adjustResize + configChanges
@@ -286,7 +286,7 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 │  ├─ linux-text.js           分类 02  文本处理三剑客          42 条
 │  ├─ linux-user.js           分类 03  用户权限与系统管理      56 条
 │  ├─ linux-net.js            分类 04  网络与排障              56 条
-│  ├─ linux-storage.js        分类 05  磁盘与存储              46 条
+│  ├─ linux-storage.js        分类 05  磁盘与存储              65 条（含 Ceph）
 │  ├─ shell.js                分类 06  Shell 脚本编程          35 条
 │  ├─ docker.js               分类 07  Docker 容器             56 条
 │  ├─ kubernetes.js           分类 08  Kubernetes              80 条
@@ -294,10 +294,11 @@ node tools/link-check.js        # 658 个官方文档链接体检（约 5 分钟
 │  ├─ middleware.js           分类 10  中间件                  30 条
 │  ├─ db-cache.js             分类 11  数据库与缓存            55 条
 │  ├─ monitor.js              分类 12  监控与日志              40 条
-│  ├─ cloud-cli.js            分类 13  华为云 CLI              71 条
+│  ├─ cloud-cli.js            分类 13  公有云 CLI              71 条
 │  ├─ iac.js                  分类 14  Terraform / Ansible     45 条
 │  ├─ cicd.js                 分类 15  CI/CD 与 Git            40 条
-│  ├─ kvm.js                  分类 16  虚拟化与镜像            25 条
+│  ├─ kvm.js                  分类 16  虚拟化与私有云          39 条（含 OpenStack）
+│  ├─ command-stacks.js       全部 18 类的技术栈分组索引
 │  ├─ security.js             分类 17  安全与合规              35 条
 │  ├─ perf.js                 分类 18  性能压测与调优          25 条
 │  ├─ cheat.js                故障速查（37 条链路）

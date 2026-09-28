@@ -9,7 +9,7 @@
 
     /* ================= A. virsh 虚拟机管理 ================= */
 
-    /* ---------- 1 / 25 ---------- */
+    /* ---------- 1 / 39 ---------- */
     {
       id: 'vm-virsh-list',
       name: 'virsh list',
@@ -45,7 +45,7 @@
       tags: ['KVM', '虚拟机', '状态查看', 'libvirt']
     },
 
-    /* ---------- 2 / 25 ---------- */
+    /* ---------- 2 / 39 ---------- */
     {
       id: 'vm-virsh-start',
       name: 'virsh start / shutdown',
@@ -83,7 +83,7 @@
       tags: ['KVM', '启动', '优雅关机', 'libvirt']
     },
 
-    /* ---------- 3 / 25 ---------- */
+    /* ---------- 3 / 39 ---------- */
     {
       id: 'vm-virsh-destroy',
       name: 'virsh destroy',
@@ -119,7 +119,7 @@
       tags: ['KVM', '强制关机', '高危操作', '数据风险']
     },
 
-    /* ---------- 4 / 25 ---------- */
+    /* ---------- 4 / 39 ---------- */
     {
       id: 'vm-virsh-console',
       name: 'virsh console',
@@ -155,7 +155,7 @@
       tags: ['KVM', '串口控制台', '救援', 'libvirt']
     },
 
-    /* ---------- 5 / 25 ---------- */
+    /* ---------- 5 / 39 ---------- */
     {
       id: 'vm-virsh-edit',
       name: 'virsh edit',
@@ -193,7 +193,7 @@
       tags: ['KVM', 'XML配置', '虚机定义', 'libvirt']
     },
 
-    /* ---------- 6 / 25 ---------- */
+    /* ---------- 6 / 39 ---------- */
     {
       id: 'vm-virsh-dominfo',
       name: 'virsh dominfo / domblklist',
@@ -231,7 +231,7 @@
       tags: ['KVM', '信息查询', '磁盘', '网卡']
     },
 
-    /* ---------- 7 / 25 ---------- */
+    /* ---------- 7 / 39 ---------- */
     {
       id: 'vm-virsh-snapshot',
       name: 'virsh snapshot',
@@ -273,7 +273,7 @@
       tags: ['KVM', '快照', '回滚', '数据保护']
     },
 
-    /* ---------- 8 / 25 ---------- */
+    /* ---------- 8 / 39 ---------- */
     {
       id: 'vm-virsh-network',
       name: 'virsh net-list / net-start',
@@ -313,7 +313,7 @@
       tags: ['KVM', '虚拟网络', '网桥', 'NAT']
     },
 
-    /* ---------- 9 / 25 ---------- */
+    /* ---------- 9 / 39 ---------- */
     {
       id: 'vm-virsh-pool',
       name: 'virsh pool-list / pool-define-as',
@@ -354,7 +354,7 @@
       tags: ['KVM', '存储池', '磁盘', 'libvirt']
     },
 
-    /* ---------- 10 / 25 ---------- */
+    /* ---------- 10 / 39 ---------- */
     {
       id: 'vm-virsh-autostart',
       name: 'virsh autostart',
@@ -394,7 +394,7 @@
 
     /* ================= B. 镜像与磁盘 ================= */
 
-    /* ---------- 11 / 25 ---------- */
+    /* ---------- 11 / 39 ---------- */
     {
       id: 'vm-img-create',
       name: 'qemu-img create',
@@ -432,7 +432,7 @@
       tags: ['镜像', 'qcow2', 'raw', '预分配']
     },
 
-    /* ---------- 12 / 25 ---------- */
+    /* ---------- 12 / 39 ---------- */
     {
       id: 'vm-img-info',
       name: 'qemu-img info',
@@ -469,7 +469,7 @@
       tags: ['镜像', '格式识别', '容量', '差分盘']
     },
 
-    /* ---------- 13 / 25 ---------- */
+    /* ---------- 13 / 39 ---------- */
     {
       id: 'vm-img-convert',
       name: 'qemu-img convert',
@@ -510,7 +510,7 @@
       tags: ['镜像转换', '格式', '压缩', '迁移']
     },
 
-    /* ---------- 14 / 25 ---------- */
+    /* ---------- 14 / 39 ---------- */
     {
       id: 'vm-img-resize',
       name: 'qemu-img resize',
@@ -551,7 +551,7 @@
       tags: ['扩容', '缩容', '文件系统', '高危操作']
     },
 
-    /* ---------- 15 / 25 ---------- */
+    /* ---------- 15 / 39 ---------- */
     {
       id: 'vm-img-snapshot',
       name: 'qemu-img snapshot',
@@ -590,7 +590,7 @@
       tags: ['镜像快照', 'qcow2', '回滚', '数据保护']
     },
 
-    /* ---------- 16 / 25 ---------- */
+    /* ---------- 16 / 39 ---------- */
     {
       id: 'vm-img-virt-install',
       name: 'virt-install',
@@ -630,7 +630,7 @@
       tags: ['创建虚机', '无人值守', 'virtio', '自动化']
     },
 
-    /* ---------- 17 / 25 ---------- */
+    /* ---------- 17 / 39 ---------- */
     {
       id: 'vm-img-virt-customize',
       name: 'virt-customize',
@@ -672,7 +672,7 @@
       tags: ['镜像定制', 'SSH注入', '离线修改', 'libguestfs']
     },
 
-    /* ---------- 18 / 25 ---------- */
+    /* ---------- 18 / 39 ---------- */
     {
       id: 'vm-img-guestfish',
       name: 'guestfish / libguestfs',
@@ -714,7 +714,7 @@
 
     /* ================= C. 云镜像与初始化 ================= */
 
-    /* ---------- 19 / 25 ---------- */
+    /* ---------- 19 / 39 ---------- */
     {
       id: 'vm-cloud-cloud-init',
       name: 'cloud-init 调试',
@@ -756,7 +756,7 @@
       tags: ['cloud-init', '云主机初始化', '日志排障', 'YAML']
     },
 
-    /* ---------- 20 / 25 ---------- */
+    /* ---------- 20 / 39 ---------- */
     {
       id: 'vm-cloud-user-data',
       name: 'user-data / meta-data 写法',
@@ -798,7 +798,7 @@
       tags: ['cloud-config', '初始化', 'YAML', '自动化']
     },
 
-    /* ---------- 21 / 25 ---------- */
+    /* ---------- 21 / 39 ---------- */
     {
       id: 'vm-cloud-localds',
       name: 'cloud-localds',
@@ -836,7 +836,7 @@
       tags: ['NoCloud', 'seed镜像', 'cloud-init', '本地KVM']
     },
 
-    /* ---------- 22 / 25 ---------- */
+    /* ---------- 22 / 39 ---------- */
     {
       id: 'vm-cloud-image-flow',
       name: '云镜像制作完整流程（组合）',
@@ -881,7 +881,7 @@
 
     /* ================= D. 容器与虚拟机工具 ================= */
 
-    /* ---------- 23 / 25 ---------- */
+    /* ---------- 23 / 39 ---------- */
     {
       id: 'vm-misc-packer',
       name: 'packer',
@@ -922,7 +922,7 @@
       tags: ['镜像构建', '自动化', 'IaC', 'CI']
     },
 
-    /* ---------- 24 / 25 ---------- */
+    /* ---------- 24 / 39 ---------- */
     {
       id: 'vm-misc-vagrant',
       name: 'vagrant',
@@ -965,7 +965,7 @@
       tags: ['开发环境', 'Vagrantfile', '虚拟化', '快照']
     },
 
-    /* ---------- 25 / 25 ---------- */
+    /* ---------- 25 / 39 ---------- */
     {
       id: 'vm-misc-govc',
       name: 'govc',
@@ -1005,6 +1005,184 @@
       related: ['vm-virsh-dominfo', 'vm-virsh-start', 'vm-virsh-destroy', 'sec-huawei-iam'],
       docs: 'https://github.com/vmware/govmomi',
       tags: ['VMware', 'vSphere', '命令行', '批量运维']
+    },
+  );
+})();
+
+/* OpenStack 私有云：先读清资源与作用域，再在隔离项目做受控变更。 */
+(function () {
+  'use strict';
+  var catId = 'kvm';
+  window.CC_DATA[catId] = window.CC_DATA[catId] || [];
+  window.CC_DATA[catId].push(
+    /* ---------- 26 / 39 ---------- */
+    {
+      id: 'os-token-issue',
+      name: 'openstack token issue',
+      level: 1,
+      syntax: 'openstack token issue', summary: '验证当前 OpenStack 凭据和项目作用域，排查认证失败的第一步。',
+      desc: '先安全加载项目提供的 openrc 或 clouds.yaml，再检查 token 的 project、user 与有效期；能拿到 token 不代表有目标资源的操作权限。',
+      examples: [{ cmd: 'openstack token issue', desc: '确认身份服务可用且当前凭据有效' }],
+      notes: ['不要把 token、OS_PASSWORD 或 openrc 内容贴到工单和公开终端记录里。'],
+      related: ['os-service-list', 'os-server-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/token.html',
+      tags: ['OpenStack', 'Keystone', '认证']
+    },
+    /* ---------- 27 / 39 ---------- */
+    {
+      id: 'os-service-list',
+      name: 'openstack service list',
+      level: 2,
+      syntax: 'openstack service list', summary: '核对 Keystone 服务目录，确认计算、网络、存储服务已注册。',
+      desc: 'service list 显示服务类型；endpoint list 再看 public/internal/admin URL 与 Region。注册存在不代表 API 健康，必要时继续做对应服务的只读请求。',
+      examples: [{ cmd: 'openstack service list', desc: '查看云平台登记的服务' }, { cmd: 'openstack endpoint list', desc: '查看各服务端点和区域' }],
+      notes: ['先确认当前 cloud、region 和项目，避免查到另一个环境的服务目录。'],
+      related: ['os-token-issue', 'os-server-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/service.html',
+      tags: ['OpenStack', 'Keystone', '服务目录']
+    },
+    /* ---------- 28 / 39 ---------- */
+    {
+      id: 'os-server-list',
+      name: 'openstack server list',
+      level: 1,
+      syntax: 'openstack server list [--long] [--project <PROJECT>]', summary: '列出当前项目的虚机及状态，定位实例是否存在和运行在哪个网络。',
+      desc: '默认作用域是当前项目；管理员跨项目查询需明确权限和参数。状态 ACTIVE 不等于应用可用，下一步核对地址、控制台日志与业务探针。',
+      examples: [{ cmd: 'openstack server list --long', desc: '显示当前项目实例的详细列' }],
+      notes: ['实例列表为空先看 token 的 project，不要立刻判定虚机被删除。'],
+      related: ['os-server-show', 'os-token-issue', 'os-network-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/server.html',
+      tags: ['OpenStack', 'Nova', '虚机']
+    },
+    /* ---------- 29 / 39 ---------- */
+    {
+      id: 'os-server-show',
+      name: 'openstack server show',
+      level: 2,
+      syntax: 'openstack server show <SERVER>', summary: '查看虚机的镜像、规格、地址、宿主机与故障信息。',
+      desc: '重点看 status、fault、addresses、image、flavor；管理员还可看到宿主机信息。若实例启动失败，结合 console log 和 Nova 日志定位。',
+      examples: [{ cmd: 'openstack server show web01', desc: '查看 web01 实例的详情' }],
+      notes: ['不同角色可见字段不同；fault 字段为空不能证明应用完全正常。'],
+      related: ['os-server-list', 'os-console-log'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/server.html',
+      tags: ['OpenStack', 'Nova', '排障']
+    },
+    /* ---------- 30 / 39 ---------- */
+    {
+      id: 'os-console-log',
+      name: 'openstack console log show',
+      level: 2,
+      syntax: 'openstack console log show <SERVER>', summary: '读取实例串口日志，定位启动失败、cloud-init 或系统盘问题。',
+      desc: '在 SSH 不通时仍可从云平台读取启动输出；重点看内核报错、cloud-init 失败和登录服务状态。日志缺失可能与镜像串口配置有关。',
+      examples: [{ cmd: 'openstack console log show web01', desc: '查看 web01 的启动日志' }],
+      notes: ['控制台日志可能包含应用输出和临时凭据，分享前应脱敏。'],
+      related: ['os-server-show', 'os-server-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/console-log.html',
+      tags: ['OpenStack', 'Nova', '启动日志']
+    },
+    /* ---------- 31 / 39 ---------- */
+    {
+      id: 'os-image-list',
+      name: 'openstack image list',
+      level: 1,
+      syntax: 'openstack image list [--long]', summary: '查看 Glance 镜像清单及可见性，准备创建实例或排查镜像拉取。',
+      desc: '镜像名称可重复，自动化应使用 ID。创建实例前确认镜像状态 active、架构与启动方式匹配目标规格。',
+      examples: [{ cmd: 'openstack image list --long', desc: '列出当前项目可见镜像' }],
+      notes: ['共享镜像是否可见取决于项目授权；列表为空不一定是 Glance 故障。'],
+      related: ['os-server-create', 'os-flavor-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/image.html',
+      tags: ['OpenStack', 'Glance', '镜像']
+    },
+    /* ---------- 32 / 39 ---------- */
+    {
+      id: 'os-flavor-list',
+      name: 'openstack flavor list',
+      level: 1,
+      syntax: 'openstack flavor list [--long]', summary: '查看虚机规格的 vCPU、内存、磁盘配额，核对部署要求。',
+      desc: '规格可见性可能受项目限制；创建实例前还需确认目标可用区的资源容量和镜像最小磁盘要求。',
+      examples: [{ cmd: 'openstack flavor list --long', desc: '列出可用规格和资源参数' }],
+      notes: ['规格列表存在不代表当前 hypervisor 一定有足够资源完成调度。'],
+      related: ['os-server-create', 'os-image-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/flavor.html',
+      tags: ['OpenStack', 'Nova', '规格']
+    },
+    /* ---------- 33 / 39 ---------- */
+    {
+      id: 'os-network-list',
+      name: 'openstack network list',
+      level: 1,
+      syntax: 'openstack network list [--long]', summary: '列出 Neutron 网络，确认实例连接的网络与子网是否正确。',
+      desc: '网络名可能重复，部署时优先使用 ID。排查实例无法通信，应继续核对端口、子网、安全组和路由。',
+      examples: [{ cmd: 'openstack network list --long', desc: '查看当前项目可用网络' }, { cmd: 'openstack subnet list', desc: '对照网络下的子网' }],
+      notes: ['跨项目共享网络的可见性取决于策略；不要只凭地址段判断网络归属。'],
+      related: ['os-server-list', 'os-security-group-rule-list', 'os-floating-ip-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/network.html',
+      tags: ['OpenStack', 'Neutron', '网络']
+    },
+    /* ---------- 34 / 39 ---------- */
+    {
+      id: 'os-security-group-rule-list',
+      name: 'openstack security group rule list',
+      level: 2,
+      syntax: 'openstack security group rule list <GROUP>', summary: '检查安全组规则的方向、协议、端口和来源，定位实例网络不通。',
+      desc: '同时核对规则是否挂在实例端口上，以及系统内防火墙、服务监听和路由；开放规则不保证应用已在监听。',
+      examples: [{ cmd: 'openstack security group rule list web-sg', desc: '查看 web-sg 的入站和出站规则' }],
+      notes: ['生产不要为了排障直接放开 0.0.0.0/0 的所有端口。'],
+      related: ['os-network-list', 'os-floating-ip-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/security-group-rule.html',
+      tags: ['OpenStack', 'Neutron', '安全组']
+    },
+    /* ---------- 35 / 39 ---------- */
+    {
+      id: 'os-floating-ip-list',
+      name: 'openstack floating ip list',
+      level: 2,
+      syntax: 'openstack floating ip list', summary: '检查公网浮动 IP 的分配与绑定，确认实例对外访问路径。',
+      desc: '对照 Floating IP、Fixed IP、Port 和状态；若已绑定但外部仍不通，继续查路由器网关、安全组与虚机内监听。',
+      examples: [{ cmd: 'openstack floating ip list', desc: '查看当前项目的公网地址及绑定' }],
+      notes: ['公网 IP 可能产生费用，闲置地址应按云平台策略回收。'],
+      related: ['os-network-list', 'os-security-group-rule-list'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/floating-ip.html',
+      tags: ['OpenStack', 'Neutron', '公网']
+    },
+    /* ---------- 36 / 39 ---------- */
+    {
+      id: 'os-volume-list',
+      name: 'openstack volume list',
+      level: 1,
+      syntax: 'openstack volume list [--long]', summary: '列出 Cinder 卷的大小和状态，确认数据盘是否创建并挂载。',
+      desc: 'available 表示可用未挂载，in-use 表示已连接实例；卷状态不等于文件系统已挂载，需在虚机内核对 lsblk/findmnt。',
+      examples: [{ cmd: 'openstack volume list --long', desc: '查看项目中的数据卷和状态' }],
+      notes: ['删除卷前核对快照、备份、挂载关系和业务归属。'],
+      related: ['os-volume-show', 'os-server-show'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/volume.html',
+      tags: ['OpenStack', 'Cinder', '块存储']
+    },
+    /* ---------- 37 / 39 ---------- */
+    {
+      id: 'os-volume-show',
+      name: 'openstack volume show',
+      level: 2,
+      syntax: 'openstack volume show <VOLUME>', summary: '查看 Cinder 卷的后端类型、挂载目标和异常状态。',
+      desc: '重点看 status、attachments、volume_type、bootable；若状态 error，结合 Cinder 后端和 Ceph RBD 健康继续定位。',
+      examples: [{ cmd: 'openstack volume show data01', desc: '查看 data01 卷详情及挂载信息' }],
+      notes: ['不要对 in-use 的业务卷直接执行 force-delete 或 reset-state。'],
+      related: ['os-volume-list', 'ceph-rbd-info', 'ceph-status'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/volume.html',
+      tags: ['OpenStack', 'Cinder', '排障']
+    },
+    /* ---------- 38 / 39 ---------- */
+    {
+      id: 'os-server-create',
+      name: 'openstack server create',
+      level: 3,
+      syntax: 'openstack server create --image <IMAGE> --flavor <FLAVOR> --network <NETWORK> <SERVER>',
+      summary: '在实验项目按镜像、规格和网络创建虚机，并验证调度与启动结果。',
+      desc: '创建前先列出 image/flavor/network 并确认项目配额；创建命令返回后还需轮询实例状态、检查控制台日志与业务连通性。',
+      examples: [{ cmd: 'openstack server create --image lab-ubuntu --flavor m1.small --network lab-net lab-web01', desc: '仅在隔离实验项目创建实例' }],
+      notes: ['创建会消耗配额和计算资源；生产执行前核对项目、镜像来源、安全组和回收计划。'],
+      related: ['os-image-list', 'os-flavor-list', 'os-network-list', 'os-server-show'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/server.html',
+      tags: ['OpenStack', 'Nova', '创建']
+    },
+    /* ---------- 39 / 39 ---------- */
+    {
+      id: 'os-object-list',
+      name: 'openstack container list',
+      level: 2,
+      syntax: 'openstack container list', summary: '列出 Swift 对象存储容器，确认项目中的桶式资源是否存在。',
+      desc: 'Swift 的 container 是对象分组，别与 Docker 容器混淆；若云平台未部署 Swift，该命令可能不可用，需先查服务目录。',
+      examples: [{ cmd: 'openstack container list', desc: '查看当前项目的 Swift 容器' }],
+      notes: ['生产删除对象容器前应确认版本、保留策略与备份。'],
+      related: ['os-service-list', 'os-token-issue'], docs: 'https://docs.openstack.org/python-openstackclient/latest/cli/command-objects/container.html',
+      tags: ['OpenStack', 'Swift', '对象存储']
     }
   );
 })();

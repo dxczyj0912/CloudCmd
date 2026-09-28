@@ -1,12 +1,12 @@
 {
-  "commands": 830,
+  "commands": 863,
   "lessons": 188,
   "steps": 764,
   "hints": 764,
   "cards": 398,
   "taught": 302,
   "quizzed": 686,
-  "orphan": 103,
+  "orphan": 136,
   "orphanIds": [
     {
       "id": "lb-tac",
@@ -212,6 +212,101 @@
       "id": "ls9-blkdiscard",
       "cat": "linux-storage",
       "name": "blkdiscard"
+    },
+    {
+      "id": "ceph-status",
+      "cat": "linux-storage",
+      "name": "ceph -s"
+    },
+    {
+      "id": "ceph-health-detail",
+      "cat": "linux-storage",
+      "name": "ceph health detail"
+    },
+    {
+      "id": "ceph-osd-tree",
+      "cat": "linux-storage",
+      "name": "ceph osd tree"
+    },
+    {
+      "id": "ceph-osd-df",
+      "cat": "linux-storage",
+      "name": "ceph osd df tree"
+    },
+    {
+      "id": "ceph-pg-stat",
+      "cat": "linux-storage",
+      "name": "ceph pg stat"
+    },
+    {
+      "id": "ceph-pg-query",
+      "cat": "linux-storage",
+      "name": "ceph pg query"
+    },
+    {
+      "id": "ceph-df",
+      "cat": "linux-storage",
+      "name": "ceph df detail"
+    },
+    {
+      "id": "ceph-pool-ls",
+      "cat": "linux-storage",
+      "name": "ceph osd pool ls detail"
+    },
+    {
+      "id": "ceph-pool-get",
+      "cat": "linux-storage",
+      "name": "ceph osd pool get"
+    },
+    {
+      "id": "ceph-pool-create",
+      "cat": "linux-storage",
+      "name": "ceph osd pool create"
+    },
+    {
+      "id": "ceph-crush-rule",
+      "cat": "linux-storage",
+      "name": "ceph osd crush rule"
+    },
+    {
+      "id": "ceph-orch-ps",
+      "cat": "linux-storage",
+      "name": "ceph orch ps"
+    },
+    {
+      "id": "ceph-rbd-ls",
+      "cat": "linux-storage",
+      "name": "rbd ls"
+    },
+    {
+      "id": "ceph-rbd-info",
+      "cat": "linux-storage",
+      "name": "rbd info"
+    },
+    {
+      "id": "ceph-rbd-snap",
+      "cat": "linux-storage",
+      "name": "rbd snap ls"
+    },
+    {
+      "id": "ceph-fs-status",
+      "cat": "linux-storage",
+      "name": "ceph fs status"
+    },
+    {
+      "id": "ceph-fs-subvolume",
+      "cat": "linux-storage",
+      "name": "ceph fs subvolume ls"
+    },
+    {
+      "id": "ceph-rgw-bucket",
+      "cat": "linux-storage",
+      "name": "radosgw-admin bucket stats"
+    },
+    {
+      "id": "ceph-config-dump",
+      "cat": "linux-storage",
+      "name": "ceph config dump"
     },
     {
       "id": "sh-devnull-devtcp",
@@ -499,6 +594,76 @@
       "name": "govc"
     },
     {
+      "id": "os-token-issue",
+      "cat": "kvm",
+      "name": "openstack token issue"
+    },
+    {
+      "id": "os-service-list",
+      "cat": "kvm",
+      "name": "openstack service list"
+    },
+    {
+      "id": "os-server-list",
+      "cat": "kvm",
+      "name": "openstack server list"
+    },
+    {
+      "id": "os-server-show",
+      "cat": "kvm",
+      "name": "openstack server show"
+    },
+    {
+      "id": "os-console-log",
+      "cat": "kvm",
+      "name": "openstack console log show"
+    },
+    {
+      "id": "os-image-list",
+      "cat": "kvm",
+      "name": "openstack image list"
+    },
+    {
+      "id": "os-flavor-list",
+      "cat": "kvm",
+      "name": "openstack flavor list"
+    },
+    {
+      "id": "os-network-list",
+      "cat": "kvm",
+      "name": "openstack network list"
+    },
+    {
+      "id": "os-security-group-rule-list",
+      "cat": "kvm",
+      "name": "openstack security group rule list"
+    },
+    {
+      "id": "os-floating-ip-list",
+      "cat": "kvm",
+      "name": "openstack floating ip list"
+    },
+    {
+      "id": "os-volume-list",
+      "cat": "kvm",
+      "name": "openstack volume list"
+    },
+    {
+      "id": "os-volume-show",
+      "cat": "kvm",
+      "name": "openstack volume show"
+    },
+    {
+      "id": "os-server-create",
+      "cat": "kvm",
+      "name": "openstack server create"
+    },
+    {
+      "id": "os-object-list",
+      "cat": "kvm",
+      "name": "openstack container list"
+    },
+    {
       "id": "sec-masscan",
       "cat": "security",
       "name": "masscan"
@@ -524,5 +689,5 @@
       "name": "setsebool"
     }
   ],
-  "generatedAt": "2026-09-26T13:57:30.485Z"
+  "generatedAt": "2026-09-28T07:23:39.511Z"
 }

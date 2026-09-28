@@ -31,7 +31,7 @@
     },
     {
       id: 'linux-storage', index: 5, name: '磁盘与存储', icon: '💾',
-      tagline: '分区、LVM、挂载、容量排查、IO 观测',
+      tagline: '分区、LVM、Ceph、挂载、容量排查与 IO 观测',
       domain: '操作系统地基', stage: 2, status: 'ready', file: 'linux-storage.js'
     },
     {
@@ -60,7 +60,7 @@
     /* ---------------- 领域三：服务与数据 ---------------- */
     {
       id: 'middleware', index: 10, name: '中间件', icon: '🧩',
-      tagline: 'Nginx、Tomcat、HAProxy、Keepalived、ETCD',
+      tagline: 'Nginx、Tomcat、Redis、消息队列、HAProxy 与 etcd',
       domain: '服务与数据', stage: 3, status: 'ready', file: 'middleware.js'
     },
     {
@@ -76,8 +76,8 @@
 
     /* ---------------- 领域四：云平台与自动化 ---------------- */
     {
-      id: 'cloud-cli', index: 13, name: '华为云 CLI', icon: '☁️',
-      tagline: 'hcloud(KooCLI)、obsutil、CCE 实操命令',
+      id: 'cloud-cli', index: 13, name: '公有云 CLI', icon: '☁️',
+      tagline: '华为云 KooCLI/obsutil、AWS CLI 与 Azure CLI',
       domain: '云平台与自动化', stage: 6, status: 'ready', file: 'cloud-cli.js'
     },
     {
@@ -91,8 +91,8 @@
       domain: '云平台与自动化', stage: 6, status: 'ready', file: 'cicd.js'
     },
     {
-      id: 'kvm', index: 16, name: '虚拟化与镜像', icon: '📦',
-      tagline: 'KVM/virsh、qemu-img、cloud-init、Packer',
+      id: 'kvm', index: 16, name: '虚拟化与私有云', icon: '📦',
+      tagline: 'KVM/virsh、qemu-img、cloud-init、OpenStack',
       domain: '云平台与自动化', stage: 6, status: 'ready', file: 'kvm.js'
     },
 

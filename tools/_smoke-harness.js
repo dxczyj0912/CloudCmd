@@ -114,6 +114,11 @@
       var l = R.parse('#/c/docker/dk-run');
       return l.cmdId === 'dk-run' ? true : JSON.stringify(l);
     });
+    t('路由：技术栈深链保留 Redis 参数', function () {
+      var l = R.parse('#/c/middleware?stack=redis');
+      return l.name === 'category' && l.catId === 'middleware' && l.stack === 'redis'
+        ? true : JSON.stringify(l);
+    });
     t('路由：#/cmd/k8s-get', function () {
       var l = R.parse('#/cmd/k8s-get');
       return (l.name === 'command' && l.cmdId === 'k8s-get') ? true : JSON.stringify(l);
@@ -222,8 +227,69 @@
       return (/href="#\/practice"/.test(h) && /实时练习/.test(h)) ? true : '缺少练习入口';
     });
     t('分类页渲染命令卡片与工具条', function () {
-      var h = V.viewCategory('kubernetes', {});
+      var h = V.viewCategory('kubernetes', { stack: 'all' });
       return (/cmd-card/.test(h) && /data-lv="1"/.test(h) && /cmd-name/.test(h)) ? true : '结构缺失';
+    });
+    t('中间件先展示技术栈入口，Redis 可进入', function () {
+      var h = V.viewCategory('middleware', {});
+      return h.indexOf('href="#/c/middleware?stack=redis"') !== -1 &&
+        h.indexOf('id="cmd-list"') === -1 ? true : '缺 Redis 入口或直接展示了混合命令';
+    });
+    t('Redis 技术栈只展示原始 Redis 命令，不复制数据', function () {
+      var h = V.viewCategory('middleware', { stack: 'redis' });
+      var ids = (h.match(/data-id="([^"]+)"/g) || []).map(function (x) { return x.slice(9, -1); });
+      var expected = (window.CC_DATA['db-cache'] || []).filter(function (x) { return x.id.indexOf('db-redis-') === 0; });
+      return ids.length === expected.length && ids.every(function (id) { return id.indexOf('db-redis-') === 0; }) &&
+        new Set(ids).size === ids.length && window.CC_SEARCH.get(ids[0]).catId === 'db-cache'
+        ? true : 'Redis 卡片=' + ids.length + ' / 原始命令=' + expected.length;
+    });
+    t('本类全部命令与原分类条数一致', function () {
+      var h = V.viewCategory('middleware', { stack: 'all' });
+      var cards = (h.match(/class="cmd-card/g) || []).length;
+      return cards === window.CC_DATA.middleware.length ? true : '本类全部卡片=' + cards;
+    });
+    t('全部分类的技术栈完整覆盖原命令且无重复', function () {
+      var cats = window.CC_CATS_META.list.map(function (cat) { return cat.id; });
+      var missing = [];
+      cats.forEach(function (cat) {
+        var overview = V.viewCategory(cat, {});
+        var stackIds = [];
+        var re = new RegExp('href="#/c/' + cat + '\\?stack=([^"&]+)"', 'g');
+        var m;
+        while ((m = re.exec(overview))) if (m[1] !== 'all') stackIds.push(m[1]);
+        if (!stackIds.length) missing.push(cat + '/无技术栈入口');
+        var found = {};
+        stackIds.forEach(function (stack) {
+          var h = V.viewCategory(cat, { stack: stack });
+          var ids = h.match(/data-id="([^"]+)"/g) || [];
+          if (!ids.length) missing.push(cat + '/' + stack + '=空入口');
+          ids.forEach(function (item) {
+            var id = item.slice(9, -1);
+            if ((window.CC_DATA[cat] || []).some(function (cmd) { return cmd.id === id; })) {
+              found[id] = (found[id] || 0) + 1;
+            }
+          });
+        });
+        (window.CC_DATA[cat] || []).forEach(function (cmd) {
+          if (found[cmd.id] !== 1) missing.push(cat + '/' + cmd.id + '=' + (found[cmd.id] || 0));
+        });
+      });
+      return missing.length ? missing.slice(0, 8).join(', ') : true;
+    });
+    t('Ceph 与 OpenStack 内容有独立入口和真实命令', function () {
+      var storage = V.viewCategory('linux-storage', {});
+      var virt = V.viewCategory('kvm', {});
+      var ceph = V.viewCategory('linux-storage', { stack: 'ceph' });
+      var os = V.viewCategory('kvm', { stack: 'openstack' });
+      return storage.indexOf('?stack=ceph') !== -1 && virt.indexOf('?stack=openstack') !== -1 &&
+        (ceph.match(/class="cmd-card/g) || []).length >= 15 &&
+        (os.match(/class="cmd-card/g) || []).length >= 10 ? true : '入口或命令内容缺失';
+    });
+    t('Redis 独立详情返回 Redis 列表且翻页不跨技术栈', function () {
+      var list = (window.CC_DATA['db-cache'] || []).filter(function (cmd) { return cmd.id.indexOf('db-redis-') === 0; });
+      var h = V.viewCommand(list[list.length - 1].id);
+      return h.indexOf('href="#/c/db-cache?stack=redis"') !== -1 &&
+        h.indexOf('href="#/cmd/db-pg-') === -1 ? true : '返回链接或翻页越过 Redis 边界';
     });
     t('分类页展开指定命令（openId）', function () {
       var id = window.CC_DATA['kubernetes'][0].id;
@@ -583,7 +649,7 @@
       return;
     }
 
-    location.hash = '#/c/' + catId;
+    location.hash = '#/c/' + catId + '?stack=all';
 
     setTimeout(function () {
       var dom = [];
@@ -740,8 +806,8 @@
       });
 
       d('切到 Docker 分类页正常渲染', function () {
-        location.hash = '#/c/docker';
-        return location.hash === '#/c/docker' ? true : 'hash 未生效';
+        location.hash = '#/c/docker?stack=all';
+        return location.hash === '#/c/docker?stack=all' ? true : 'hash 未生效';
       });
 
       setTimeout(function () {
@@ -751,9 +817,44 @@
           var txt = title ? title.textContent : '';
           return (n >= 3 && /Docker/.test(txt)) ? true : '卡片=' + n + ' 标题="' + txt + '"';
         });
-
-        mark('阶段二完成(' + dom.length + ')');
-        phase3(dom);
+        location.hash = '#/c/middleware?stack=redis';
+        setTimeout(function () {
+          d('Redis 深链刷新后只显示 Redis 命令', function () {
+            R.render();
+            var cards = document.querySelectorAll('#cmd-list .cmd-card');
+            if (!cards.length) return '没有命令卡片';
+            for (var i = 0; i < cards.length; i++) {
+              if (cards[i].getAttribute('data-id').indexOf('db-redis-') !== 0) return '混入了其他命令';
+            }
+            return true;
+          });
+          d('Redis 内切换排序保留技术栈与难度筛选', function () {
+            var lv = document.querySelector('.toolbar [data-lv="2"]');
+            if (!lv) return '缺 L2 按钮';
+            lv.click();
+            var sel = document.querySelector('[data-sort]');
+            sel.value = 'name';
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+            var bar = document.querySelector('.toolbar');
+            var cards = document.querySelectorAll('#cmd-list .cmd-card');
+            return bar.getAttribute('data-stack') === 'redis' &&
+              bar.querySelector('[data-lv="2"]').getAttribute('aria-pressed') === 'true' &&
+              cards.length > 0 && Array.prototype.every.call(cards, function (c) { return c.getAttribute('data-id').indexOf('db-redis-') === 0; })
+              ? true : '排序或难度切换后丢了 Redis 上下文';
+          });
+          d('Redis 交叉入口收藏仍写入原命令状态', function () {
+            var card = document.querySelector('#cmd-list .cmd-card');
+            if (!card) return '没有 Redis 卡片';
+            var id = card.getAttribute('data-id');
+            var before = ST.isFavorite(id);
+            card.querySelector('[data-fav]').click();
+            var changed = ST.isFavorite(id) !== before;
+            card.querySelector('[data-fav]').click();
+            return changed && ST.isFavorite(id) === before ? true : '收藏状态未共用';
+          });
+          mark('阶段二完成(' + dom.length + ')');
+          phase3(dom);
+        }, 200);
       }, 200);
     }, 200);
   }

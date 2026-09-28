@@ -232,13 +232,51 @@
 
   /* ---------------- 分类列表页 ---------------- */
 
+  var COMMAND_STACKS = window.CC_COMMAND_STACKS || {};
+
+  function stackCommands(stack) {
+    return (window.CC_DATA[stack.source || stack.category] || []).filter(function (cmd) {
+      return (stack.ids || []).indexOf(cmd.id) !== -1 || stack.prefixes.some(function (prefix) {
+        return cmd.id.indexOf(prefix) === 0;
+      });
+    });
+  }
+
+  function availableStacks(catId) {
+    return (COMMAND_STACKS[catId] || []).map(function (stack) {
+      stack.category = catId;
+      return stack;
+    }).filter(function (stack) { return stackCommands(stack).length > 0; });
+  }
+
+  function stackForCommand(catId, cmdId) {
+    var stacks = availableStacks(catId);
+    for (var i = 0; i < stacks.length; i++) {
+      if (stackCommands(stacks[i]).some(function (cmd) { return cmd.id === cmdId; })) return stacks[i];
+    }
+    return null;
+  }
+
+  function stackHref(catId, stackId) {
+    return '#/c/' + encodeURIComponent(catId) + '?stack=' + encodeURIComponent(stackId);
+  }
+
   function viewCategory(catId, opts) {
     opts = opts || {};
     var cat = window.CC_CATS_META.byId(catId);
     if (!cat) return viewNotFound('分类不存在');
-    var list = (window.CC_DATA[catId] || []).slice();
+    var nativeList = window.CC_DATA[catId] || [];
+    var stacks = availableStacks(catId);
+    var stack = null;
+    for (var s = 0; s < stacks.length; s++) {
+      if (stacks[s].id === opts.stack) { stack = stacks[s]; break; }
+    }
+    /* 旧的 #/c/<分类>/<命令> 深链仍能展开对应技术栈内的命令。 */
+    if (!stack && opts.openId && stacks.length) stack = stackForCommand(catId, opts.openId);
+    var showAll = opts.stack === 'all';
+    var list = stack ? stackCommands(stack) : (showAll || !stacks.length ? nativeList.slice() : []);
 
-    if (!list.length) {
+    if (!nativeList.length) {
       return '<div class="wrap"><div class="page-head"><h1>' + cat.icon + ' ' + esc(cat.name) + '</h1></div>' +
         '<div class="empty"><span class="big">🚧</span><p>这个分类还在整理中，计划在 Phase 2 上线。</p></div></div>';
     }
@@ -252,13 +290,38 @@
     }
 
     var html = '<div class="wrap">';
-    html += breadcrumb([['#/', '首页'], [null, cat.name]]);
+    var crumbs = [['#/', '首页'], [stack || showAll ? '#/c/' + catId : null, cat.name]];
+    if (stack) crumbs.push([null, stack.name]);
+    else if (showAll) crumbs.push([null, '本类全部命令']);
+    html += breadcrumb(crumbs);
     html += '<div class="page-head"><div class="page-head-row">' +
-      '<h1><span class="emoji">' + cat.icon + '</span>' + esc(cat.name) + '</h1>' +
-      practiceEntry(catId) +
-      '</div><div class="page-sub">' + esc(cat.tagline || '') + '　·　共 ' + list.length + ' 条命令</div></div>';
+      '<h1><span class="emoji">' + (stack ? stack.icon : cat.icon) + '</span>' +
+      esc(stack ? stack.name + ' 命令' : cat.name) + '</h1>' +
+      practiceEntry(stack && stack.source ? stack.source : catId) +
+      '</div><div class="page-sub">' +
+      (stack ? esc(cat.name) + ' · ' + (!stack.source || stack.source === catId ? '' : '内容来自' + esc(window.CC_CATS_META.byId(stack.source).name) + ' · ') +
+        '共 ' + list.length + ' 条命令' : esc(cat.tagline || '') + '　·　' +
+        (showAll ? '本类共 ' + list.length + ' 条命令' : '请选择技术栈查看命令')) + '</div></div>';
 
-    html += '<div class="toolbar" data-cat="' + esc(catId) + '">' +
+    if (stacks.length && !stack && !showAll) {
+      html += '<h2 class="stack-heading">按技术栈查命令</h2><div class="stack-grid">';
+      for (var st = 0; st < stacks.length; st++) {
+        var group = stacks[st];
+        var n = stackCommands(group).length;
+        html += '<a class="stack-card" href="' + stackHref(catId, group.id) + '">' +
+          '<span class="stack-icon" aria-hidden="true">' + group.icon + '</span>' +
+          '<span class="stack-name">' + esc(group.name) + '</span>' +
+          '<span class="stack-count">' + n + ' 条命令</span>' +
+          '<span class="stack-arrow" aria-hidden="true">→</span></a>';
+      }
+      html += '</div><a class="stack-all" href="' + stackHref(catId, 'all') +
+        '">查看本类全部 ' + nativeList.length + ' 条命令 →</a></div>';
+      return html;
+    }
+    if (stacks.length) html += '<a class="stack-back" href="#/c/' + esc(catId) + '">← 返回技术栈列表</a>';
+
+    html += '<div class="toolbar" data-cat="' + esc(catId) + '" data-stack="' +
+      esc(stack ? stack.id : (showAll ? 'all' : '')) + '">' +
       '<span class="toolbar-label">难度</span>' +
       '<div class="seg" data-filter="level">' +
       segBtn('all', '全部', true) + segBtn('1', 'L1') + segBtn('2', 'L2') +
@@ -276,8 +339,9 @@
       '</div>';
 
     html += '<div class="cmd-list" id="cmd-list">';
+    var sourceCat = stack ? window.CC_CATS_META.byId(stack.source || catId) : cat;
     for (var i = 0; i < list.length; i++) {
-      html += cmdCard(list[i], cat, { open: opts.openId === list[i].id });
+      html += cmdCard(list[i], sourceCat, { open: opts.openId === list[i].id });
     }
     html += '</div>';
     html += '<div class="empty" id="filter-empty" hidden><span class="big">🔍</span><p>当前筛选条件下没有命令。</p></div>';
@@ -561,14 +625,18 @@
     var hit = window.CC_SEARCH.get(cmdId);
     if (!hit) return viewNotFound('找不到这条命令');
 
-    var list = window.CC_DATA[hit.catId] || [];
+    var stack = stackForCommand(hit.catId, cmdId);
+    var list = stack ? stackCommands(stack) : (window.CC_DATA[hit.catId] || []);
     var idx = -1;
     for (var i = 0; i < list.length; i++) { if (list[i].id === cmdId) { idx = i; break; } }
     var prev = idx > 0 ? list[idx - 1] : null;
     var next = idx >= 0 && idx < list.length - 1 ? list[idx + 1] : null;
 
     var h = '<div class="wrap">';
-    h += breadcrumb([['#/', '首页'], ['#/c/' + hit.catId, hit.catName], [null, hit.cmd.name]]);
+    var crumbs = [['#/', '首页'], ['#/c/' + hit.catId, hit.catName]];
+    if (stack) crumbs.push([stackHref(hit.catId, stack.id), stack.name]);
+    crumbs.push([null, hit.cmd.name]);
+    h += breadcrumb(crumbs);
     h += '<div class="page-head"><h1><span class="cmd-name" style="font-size:22px">' + esc(hit.cmd.name) + '</span>' +
       levelBadge(hit.cmd.level) + '</h1>' +
       '<div class="page-sub">' + mdInline(hit.cmd.summary) + '</div></div>';
@@ -579,7 +647,8 @@
     h += '<div class="detail-foot"><div class="pager">' +
       (prev ? '<a href="#/cmd/' + esc(prev.id) + '">← ' + esc(prev.name) + '</a>' : '') +
       (next ? '<a href="#/cmd/' + esc(next.id) + '">' + esc(next.name) + ' →</a>' : '') +
-      '</div><a href="#/c/' + esc(hit.catId) + '">返回分类</a></div>';
+      '</div><a href="' + (stack ? stackHref(hit.catId, stack.id) : '#/c/' + esc(hit.catId)) +
+      '">返回' + (stack ? esc(stack.name) + '命令' : '分类') + '</a></div>';
 
     h += '</div>';
     return h;

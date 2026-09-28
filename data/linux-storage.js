@@ -13,7 +13,7 @@
 
     /* ================= A. 容量查看与排查 ================= */
 
-    /* ---------- 1 / 46 ---------- */
+    /* ---------- 1 / 65 ---------- */
     {
       id: 'ls9-df',
       name: 'df',
@@ -48,7 +48,7 @@
       tags: ['容量', '排障', '使用率', '磁盘满', '空间不足']
     },
 
-    /* ---------- 2 / 46 ---------- */
+    /* ---------- 2 / 65 ---------- */
     {
       id: 'ls9-du',
       name: 'du',
@@ -83,7 +83,7 @@
       tags: ['容量', '目录', '排障', '磁盘满', '找出大文件']
     },
 
-    /* ---------- 3 / 46 ---------- */
+    /* ---------- 3 / 65 ---------- */
     {
       id: 'ls9-ncdu',
       name: 'ncdu',
@@ -114,7 +114,7 @@
       tags: ['容量', '交互式', '分析']
     },
 
-    /* ---------- 4 / 46 ---------- */
+    /* ---------- 4 / 65 ---------- */
     {
       id: 'ls9-lsblk',
       name: 'lsblk',
@@ -149,7 +149,7 @@
       tags: ['块设备', '分区', '云硬盘']
     },
 
-    /* ---------- 5 / 46 ---------- */
+    /* ---------- 5 / 65 ---------- */
     {
       id: 'ls9-blkid',
       name: 'blkid',
@@ -182,7 +182,7 @@
       tags: ['UUID', '文件系统', 'fstab']
     },
 
-    /* ---------- 6 / 46 ---------- */
+    /* ---------- 6 / 65 ---------- */
     {
       id: 'ls9-findmnt',
       name: 'findmnt',
@@ -217,7 +217,7 @@
 
     /* ================= B. 分区与格式化 ================= */
 
-    /* ---------- 7 / 46 ---------- */
+    /* ---------- 7 / 65 ---------- */
     {
       id: 'ls9-fdisk',
       name: 'fdisk',
@@ -252,7 +252,7 @@
       tags: ['分区', 'GPT', 'MBR']
     },
 
-    /* ---------- 8 / 46 ---------- */
+    /* ---------- 8 / 65 ---------- */
     {
       id: 'ls9-parted',
       name: 'parted',
@@ -288,7 +288,7 @@
       tags: ['分区', 'GPT', '大容量']
     },
 
-    /* ---------- 9 / 46 ---------- */
+    /* ---------- 9 / 65 ---------- */
     {
       id: 'ls9-partprobe',
       name: 'partprobe',
@@ -318,7 +318,7 @@
       tags: ['分区', '内核', '扩容']
     },
 
-    /* ---------- 10 / 46 ---------- */
+    /* ---------- 10 / 65 ---------- */
     {
       id: 'ls9-mkfs-ext4',
       name: 'mkfs.ext4',
@@ -353,7 +353,7 @@
       tags: ['格式化', 'ext4', '文件系统']
     },
 
-    /* ---------- 11 / 46 ---------- */
+    /* ---------- 11 / 65 ---------- */
     {
       id: 'ls9-mkfs-xfs',
       name: 'mkfs.xfs',
@@ -388,7 +388,7 @@
       tags: ['格式化', 'XFS', '文件系统']
     },
 
-    /* ---------- 12 / 46 ---------- */
+    /* ---------- 12 / 65 ---------- */
     {
       id: 'ls9-mkswap',
       name: 'mkswap',
@@ -422,7 +422,7 @@
       tags: ['swap', '内存', '交换空间']
     },
 
-    /* ---------- 13 / 46 ---------- */
+    /* ---------- 13 / 65 ---------- */
     {
       id: 'ls9-swapon',
       name: 'swapon / swapoff',
@@ -458,7 +458,7 @@
 
     /* ================= C. 挂载与持久化 ================= */
 
-    /* ---------- 14 / 46 ---------- */
+    /* ---------- 14 / 65 ---------- */
     {
       id: 'ls9-mount',
       name: 'mount',
@@ -495,7 +495,7 @@
       tags: ['挂载', 'fstab', '数据盘']
     },
 
-    /* ---------- 15 / 46 ---------- */
+    /* ---------- 15 / 65 ---------- */
     {
       id: 'ls9-umount',
       name: 'umount',
@@ -531,7 +531,7 @@
       tags: ['卸载', '排障', 'busy']
     },
 
-    /* ---------- 16 / 46 ---------- */
+    /* ---------- 16 / 65 ---------- */
     {
       id: 'ls9-fstab',
       name: '/etc/fstab',
@@ -569,7 +569,7 @@
       tags: ['fstab', '开机挂载', 'UUID']
     },
 
-    /* ---------- 17 / 46 ---------- */
+    /* ---------- 17 / 65 ---------- */
     {
       id: 'ls9-systemd-mount',
       name: 'systemd mount unit',
@@ -603,7 +603,7 @@
       tags: ['systemd', '挂载', '开机']
     },
 
-    /* ---------- 18 / 46 ---------- */
+    /* ---------- 18 / 65 ---------- */
     {
       id: 'ls9-autofs',
       name: 'autofs',
@@ -636,7 +636,7 @@
       tags: ['按需挂载', 'NFS', '自动化']
     },
 
-    /* ---------- 19 / 46 ---------- */
+    /* ---------- 19 / 65 ---------- */
     {
       id: 'ls9-nfs-client',
       name: 'mount -t nfs（客户端）',
@@ -674,7 +674,7 @@
       tags: ['NFS', '共享存储', '挂载']
     },
 
-    /* ---------- 20 / 46 ---------- */
+    /* ---------- 20 / 65 ---------- */
     {
       id: 'ls9-nfs-server',
       name: 'exportfs / /etc/exports',
@@ -710,7 +710,7 @@
       tags: ['NFS', '共享存储', '服务端']
     },
 
-    /* ---------- 21 / 46 ---------- */
+    /* ---------- 21 / 65 ---------- */
     {
       id: 'ls9-new-disk-flow',
       name: '华为云 ECS 挂载 EVS 数据盘全流程',
@@ -750,7 +750,7 @@
       tags: ['云硬盘', '挂载', '全流程']
     },
 
-    /* ---------- 22 / 46 ---------- */
+    /* ---------- 22 / 65 ---------- */
     {
       id: 'ls9-growpart',
       name: 'growpart',
@@ -791,7 +791,7 @@
 
     /* ================= D. LVM 逻辑卷 ================= */
 
-    /* ---------- 23 / 46 ---------- */
+    /* ---------- 23 / 65 ---------- */
     {
       id: 'ls9-lvm-overview',
       name: 'LVM 概览（PV/VG/LV）',
@@ -825,7 +825,7 @@
       tags: ['LVM', '逻辑卷', '概念']
     },
 
-    /* ---------- 24 / 46 ---------- */
+    /* ---------- 24 / 65 ---------- */
     {
       id: 'ls9-pvcreate',
       name: 'pvcreate / pvs / pvdisplay',
@@ -860,7 +860,7 @@
       tags: ['LVM', '物理卷', 'PV']
     },
 
-    /* ---------- 25 / 46 ---------- */
+    /* ---------- 25 / 65 ---------- */
     {
       id: 'ls9-vgcreate',
       name: 'vgcreate / vgs / vgextend',
@@ -895,7 +895,7 @@
       tags: ['LVM', '卷组', '扩容']
     },
 
-    /* ---------- 26 / 46 ---------- */
+    /* ---------- 26 / 65 ---------- */
     {
       id: 'ls9-lvcreate',
       name: 'lvcreate / lvs / lvextend',
@@ -931,7 +931,7 @@
       tags: ['LVM', '逻辑卷', '扩容']
     },
 
-    /* ---------- 27 / 46 ---------- */
+    /* ---------- 27 / 65 ---------- */
     {
       id: 'ls9-lvreduce',
       name: 'lvreduce',
@@ -965,7 +965,7 @@
       tags: ['LVM', '缩容', '高危']
     },
 
-    /* ---------- 28 / 46 ---------- */
+    /* ---------- 28 / 65 ---------- */
     {
       id: 'ls9-lvm-extend',
       name: 'LVM 在线扩容完整流程',
@@ -1006,7 +1006,7 @@
       tags: ['LVM', '扩容', '云硬盘']
     },
 
-    /* ---------- 29 / 46 ---------- */
+    /* ---------- 29 / 65 ---------- */
     {
       id: 'ls9-lvremove',
       name: 'lvremove',
@@ -1042,7 +1042,7 @@
 
     /* ================= E. 文件系统修复与调整 ================= */
 
-    /* ---------- 30 / 46 ---------- */
+    /* ---------- 30 / 65 ---------- */
     {
       id: 'ls9-fsck',
       name: 'fsck / e2fsck',
@@ -1079,7 +1079,7 @@
       tags: ['文件系统', '修复', 'ext4']
     },
 
-    /* ---------- 31 / 46 ---------- */
+    /* ---------- 31 / 65 ---------- */
     {
       id: 'ls9-resize2fs',
       name: 'resize2fs',
@@ -1114,7 +1114,7 @@
       tags: ['ext4', '扩容', '缩容']
     },
 
-    /* ---------- 32 / 46 ---------- */
+    /* ---------- 32 / 65 ---------- */
     {
       id: 'ls9-xfs-growfs',
       name: 'xfs_growfs',
@@ -1148,7 +1148,7 @@
       tags: ['XFS', '扩容', '在线']
     },
 
-    /* ---------- 33 / 46 ---------- */
+    /* ---------- 33 / 65 ---------- */
     {
       id: 'ls9-tune2fs',
       name: 'tune2fs / dumpe2fs',
@@ -1188,7 +1188,7 @@
 
     /* ================= F. IO 观测 ================= */
 
-    /* ---------- 34 / 46 ---------- */
+    /* ---------- 34 / 65 ---------- */
     {
       id: 'ls9-iostat',
       name: 'iostat',
@@ -1225,7 +1225,7 @@
       tags: ['IO', '性能', '瓶颈']
     },
 
-    /* ---------- 35 / 46 ---------- */
+    /* ---------- 35 / 65 ---------- */
     {
       id: 'ls9-iotop',
       name: 'iotop',
@@ -1260,7 +1260,7 @@
       tags: ['IO', '进程', '排障']
     },
 
-    /* ---------- 36 / 46 ---------- */
+    /* ---------- 36 / 65 ---------- */
     {
       id: 'ls9-ioping',
       name: 'ioping',
@@ -1295,7 +1295,7 @@
       tags: ['IO', '延迟', '云硬盘']
     },
 
-    /* ---------- 37 / 46 ---------- */
+    /* ---------- 37 / 65 ---------- */
     {
       id: 'ls9-fio',
       name: 'fio',
@@ -1331,7 +1331,7 @@
       tags: ['IO', '压测', 'IOPS']
     },
 
-    /* ---------- 38 / 46 ---------- */
+    /* ---------- 38 / 65 ---------- */
     {
       id: 'ls9-dd',
       name: 'dd（磁盘测速）',
@@ -1371,7 +1371,7 @@
 
     /* ================= G. RAID 与硬件 ================= */
 
-    /* ---------- 39 / 46 ---------- */
+    /* ---------- 39 / 65 ---------- */
     {
       id: 'ls9-mdadm',
       name: 'mdadm',
@@ -1407,7 +1407,7 @@
       tags: ['RAID', '冗余', '换盘']
     },
 
-    /* ---------- 40 / 46 ---------- */
+    /* ---------- 40 / 65 ---------- */
     {
       id: 'ls9-mdstat',
       name: 'cat /proc/mdstat',
@@ -1440,7 +1440,7 @@
       tags: ['RAID', '状态', '排障']
     },
 
-    /* ---------- 41 / 46 ---------- */
+    /* ---------- 41 / 65 ---------- */
     {
       id: 'ls9-smartctl',
       name: 'smartctl',
@@ -1478,7 +1478,7 @@
 
     /* ================= H. 磁盘与文件操作 ================= */
 
-    /* ---------- 42 / 46 ---------- */
+    /* ---------- 42 / 65 ---------- */
     {
       id: 'ls9-hdparm',
       name: 'hdparm',
@@ -1513,7 +1513,7 @@
       tags: ['硬件', '参数', '测速']
     },
 
-    /* ---------- 43 / 46 ---------- */
+    /* ---------- 43 / 65 ---------- */
     {
       id: 'ls9-sync',
       name: 'sync',
@@ -1547,7 +1547,7 @@
       tags: ['刷盘', '数据安全', '卸载']
     },
 
-    /* ---------- 44 / 46 ---------- */
+    /* ---------- 44 / 65 ---------- */
     {
       id: 'ls9-fallocate',
       name: 'fallocate',
@@ -1583,7 +1583,7 @@
       tags: ['预分配', '稀疏文件', 'swap']
     },
 
-    /* ---------- 45 / 46 ---------- */
+    /* ---------- 45 / 65 ---------- */
     {
       id: 'ls9-blkdiscard',
       name: 'blkdiscard',
@@ -1620,7 +1620,7 @@
       tags: ['SSD', 'TRIM', '高危']
     },
 
-    /* ---------- 46 / 46 ---------- */
+    /* ---------- 46 / 65 ---------- */
     {
       id: 'ls9-quota',
       name: 'quota / repquota',
@@ -1655,8 +1655,245 @@
       related: ['ls9-df', 'ls9-du', 'ls9-fstab', 'ls9-mount'],
       docs: 'https://man7.org/linux/man-pages/man1/quota.1.html',
       tags: ['配额', '多用户', '容量管理']
-    }
+    },
 
     /* 后续命令同样追加在这里，用逗号分隔 */
+  );
+})();
+
+/* Ceph：分布式存储的只读巡检、定位与受控变更。命令归入磁盘与存储。 */
+(function () {
+  'use strict';
+  var catId = 'linux-storage';
+  window.CC_DATA[catId] = window.CC_DATA[catId] || [];
+  window.CC_DATA[catId].push(
+    /* ---------- 47 / 65 ---------- */
+    {
+      id: 'ceph-status',
+      name: 'ceph -s',
+      level: 1,
+      syntax: 'ceph -s', summary: '查看集群健康、MON/OSD/MGR 状态、PG 分布和容量的第一入口。',
+      desc: '先看 HEALTH，再核对 OSD up/in 数、PG 状态和容量。HEALTH_OK 只代表当前集群检查通过，不能代替业务读写验证；HEALTH_WARN 时继续用 health detail 定位具体检查项。',
+      examples: [{ cmd: 'ceph -s', desc: '巡检集群概况，记录时间、健康码和 OSD 数量' }],
+      notes: ['先确认当前 ceph.conf 与 keyring 指向目标集群；不要把“命令能连上 MON”当作业务已恢复。'],
+      related: ['ceph-health-detail', 'ceph-pg-stat', 'ceph-df'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/monitoring/', tags: ['Ceph', '集群健康']
+    },
+    /* ---------- 48 / 65 ---------- */
+    {
+      id: 'ceph-health-detail',
+      name: 'ceph health detail',
+      level: 2,
+      syntax: 'ceph health detail', summary: '展开健康告警的检查项与对象，分清容量、PG、OSD 或服务问题。',
+      desc: '比 ceph -s 的一句 HEALTH_WARN 更具体：输出告警码、受影响的守护进程或 PG 数量。先记录告警码和持续时间，再按对应子系统继续查询，不要直接静音告警。',
+      examples: [{ cmd: 'ceph health detail', desc: '查看当前全部健康检查项' }],
+      notes: ['同一告警可能是恢复过程中的暂态；必须结合 PG 状态和客户端错误趋势判断。'],
+      related: ['ceph-status', 'ceph-osd-tree', 'ceph-pg-stat'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/health-checks/', tags: ['Ceph', '告警', '排障']
+    },
+    /* ---------- 49 / 65 ---------- */
+    {
+      id: 'ceph-osd-tree',
+      name: 'ceph osd tree',
+      level: 2,
+      syntax: 'ceph osd tree', summary: '按 CRUSH 层级查看 OSD 状态，定位失联主机及故障域。',
+      desc: 'up/down 表示进程是否在线，in/out 表示是否参与数据放置；二者含义不同。结合 host 层级判断故障是否集中在同一台机器或机架。',
+      examples: [{ cmd: 'ceph osd tree', desc: '按 host 查看 OSD 状态和权重' }],
+      notes: ['看到 down 不要立刻执行 out；先查网络、磁盘和服务日志，并评估副本数及当前降级程度。'],
+      related: ['ceph-health-detail', 'ceph-osd-df', 'ceph-orch-ps'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/monitoring/', tags: ['Ceph', 'OSD', 'CRUSH']
+    },
+    /* ---------- 50 / 65 ---------- */
+    {
+      id: 'ceph-osd-df',
+      name: 'ceph osd df tree',
+      level: 2,
+      syntax: 'ceph osd df tree', summary: '按主机和 OSD 查看实际用量及利用率，识别热点与容量不均。',
+      desc: '重点看 %USE 与 VAR，不能只看总集群剩余量；个别 OSD 接近 full 阈值时，即使总容量充足也会影响写入。',
+      examples: [{ cmd: 'ceph osd df tree', desc: '按 CRUSH 层级比较 OSD 利用率' }],
+      notes: ['跨设备类型的利用率差异不一定是异常；对照 CRUSH 规则和设备类别判断。'],
+      related: ['ceph-df', 'ceph-osd-tree', 'ceph-crush-rule'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/monitoring/', tags: ['Ceph', 'OSD', '容量']
+    },
+    /* ---------- 51 / 65 ---------- */
+    {
+      id: 'ceph-pg-stat',
+      name: 'ceph pg stat',
+      level: 2,
+      syntax: 'ceph pg stat', summary: '汇总 PG 状态，确认不可用、降级或恢复积压是否存在。',
+      desc: 'active+clean 是常见健康状态；degraded 表示副本不完整，inactive 表示不能正常服务。恢复中可能出现 backfill/recovery，需观察数量是否持续下降。',
+      examples: [{ cmd: 'ceph pg stat', desc: '快速查看各 PG 状态的数量' }],
+      notes: ['不要为了让状态变绿直接调低副本数或禁用恢复；先确认容量、网络和故障 OSD。'],
+      related: ['ceph-status', 'ceph-pg-query', 'ceph-osd-tree'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/monitoring/', tags: ['Ceph', 'PG', '恢复']
+    },
+    /* ---------- 52 / 65 ---------- */
+    {
+      id: 'ceph-pg-query',
+      name: 'ceph pg query',
+      level: 3,
+      syntax: 'ceph pg <PG_ID> query', summary: '查询单个异常 PG 的 acting/up 集合及恢复状态，缩小故障范围。',
+      desc: '先从健康告警获取真实 PG ID，再看 acting/up OSD、状态和异常原因；配合 OSD tree 查对应宿主机。不同版本 JSON 字段可能变化。',
+      examples: [{ cmd: 'ceph pg 1.2a query', desc: '用告警给出的 PG ID 定位具体异常' }],
+      notes: ['PG ID 必须来自当前集群的告警或列表，示例 ID 不一定存在。'],
+      related: ['ceph-pg-stat', 'ceph-osd-tree', 'ceph-health-detail'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/monitoring/', tags: ['Ceph', 'PG', '排障']
+    },
+    /* ---------- 53 / 65 ---------- */
+    {
+      id: 'ceph-df',
+      name: 'ceph df detail',
+      level: 2,
+      syntax: 'ceph df detail', summary: '同时查看集群 RAW 容量和各存储池的逻辑使用量、可用空间。',
+      desc: 'RAW 是物理容量视角，池统计是逻辑对象视角；副本和纠删码开销使两者不能直接相加。重点对照 MAX AVAIL、%USED 和目标池的增长趋势。',
+      examples: [{ cmd: 'ceph df detail', desc: '查看各池用量和集群容量' }],
+      notes: ['MAX AVAIL 受 CRUSH 规则及最满 OSD 限制，不等于总剩余 RAW 容量。'],
+      related: ['ceph-osd-df', 'ceph-pool-ls'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/monitoring/', tags: ['Ceph', '容量', '池']
+    },
+    /* ---------- 54 / 65 ---------- */
+    {
+      id: 'ceph-pool-ls',
+      name: 'ceph osd pool ls detail',
+      level: 2,
+      syntax: 'ceph osd pool ls detail', summary: '列出存储池及副本、PG 等关键属性，确认业务使用的池配置。',
+      desc: '检查池名、size/min_size、PG 数和应用类型。池是 RBD、CephFS、RGW 的底层资源，改池参数前应知道哪些客户端使用它。',
+      examples: [{ cmd: 'ceph osd pool ls detail', desc: '查看当前池配置' }],
+      notes: ['不要仅凭池名判断业务归属；结合 ceph osd pool application get 和业务配置。'],
+      related: ['ceph-pool-get', 'ceph-df', 'ceph-rbd-ls'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/pools/', tags: ['Ceph', 'pool', '配置']
+    },
+    /* ---------- 55 / 65 ---------- */
+    {
+      id: 'ceph-pool-get',
+      name: 'ceph osd pool get',
+      level: 2,
+      syntax: 'ceph osd pool get <POOL> size', summary: '读取池的副本数等单项参数，核对容量与故障容忍度。',
+      desc: 'size 是目标副本数，min_size 是允许写入的最少副本数；这两个值不能脱离当前故障域与业务可用性要求单独判断。',
+      examples: [{ cmd: 'ceph osd pool get volumes size', desc: '查看 volumes 池的目标副本数' }, { cmd: 'ceph osd pool get volumes min_size', desc: '查看最低写入副本数' }],
+      notes: ['示例池名需替换为实际池；不要在故障时随意调低 min_size 让告警消失。'],
+      related: ['ceph-pool-ls', 'ceph-crush-rule'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/pools/', tags: ['Ceph', 'pool', '副本']
+    },
+    /* ---------- 56 / 65 ---------- */
+    {
+      id: 'ceph-pool-create',
+      name: 'ceph osd pool create',
+      level: 3,
+      syntax: 'ceph osd pool create <POOL> [PG_NUM]', summary: '在隔离集群创建池，并在交付前确认应用类型和放置规则。',
+      desc: '建池会改变集群元数据；PG 数的建议取决于 Ceph 版本和 autoscaler。现代集群先确认 pg_autoscale_mode，不要套用旧文章的固定计算公式。',
+      examples: [{ cmd: 'ceph osd pool create lab-rbd', desc: '仅在隔离实验集群创建池' }, { cmd: 'ceph osd pool application enable lab-rbd rbd', desc: '明确池的应用类型' }],
+      notes: ['生产创建前确认命名、配额、CRUSH 规则与审批；不要在已有业务池上照抄示例。'],
+      related: ['ceph-pool-ls', 'ceph-pool-get', 'ceph-crush-rule'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/pools/', tags: ['Ceph', 'pool', '变更']
+    },
+    /* ---------- 57 / 65 ---------- */
+    {
+      id: 'ceph-crush-rule',
+      name: 'ceph osd crush rule',
+      level: 3,
+      syntax: 'ceph osd crush rule ls / ceph osd crush rule dump <RULE>', summary: '核对数据放置规则和故障域，解释副本为何落在特定设备或主机。',
+      desc: 'CRUSH 规则决定根、设备类别及 host/rack 等故障域。看到容量不均或副本落点异常时，先读取规则与池的 crush_rule，再考虑配置变更。',
+      examples: [{ cmd: 'ceph osd crush rule ls', desc: '列出可用放置规则' }, { cmd: 'ceph osd pool get volumes crush_rule', desc: '确认业务池使用哪条规则' }],
+      notes: ['修改 CRUSH 规则可能触发大量数据迁移；先评估容量和恢复窗口。'],
+      related: ['ceph-osd-tree', 'ceph-osd-df', 'ceph-pool-get'],
+      docs: 'https://docs.ceph.com/en/latest/rados/operations/crush-map/', tags: ['Ceph', 'CRUSH', '故障域']
+    },
+    /* ---------- 58 / 65 ---------- */
+    {
+      id: 'ceph-orch-ps',
+      name: 'ceph orch ps',
+      level: 2,
+      syntax: 'ceph orch ps [--daemon_type <TYPE>]', summary: '在 cephadm 管理的集群中查看守护进程所在主机与运行状态。',
+      desc: '用于确认 MON、MGR、OSD、MDS、RGW 的编排状态及部署位置；它是 cephadm 编排接口，不适用于所有旧式或外部编排集群。',
+      examples: [{ cmd: 'ceph orch ps', desc: '列出 cephadm 托管的守护进程' }, { cmd: 'ceph orch host ls', desc: '对照编排主机清单' }],
+      notes: ['如果返回 orchestrator not configured，先确认部署方式，不要把它当作 OSD 全部宕机。'],
+      related: ['ceph-osd-tree', 'ceph-status'],
+      docs: 'https://docs.ceph.com/en/latest/cephadm/operations/', tags: ['Ceph', 'cephadm', '守护进程']
+    },
+    /* ---------- 59 / 65 ---------- */
+    {
+      id: 'ceph-rbd-ls',
+      name: 'rbd ls',
+      level: 2,
+      syntax: 'rbd ls -p <POOL>', summary: '列出 RBD 池中的块设备镜像，核对虚机或容器卷是否存在。',
+      desc: 'RBD 是块存储入口，列表只能证明镜像元数据存在；要确认大小、特性和快照需继续 rbd info、rbd snap ls。',
+      examples: [{ cmd: 'rbd ls -p volumes', desc: '查看 volumes 池中的镜像清单' }],
+      notes: ['先确认当前 Ceph 集群及池名；不要把同名镜像与业务实例直接对应。'],
+      related: ['ceph-rbd-info', 'ceph-rbd-snap', 'ceph-pool-ls'],
+      docs: 'https://docs.ceph.com/en/latest/rbd/rados-rbd-cmds/', tags: ['Ceph', 'RBD', '块存储']
+    },
+    /* ---------- 60 / 65 ---------- */
+    {
+      id: 'ceph-rbd-info',
+      name: 'rbd info',
+      level: 2,
+      syntax: 'rbd info <POOL>/<IMAGE>', summary: '查看 RBD 镜像的大小、对象布局、特性与快照状态。',
+      desc: '结合 image size、features 和 block_name_prefix 判断卷配置；resize 或映射前先确认镜像没有被错误业务引用。',
+      examples: [{ cmd: 'rbd info volumes/web01', desc: '查看指定镜像元数据' }],
+      notes: ['镜像大小不等于已经占用的原始物理容量；配合 rbd du 与池统计。'],
+      related: ['ceph-rbd-ls', 'ceph-rbd-snap', 'ceph-df'],
+      docs: 'https://docs.ceph.com/en/latest/rbd/rados-rbd-cmds/', tags: ['Ceph', 'RBD', '镜像']
+    },
+    /* ---------- 61 / 65 ---------- */
+    {
+      id: 'ceph-rbd-snap',
+      name: 'rbd snap ls',
+      level: 3,
+      syntax: 'rbd snap ls <POOL>/<IMAGE>', summary: '检查 RBD 镜像快照，确认保护点与依赖链。',
+      desc: '快照是镜像级时间点，不等于应用一致性备份。克隆镜像可能依赖受保护快照，删除前必须查子镜像和恢复策略。',
+      examples: [{ cmd: 'rbd snap ls volumes/web01', desc: '列出镜像已有快照' }],
+      notes: ['生产创建快照前应先做应用 quiesce/一致性处理；不要把快照当作异地备份。'],
+      related: ['ceph-rbd-info', 'ceph-rbd-ls'],
+      docs: 'https://docs.ceph.com/en/latest/rbd/rados-rbd-cmds/', tags: ['Ceph', 'RBD', '快照']
+    },
+    /* ---------- 62 / 65 ---------- */
+    {
+      id: 'ceph-fs-status',
+      name: 'ceph fs status',
+      level: 2,
+      syntax: 'ceph fs status [<FS_NAME>]', summary: '查看 CephFS 文件系统及 MDS 状态，区分存储层和元数据服务问题。',
+      desc: '客户端挂载卡住时先看 MDS 是否有 active 实例、standby 是否就绪及元数据池健康，再看底层 OSD/PG。',
+      examples: [{ cmd: 'ceph fs status', desc: '汇总全部 CephFS 与 MDS 状态' }],
+      notes: ['MDS active 不代表客户端权限、挂载参数和网络都正确；还需端到端读写验证。'],
+      related: ['ceph-status', 'ceph-pg-stat', 'ceph-fs-subvolume'],
+      docs: 'https://docs.ceph.com/en/latest/cephfs/administration/', tags: ['Ceph', 'CephFS', 'MDS']
+    },
+    /* ---------- 63 / 65 ---------- */
+    {
+      id: 'ceph-fs-subvolume',
+      name: 'ceph fs subvolume ls',
+      level: 3,
+      syntax: 'ceph fs subvolume ls <FS_NAME> [<GROUP_NAME>]', summary: '列出 CephFS 子卷，核对 CSI 或租户目录的卷是否存在。',
+      desc: 'Kubernetes CephFS CSI 常用子卷承载 PVC；先确认文件系统名和子卷组，再将结果与 CSI 对象及业务挂载点对应。',
+      examples: [{ cmd: 'ceph fs subvolume ls cephfs', desc: '列出 cephfs 默认组下的子卷' }],
+      notes: ['直接在 Ceph 端删除子卷会绕过 Kubernetes 的生命周期管理；优先从业务系统查归属。'],
+      related: ['ceph-fs-status', 'ceph-pool-ls'],
+      docs: 'https://docs.ceph.com/en/latest/cephfs/fs-volumes/', tags: ['Ceph', 'CephFS', 'CSI']
+    },
+    /* ---------- 64 / 65 ---------- */
+    {
+      id: 'ceph-rgw-bucket',
+      name: 'radosgw-admin bucket stats',
+      level: 3,
+      syntax: 'radosgw-admin bucket stats --bucket <BUCKET>', summary: '在 RGW 节点查看桶的对象数和用量，排查对象存储配额问题。',
+      desc: '这是 RGW 管理命令，不是普通 S3 客户端命令；只在拥有相应管理权限的 RGW 环境使用。',
+      examples: [{ cmd: 'radosgw-admin bucket stats --bucket lab-backups', desc: '查看指定桶的对象统计' }],
+      notes: ['统计值可能有延迟；与 S3 List/Head 及实际上传下载验证一起判断。'],
+      related: ['ceph-df', 'ceph-status'],
+      docs: 'https://docs.ceph.com/en/latest/radosgw/admin/', tags: ['Ceph', 'RGW', '对象存储']
+    },
+    /* ---------- 65 / 65 ---------- */
+    {
+      id: 'ceph-config-dump',
+      name: 'ceph config dump',
+      level: 3,
+      syntax: 'ceph config dump', summary: '查看集中配置数据库中的设置，排查集群参数与预期不一致。',
+      desc: '集中配置只是配置来源之一；守护进程的最终生效值可通过 ceph config show <daemon> 核对，还要考虑本地文件与运行时覆盖。',
+      examples: [{ cmd: 'ceph config dump', desc: '列出集群配置数据库中的条目' }],
+      notes: ['查看输出时注意可能包含敏感地址或凭据；不要把原始配置直接公开分享。'],
+      related: ['ceph-status', 'ceph-orch-ps'],
+      docs: 'https://docs.ceph.com/en/latest/rados/configuration/ceph-conf/', tags: ['Ceph', '配置', '排障']
+    }
   );
 })();

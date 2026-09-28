@@ -310,15 +310,24 @@
         var bar = t.closest('.toolbar');
         var cat = bar ? bar.getAttribute('data-cat') : '';
         if (!cat) return;
+        var stack = bar.getAttribute('data-stack') || '';
+        var pressed = bar.querySelector('.seg [aria-pressed="true"]');
+        var currentLevel = pressed ? pressed.getAttribute('data-lv') : 'all';
         currentSort = t.value;
         var mainEl = document.getElementById('main');
-        if (mainEl) mainEl.innerHTML = window.CC_VIEW.viewCategory(cat, { sort: currentSort });
+        if (mainEl) mainEl.innerHTML = window.CC_VIEW.viewCategory(cat, { sort: currentSort, stack: stack });
         else return;
         /* 重渲染后恢复控件状态 */
         var sel = mainEl.querySelector('.toolbar select[data-sort]');
         if (sel) sel.value = currentSort;
         var todo = mainEl.querySelector('[data-only-todo]');
         if (todo) todo.checked = onlyTodoState;
+        var level = mainEl.querySelector('.seg [data-lv="' + currentLevel + '"]');
+        if (level) {
+          var active = mainEl.querySelector('.seg [aria-pressed="true"]');
+          if (active) active.setAttribute('aria-pressed', 'false');
+          level.setAttribute('aria-pressed', 'true');
+        }
         applyFilter();
         return;
       }
@@ -724,6 +733,7 @@
 
     if (loc.name === 'category') {
       currentSort = 'default';
+      onlyTodoState = false;
       applyFilter();
       if (loc.cmdId) {
         var el = document.getElementById('cmd-' + loc.cmdId);

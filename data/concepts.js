@@ -1,6 +1,6 @@
 /* data/concepts.js · 概念词典
    --------------------------------------------------------------------------
-   830 条命令解决"怎么敲"，这一份解决"到底是什么、为什么是这样"。
+   863 条命令解决"怎么敲"，这一份解决"到底是什么、为什么是这样"。
    一条记录 = 一个概念（不是一条命令）。
 
    {
@@ -1179,6 +1179,40 @@
       related: ['sec-getenforce', 'sec-semanage-fcontext', 'sec-restorecon', 'sec-ausearch', 'sec-aa-status'],
       lessons: [],
       tags: ['安全', 'Linux', '排障']
+    },
+
+    {
+      id: 'ceph-osd-pg',
+      term: 'Ceph OSD 与 PG',
+      en: 'Object Storage Daemon / Placement Group',
+      cat: 'linux-storage',
+      level: 3,
+      oneLine: 'OSD 保存对象，PG 将对象映射到一组 OSD 上',
+      why: 'Ceph 把数据切成对象，再通过 PG 和 CRUSH 规则分布到多个 OSD。健康检查先看集群状态，再看 OSD 是否在位、PG 是否 active+clean；PG 降级常是 OSD 故障或副本暂时不足。容量也不是把所有磁盘剩余空间相加就能直接使用：副本数、故障域和各 OSD 的空间不均会影响可写容量。',
+      confusion: [
+        { q: '一个 PG 卡住就应该立即执行修复或删掉它吗？', a: '不应该。先读 `ceph health detail`、`ceph pg <id> query` 和 OSD 状态，确认是磁盘故障、网络分区还是恢复队列。盲目删数据或强制标记丢失对象会造成永久数据损失。' },
+        { q: '集群显示 HEALTH_OK，就能省略恢复演练吗？', a: '不能。HEALTH_OK 表示当前副本与服务状态满足配置，不证明备份可恢复，也不证明同时故障的容忍能力；生产环境仍要核对故障域、备份与恢复流程。' }
+      ],
+      related: ['ceph-status', 'ceph-health-detail', 'ceph-osd-tree', 'ceph-pg-stat', 'ceph-pg-query', 'ceph-df'],
+      lessons: [],
+      tags: ['Ceph', '存储', '排障']
+    },
+
+    {
+      id: 'openstack-services',
+      term: 'OpenStack 服务分工',
+      en: 'OpenStack services',
+      cat: 'kvm',
+      level: 2,
+      oneLine: '身份、计算、网络、镜像与块存储由不同服务协作',
+      why: 'OpenStack CLI 看似统一，背后却分别调用 Keystone 身份认证、Nova 计算、Neutron 网络、Glance 镜像、Cinder 块存储和 Swift 对象存储。创建云主机失败时，先确认 token 和服务目录，再逐项核查镜像、规格、网络与卷；只盯着 Nova 的报错容易漏掉下游服务的问题。各服务的配额和权限也可能分别限制创建。',
+      confusion: [
+        { q: '已有云主机规格与镜像，为什么仍创建失败？', a: '还可能缺少网络、子网、安全组、可用区资源或项目配额。先验证 `openstack token issue`，再列出镜像、规格、网络和服务状态，最后查看云主机详情与控制台日志。' },
+        { q: 'Swift 对象存储和 Cinder 云硬盘是同一种存储吗？', a: '不是。Cinder 提供可挂载给实例的块设备，适合文件系统和数据库；Swift 用对象 API 存取对象，适合静态文件与备份，两者的访问方式和一致性需求不同。' }
+      ],
+      related: ['os-token-issue', 'os-service-list', 'os-server-list', 'os-image-list', 'os-network-list', 'os-volume-list', 'os-object-list'],
+      lessons: [],
+      tags: ['OpenStack', '私有云', '排障']
     },
 
     {

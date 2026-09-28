@@ -236,7 +236,9 @@ function renderCheck() {
       'document.getElementById("drill-card").classList.contains("is-flipped") && /判据/.test(document.getElementById("dc-back").textContent)'));
 
     await ev('location.hash="#/c/cloud-cli"'); await settle(600);
-    ok('分类页渲染命令卡片', await ev('document.querySelectorAll("#cmd-list .cmd-card").length') >= 3);
+    ok('分类页先渲染技术栈入口', await ev('document.querySelectorAll(".stack-card").length') >= 3);
+    await ev('location.hash="#/c/cloud-cli?stack=compute"'); await settle(600);
+    ok('技术栈页渲染命令卡片', await ev('document.querySelectorAll("#cmd-list .cmd-card").length') >= 3);
 
     ok('渲染过程无未捕获异常', errors.length === 0, errors.slice(0, 2).join(' | '));
 

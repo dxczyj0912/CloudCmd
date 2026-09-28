@@ -1,7 +1,8 @@
 /* ==========================================================================
    assets/js/router.js · hash 路由
    #/                      首页
-   #/c/<catId>             分类列表
+   #/c/<catId>             分类或技术栈入口
+   #/c/<catId>?stack=<id> 技术栈命令列表
    #/c/<catId>/<cmdId>     分类列表并展开某条命令
    #/cmd/<cmdId>           命令独立详情页
    #/search?q=xxx          搜索结果
@@ -57,7 +58,7 @@
     var parts = raw.split('/').filter(function (p) { return p !== ''; });
 
     if (!parts.length) return { name: 'home' };
-    if (parts[0] === 'c') return { name: 'category', catId: parts[1] || '', cmdId: parts[2] || '' };
+    if (parts[0] === 'c') return { name: 'category', catId: parts[1] || '', cmdId: parts[2] || '', stack: query.stack || '' };
     if (parts[0] === 'cmd') return { name: 'command', cmdId: parts[1] || '' };
     if (parts[0] === 'search') return { name: 'search', q: query.q || '' };
     if (parts[0] === 'favorites') return { name: 'favorites' };
@@ -79,7 +80,7 @@
     var V = window.CC_VIEW;
     switch (loc.name) {
       case 'home':      return { html: V.viewHome(), active: '' };
-      case 'category':  return { html: V.viewCategory(loc.catId, { openId: loc.cmdId }), active: loc.catId };
+      case 'category':  return { html: V.viewCategory(loc.catId, { openId: loc.cmdId, stack: loc.stack }), active: loc.catId };
       case 'command':   return { html: V.viewCommand(loc.cmdId), active: '' };
       case 'search':    return { html: V.viewSearch(loc.q), active: '' };
       case 'favorites': return { html: V.viewFavorites(), active: '__favorites' };
@@ -121,7 +122,8 @@
     /* 文档标题 */
     var titles = { home: '首页', roadmap: '学习路线图', cheat: '故障速查', favorites: '我的收藏', search: '搜索', practice: '实时练习', practiceList: '实时练习',
       kb: ({ concepts: '概念词典', errors: '报错速查', versions: '版本差异', cert: '认证对照' })[loc.kind] || '知识库' };
-    var t = titles[loc.name] || (loc.name === 'category' ? (window.CC_CATS_META.byId(loc.catId) || {}).name : '') || '';
+    var t = titles[loc.name] || (loc.name === 'category' ?
+      ((loc.stack && loc.stack !== 'all' ? loc.stack + ' · ' : '') + ((window.CC_CATS_META.byId(loc.catId) || {}).name || '')) : '') || '';
     document.title = (t ? t + ' · ' : '') + 'CloudCmd 云计算命令手册';
 
     /* 通知 app 层绑定交互 */
