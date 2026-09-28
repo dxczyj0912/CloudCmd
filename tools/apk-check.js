@@ -197,10 +197,17 @@ function renderCheck() {
     await send('Page.enable'); await send('Runtime.enable');
     await send('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 3, mobile: true });
     await send('Page.navigate', { url: 'file:///' + path.join(EXTRACT, 'index.html').replace(/\\/g, '/') });
-    await settle(1800);
-
-    ok('375x667 下首页渲染出内容', await ev(
-      'document.querySelector(".hero") !== null && document.body.textContent.length > 200'));
+    /* CI 的 Windows runner 偶尔在 1.8 秒后仍在加载脚本；等待真正的首页就绪，
+       而不是把机器慢误报成 APK 白屏。超时后仍保留失败和诊断信息。 */
+    let homeReady = false;
+    for (let attempt = 0; attempt < 60 && !homeReady; attempt++) {
+      await settle(200);
+      try {
+        homeReady = await ev('document.readyState === "complete" && document.querySelector(".hero") !== null && document.body.textContent.length > 200');
+      } catch (e) { /* 导航中 Runtime 暂时不可用，下一次再查 */ }
+    }
+    ok('375x667 下首页渲染出内容', homeReady,
+      homeReady ? '' : '等待 12 秒仍未就绪；当前地址 ' + await ev('location.href'));
     /* ⚠️ 不要写死条数。这里原本断言"=== 822"，内容一涨（本会话加了 3 条）就变成假失败 ——
        它想验的是"APK 里的数据与源码一致、全都加载出来了"，所以：
        ① 先从源码侧数出真实条数（Node 端读 data/*.js），再和 APK 里的渲染结果比。
