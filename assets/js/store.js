@@ -195,6 +195,8 @@
       validateImport(obj);
       var before = JSON.stringify(state);
       applyObject(obj);
+      /* 同步服务也会定时拉取相同进度；没有变化就不要重绘阅读页或反推服务器。 */
+      if (JSON.stringify(state) === before) return true;
       if (!save()) {
         state = JSON.parse(before);
         throw new Error('进度未能写入本机存储，导入已取消');
@@ -224,12 +226,15 @@
   /* 其它标签页的修改在当前页面立即可见；忽略损坏或未知 key。 */
   if (window.addEventListener) window.addEventListener('storage', function (event) {
     if (event.key !== KEY || !event.newValue) return;
+    var before = JSON.stringify(state);
     try {
       var incoming = JSON.parse(event.newValue);
       validateImport(incoming);
       applyObject(incoming);
     } catch (e) { return; }
-    if (window.dispatchEvent && typeof window.CustomEvent === 'function') window.dispatchEvent(new CustomEvent('cc:progress-sync'));
+    if (JSON.stringify(state) !== before && window.dispatchEvent && typeof window.CustomEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('cc:progress-sync'));
+    }
   });
 
   load();

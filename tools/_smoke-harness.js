@@ -679,6 +679,28 @@
         return (changed && hasCode) ? true : '展开状态未变化或没有代码块';
       });
 
+      d('远端进度更新不折叠已展开命令，也不跳回页首', function () {
+        var id = list[0].id;
+        var remoteId = list[2].id;
+        window.scrollTo(0, 320);
+        var beforeY = window.scrollY;
+        var remoteFavorites = {};
+        remoteFavorites[remoteId] = true;
+        ST.importJSON({ favorites: remoteFavorites });
+        var card = document.getElementById('cmd-' + id);
+        var remoteCard = document.getElementById('cmd-' + remoteId);
+        var stayed = Math.abs(window.scrollY - beforeY) <= 1;
+        return card && card.classList.contains('open') && !card.querySelector('.cmd-body').hidden &&
+          remoteCard && remoteCard.querySelector('[data-fav]').classList.contains('on') && stayed
+          ? true : '同步后卡片状态、收藏或滚动位置丢失';
+      });
+
+      d('重复拉取相同进度不会重建阅读中的卡片', function () {
+        var card = document.getElementById('cmd-' + list[0].id);
+        ST.importJSON(ST.exportJSON());
+        return document.getElementById('cmd-' + list[0].id) === card ? true : '相同进度仍触发重绘';
+      });
+
       d('复制按钮带完整命令文本', function () {
         var btn = document.querySelector('#cmd-list [data-copy]');
         if (!btn) return '页面上没有复制按钮';
@@ -802,7 +824,10 @@
         if (!sel) return '没有排序控件';
         sel.value = 'name';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
-        return document.querySelectorAll('#cmd-list .cmd-card').length > 0 ? true : '重渲染后没有卡片';
+        var open = document.getElementById('cmd-' + list[0].id);
+        return document.querySelectorAll('#cmd-list .cmd-card').length > 0 &&
+          open && open.classList.contains('open') && !open.querySelector('.cmd-body').hidden
+          ? true : '排序后卡片丢失或已展开内容被收起';
       });
 
       d('切到 Docker 分类页正常渲染', function () {

@@ -315,8 +315,11 @@
         var currentLevel = pressed ? pressed.getAttribute('data-lv') : 'all';
         currentSort = t.value;
         var mainEl = document.getElementById('main');
-        if (mainEl) mainEl.innerHTML = window.CC_VIEW.viewCategory(cat, { sort: currentSort, stack: stack });
-        else return;
+        if (!mainEl) return;
+        var openIds = Array.prototype.map.call(mainEl.querySelectorAll('#cmd-list .cmd-card.open'), function (card) {
+          return card.getAttribute('data-id');
+        });
+        mainEl.innerHTML = window.CC_VIEW.viewCategory(cat, { sort: currentSort, stack: stack, openIds: openIds });
         /* 重渲染后恢复控件状态 */
         var sel = mainEl.querySelector('.toolbar select[data-sort]');
         if (sel) sel.value = currentSort;
@@ -717,8 +720,9 @@
   }
 
   /* 每次视图渲染后：绑定终端、应用筛选、滚动到目标命令、刷新进度 */
-  function bindAfterRender() {
+  function bindAfterRender(event) {
     var loc = window.CC_ROUTER.current() || {};
+    var reading = event && event.detail && event.detail.reading;
 
     /* 实时练习已迁到独立页面 academy-lab.html，这里只剩跳转占位，无需绑定终端 */
     if (loc.name === 'practice') return;
@@ -732,10 +736,19 @@
     if (loc.name === 'kb') { bindKbFilter(); return; }
 
     if (loc.name === 'category') {
-      currentSort = 'default';
-      onlyTodoState = false;
+      currentSort = reading ? reading.sort : 'default';
+      onlyTodoState = reading ? reading.onlyTodo : false;
+      if (reading) {
+        var toolbar = document.querySelector('.toolbar');
+        var level = toolbar && toolbar.querySelector('.seg [data-lv="' + reading.level + '"]');
+        var active = toolbar && toolbar.querySelector('.seg [aria-pressed="true"]');
+        if (active) active.setAttribute('aria-pressed', 'false');
+        if (level) level.setAttribute('aria-pressed', 'true');
+        var todo = toolbar && toolbar.querySelector('[data-only-todo]');
+        if (todo) todo.checked = onlyTodoState;
+      }
       applyFilter();
-      if (loc.cmdId) {
+      if (loc.cmdId && !reading) {
         var el = document.getElementById('cmd-' + loc.cmdId);
         if (el) {
           setCardOpen(el, true);
@@ -828,7 +841,7 @@
       closeDrawer();
     });
     window.addEventListener('cc:progress-sync', function () {
-      window.CC_ROUTER.render();
+      window.CC_ROUTER.render({ preserveReading: true });
     });
     document.addEventListener('cc:rendered', bindAfterRender);
 

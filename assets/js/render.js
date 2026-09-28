@@ -341,7 +341,9 @@
     html += '<div class="cmd-list" id="cmd-list">';
     var sourceCat = stack ? window.CC_CATS_META.byId(stack.source || catId) : cat;
     for (var i = 0; i < list.length; i++) {
-      html += cmdCard(list[i], sourceCat, { open: opts.openId === list[i].id });
+      html += cmdCard(list[i], sourceCat, {
+        open: opts.openIds ? opts.openIds.indexOf(list[i].id) !== -1 : opts.openId === list[i].id
+      });
     }
     html += '</div>';
     html += '<div class="empty" id="filter-empty" hidden><span class="big">🔍</span><p>当前筛选条件下没有命令。</p></div>';

@@ -76,11 +76,15 @@
     return { name: 'notfound' };
   }
 
-  function resolve(loc) {
+  function resolve(loc, reading) {
     var V = window.CC_VIEW;
     switch (loc.name) {
       case 'home':      return { html: V.viewHome(), active: '' };
-      case 'category':  return { html: V.viewCategory(loc.catId, { openId: loc.cmdId, stack: loc.stack }), active: loc.catId };
+      case 'category':  return { html: V.viewCategory(loc.catId, {
+        openId: loc.cmdId, stack: loc.stack,
+        sort: reading && reading.sort,
+        openIds: reading && reading.openIds
+      }), active: loc.catId };
       case 'command':   return { html: V.viewCommand(loc.cmdId), active: '' };
       case 'search':    return { html: V.viewSearch(loc.q), active: '' };
       case 'favorites': return { html: V.viewFavorites(), active: '__favorites' };
@@ -103,17 +107,38 @@
 
   var current = null;
 
-  function render() {
+  function captureReading() {
+    var main = document.getElementById('main');
+    var toolbar = main && main.querySelector('.toolbar');
+    var selected = toolbar && toolbar.querySelector('.seg [aria-pressed="true"]');
+    var sort = toolbar && toolbar.querySelector('[data-sort]');
+    var todo = toolbar && toolbar.querySelector('[data-only-todo]');
+    return {
+      scrollX: window.scrollX, scrollY: window.scrollY,
+      mainScrollTop: main ? main.scrollTop : 0,
+      sort: sort ? sort.value : 'default',
+      level: selected ? selected.getAttribute('data-lv') : 'all',
+      onlyTodo: !!(todo && todo.checked),
+      openIds: main ? Array.prototype.map.call(main.querySelectorAll('#cmd-list .cmd-card.open'), function (card) {
+        return card.getAttribute('data-id');
+      }) : []
+    };
+  }
+
+  function render(options) {
     var loc = parse(window.location.hash);
+    /* 远端进度变化只更新内容，不打断当前阅读位置与卡片状态。 */
+    var reading = options && options.preserveReading && current &&
+      JSON.stringify(loc) === JSON.stringify(current) ? captureReading() : null;
     current = loc;
-    var out = resolve(loc);
+    var out = resolve(loc, reading);
 
     var main = document.getElementById('main');
     if (main) {
       main.innerHTML = out.html;
       main.scrollTop = 0;
     }
-    window.scrollTo(0, 0);
+    if (!reading) window.scrollTo(0, 0);
 
     /* 高亮侧栏 */
     var nav = document.getElementById('nav');
@@ -127,7 +152,14 @@
     document.title = (t ? t + ' · ' : '') + 'CloudCmd 云计算命令手册';
 
     /* 通知 app 层绑定交互 */
-    document.dispatchEvent(new CustomEvent('cc:rendered', { detail: loc }));
+    var detail = {};
+    for (var key in loc) if (Object.prototype.hasOwnProperty.call(loc, key)) detail[key] = loc[key];
+    detail.reading = reading;
+    document.dispatchEvent(new CustomEvent('cc:rendered', { detail: detail }));
+    if (reading) {
+      if (main) main.scrollTop = reading.mainScrollTop;
+      window.scrollTo(reading.scrollX, reading.scrollY);
+    }
   }
 
   window.CC_ROUTER = {
